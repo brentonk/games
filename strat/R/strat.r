@@ -291,9 +291,29 @@ strat22 <- function(formulas, data, subset, na.action,
     mf[[1]] <- as.name("model.frame")
     mf <- eval(mf, parent.frame())
 
-    yf <- as.factor(model.response(mf))
-    if (nlevels(yf) != 3) stop("dependent variable must have 3 values")
-    y <- as.numeric(yf)
+    yf <- model.part(formulas, mf, lhs = 1, drop = TRUE)
+    if (!is.numeric(yf)) {
+        Y <- yf
+        if (ncol(Y) > 2)
+            warning("only first two columns of response will be used")
+        
+        Y <- Y[, 1:2]
+        if (!identical(sort(unique(unlist(yf))), c(0, 1)))
+            stop("dummy responses must be dummy variables")
+
+        y <- numeric(nrow(Y))
+        y[Y[, 1] == 0] <- 1
+        y[Y[, 1] == 1 & Y[, 2] == 0] <- 2
+        y[Y[, 1] == 1 & Y[, 2] == 1] <- 3
+        yf <- as.factor(y)
+        levels(yf) <- c(paste("~", names(Y)[1], sep = ""),
+                        paste(names(Y)[1], ",~", names(Y)[2], sep = ""),
+                        names(Y)[2])
+    } else {
+        yf <- as.factor(yf)
+        if (nlevels(yf) != 3) stop("dependent variable must have 3 values")
+        y <- as.numeric(yf)
+    }
 
     regr <- list()
     for (i in seq_len(length(formulas)[2]))
