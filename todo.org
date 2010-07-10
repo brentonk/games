@@ -1,0 +1,21 @@
+#+TITLE: To-Do List for Strat Project
+#+AUTHOR: Brenton Kenkel
+#+EMAIL: brenton.kenkel@gmail.com
+
+
+* Code
+
+- [X] Figure out the case that should be excluded (private info with logit
+      link?), and add a warning for it
+
+- [X] Make it so that the model matrices aren't evaluated when we just need to
+      get the lengths --- add an argument for number of regressors
+
+- [X] Make subroutine for SBI
+
+- [ ] Add corrections in the wrapper function to ensure there aren't problems
+      when including varformulas (e.g., length of start values)
+
+- [ ] Allow for outcomes to be specified as two dummy variables
+
+- [ ] Divide by sqrt(2) in SBI routine?
