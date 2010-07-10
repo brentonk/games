@@ -5,6 +5,75 @@
 library(Formula)
 library(maxLik)
 
+print.strat <- function(x, ...)
+{
+    cat("\nCall:\n")
+    print(x$call)
+    cat("\nCoefficients:\n")
+    print(x$coef)
+    cat("\n")
+    invisible(x)
+}
+
+summary.strat <- function(object, ...)
+{
+    cf <- object$coefficients
+    se <- sqrt(diag(object$vcov))
+    zval <- cf / se
+    pval <- 2 * pnorm(-abs(zval))
+
+    ans <- list()
+    ans$coefficients <- cbind(cf, se, zval, pval)
+    colnames(ans$coefficients) <- c("Estimate", "Std. Error", "z value",
+                                    "Pr(>|z|)")
+    ans$call <- object$call
+    ans$log.likelihood <- object$log.likelihood
+    ans$nobs <- nrow(object$model)
+    class(ans) <- "summary.strat"
+
+    return(ans)
+}
+
+print.summary.strat <- function(x, ...)
+{
+    cat("\nCall:\n")
+    print(x$call)
+    cat("\nCoefficients:\n")
+    printCoefmat(x$coefficients)
+    cat("\nLog-likelihood:", x$log.likelihood)
+    cat("\nAIC:", AIC(x))
+    cat("\nNo. observations:", x$nobs, "\n\n")
+    invisible(x)
+}
+
+coef.strat <- function(object, ...)
+{
+    object$coefficients
+}
+
+vcov.strat <- function(object, ...)
+{
+    object$vcov
+}
+
+logLik.strat <- function(object, ...)
+{
+    ans <- object$log.likelihood
+    attr(ans, "df") <- length(object$coefficients)
+    attr(ans, "nobs") <- nrow(object$model)
+    class(ans) <- "logLik"
+    return(ans)
+}
+
+logLik.summary.strat <- function(object, ...)
+{
+    ans <- object$log.likelihood
+    attr(ans, "df") <- nrow(object$coefficients)
+    attr(ans, "nobs") <- object$nobs
+    class(ans) <- "logLik"
+    return(ans)
+}
+
 finiteProbs <- function(x)
 {
     x <- replace(x, x < .Machine$double.eps, .Machine$double.eps)
@@ -263,19 +332,7 @@ strat22 <- function(formulas, data, subset, na.action,
     ans$call <- cl
     ans$formulas <- formulas
     ans$model <- mf
+    class(ans) <- "strat"
     
     return(ans)
-}
-
-summaryStrat <- function(object, ...)
-{
-    cf <- object$coefficients
-    se <- sqrt(diag(object$vcov))
-    zval <- cf / se
-    pval <- 2 * pnorm(-abs(zval))
-    ans <- cbind(cf, se, zval, pval)
-    colnames(ans) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
-    printCoefmat(ans)
-    print(object$log.likelihood)
-    invisible(ans)
 }
