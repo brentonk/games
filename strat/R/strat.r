@@ -21,6 +21,31 @@ assignList <- function(x)
     invisible(x)
 }
 
+sbi22 <- function(y, regr, link)
+{
+    ## have to do this because binomial() issues warning if it's not directly
+    ## passed a character string to its family argument
+    if (link == "probit") {
+        fam <- binomial(link = "probit")
+    } else {
+        fam <- binomial(link = "logit")
+    }
+    
+    Z2 <- regr$Z[y != 1, ]
+    y2 <- as.numeric(y == 3)[y != 1]
+    m2 <- glm.fit(Z2, y2, family = fam)
+    class(m2) <- "glm"
+    p4 <- as.numeric(regr$Z %*% coef(m2))
+    p4 <- if (link == "probit") pnorm(p4) else plogis(p4)
+
+    X1 <- cbind(-regr$X1, (1 - p4) * regr$X3, p4 * regr$X4)
+    y1 <- as.numeric(y != 1)
+    m1 <- glm.fit(X1, y1, family = fam)
+
+    ans <- sqrt(2) * c(coef(m1), coef(m2))
+    return(ans)
+}
+
 makeUtils22 <- function(b, regr)
 {
     utils <- vector("list", 4)
@@ -69,7 +94,7 @@ makeProbs22 <- function(b, regr, link, type)
     }
 
     linkfcn <- switch(link,
-                      logit = function(x, ...) { 1 / (1 + exp(-x)) },
+                      logit = function(x, sd = 1) plogis(x, scale = sd),
                       probit = pnorm)
 
     sd4 <- if (type == "private") sds[[4]] else sqrt(sds[[3]]^2 + sds[[4]]^2)
@@ -106,18 +131,38 @@ logLikGrad22 <- function(b, y, regr, link, type)
     assignList(utils)
     assignList(probs)
 
-    dp4 <- dnorm(u24)
-    dgp4 <- dp4 * regr$Z
-    Dp4 <- cbind(matrix(0L, nrow = nrow(regr$X1), ncol = sum(rcols[1:3])),
-                   dgp4)
-    Dp3 <- -Dp4
+    if (link == "probit" && type == "private") {
+        dp4 <- dnorm(u24)
+        dgp4 <- dp4 * regr$Z
+        Dp4 <- cbind(matrix(0L, nrow = nrow(regr$X1), ncol = sum(rcols[1:3])),
+                     dgp4)
+        Dp3 <- -Dp4
 
-    dp1 <- dnorm(u11 - p3 * u13 - p4 * u14, sd = sqrt(1 + p3^2 + p4^2))
-    dp1 <- dp1 / sqrt(1 + p3^2 + p4^2)
-    dbp1 <- dp1 * cbind(regr$X1, -p3 * regr$X3, -p4 * regr$X4)
-    dgp1 <- dp1 * (u13 - u14) * dgp4
-    Dp1 <- cbind(dbp1, dgp1)
-    Dp2 <- -Dp1
+        dp1 <- dnorm((u11 - p3 * u13 - p4 * u14) / sqrt(1 + p3^2 + p4^2))
+        dp1 <- dp1 / sqrt(1 + p3^2 + p4^2)
+        dbp1 <- dp1 * cbind(regr$X1, -p3 * regr$X3, -p4 * regr$X4)
+        dgp1 <- (dp1 * dgp4) / sqrt(1 + p3^2 + p4^2)
+        dgp1 <- dgp1 * ((u13 - u14) * sqrt(1 + p3^2 + p4^2) -
+                        (u11 - p3*u13 - p4*u14) *
+                        ((p4 - p3) / sqrt(1 + p3^2 + p4^2)))
+        Dp1 <- cbind(dbp1, dgp1)
+        Dp2 <- -Dp1
+    } else if (type == "agent") {
+        derivCDF <- switch(link,
+                           logit = dlogis,
+                           probit = dnorm)
+        
+        dp4 <- derivCDF(u24 / sqrt(2)) / sqrt(2)
+        Dp4 <- cbind(matrix(0L, nrow = nrow(regr$X1), ncol = sum(rcols[1:3])),
+                     dp4 * regr$Z)
+        Dp3 <- -Dp4
+
+        dp1 <- derivCDF((u11 - p3 * u13 - p4 * u14) / sqrt(2)) / sqrt(2)
+        dbp1 <- dp1 * cbind(regr$X1, -p3 * regr$X3, -p4 * regr$X4)
+        dgp1 <- dp1 * dp4 * (u13 - u14) * regr$Z
+        Dp1 <- cbind(dbp1, dgp1)
+        Dp2 <- -Dp1
+    }
 
     dL1 <- Dp1 / p1
     dL3 <- Dp2 / p2 + Dp3 / p3
@@ -132,7 +177,7 @@ strat22 <- function(formulas, data, subset, na.action,
                     varformulas,
                     link = c("probit", "logit"),
                     type = c("private", "agent"),
-                    startvals = c("zero", "unif", "sbi"),
+                    startvals = c("sbi", "unif", "zero"),
                     ...)
 {
     cl <- match.call()
@@ -192,6 +237,8 @@ strat22 <- function(formulas, data, subset, na.action,
         sval <- rep(0, sum(rcols))
     } else if (startvals == "unif") {
         sval <- runif(sum(rcols), -1, 1)
+    } else {
+        sval <- sbi22(y, regr, link)
     }
 
     varNames <- sapply(regr, colnames)
@@ -204,7 +251,7 @@ strat22 <- function(formulas, data, subset, na.action,
     }
     names(sval) <- unlist(varNames)
 
-    gr <- if (type == "private" && link == "probit") logLikGrad22 else NULL
+    gr <- if (missing(varformulas)) logLikGrad22 else NULL
 
     results <- maxBFGS(fn = logLik22, grad = gr, start = sval, y = y, regr =
                        regr, link = link, type = type, ...)
@@ -229,5 +276,6 @@ summaryStrat <- function(object, ...)
     ans <- cbind(cf, se, zval, pval)
     colnames(ans) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
     printCoefmat(ans)
+    print(object$log.likelihood)
     invisible(ans)
 }
