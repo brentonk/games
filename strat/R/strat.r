@@ -74,6 +74,16 @@ logLik.summary.strat <- function(object, ...)
     return(ans)
 }
 
+predict.strat <- function(object, newdata, ...)
+{
+    if (missing(newdata))
+        newdata <- object$model
+
+    ## to do: make model matrices
+
+    ## to do: pass to makeProbs, then 
+}
+
 finiteProbs <- function(x)
 {
     x <- replace(x, x < .Machine$double.eps, .Machine$double.eps)
@@ -90,7 +100,7 @@ assignList <- function(x)
     invisible(x)
 }
 
-sbi22 <- function(y, regr, link)
+sbi3 <- function(y, regr, link)
 {
     ## have to do this because binomial() issues warning if it's not directly
     ## passed a character string to its family argument
@@ -115,7 +125,7 @@ sbi22 <- function(y, regr, link)
     return(ans)
 }
 
-makeUtils22 <- function(b, regr)
+makeUtils3 <- function(b, regr)
 {
     utils <- vector("list", 4)
     names(utils) <- c("u11", "u13", "u14", "u24")
@@ -134,7 +144,7 @@ makeUtils22 <- function(b, regr)
     return(utils)
 }
 
-makeSDs22 <- function(b, regr)
+makeSDs3 <- function(b, regr)
 {
     sds <- vector("list", 4)
 
@@ -151,15 +161,28 @@ makeSDs22 <- function(b, regr)
     return(sds)
 }
 
-makeProbs22 <- function(b, regr, link, type)
+actionsToOutcomes <- function(probs, game, log = TRUE)
 {
-    utils <- makeUtils22(b, regr)
+    probs <- do.call(cbind, probs)
+    if (game == "strat3") {
+        ans <- cbind(base::log(probs[, 1]),
+                     base::log(probs[, 2]) + base::log(probs[, 3]),
+                     base::log(probs[, 2]) + base::log(probs[, 4]))
+    }
+
+    if (!log) ans <- exp(ans)
+    return(ans)
+}
+
+makeProbs3 <- function(b, regr, link, type)
+{
+    utils <- makeUtils3(b, regr)
 
     ## length(utils$b) == 0 means no terms left for the variance components
     if (length(utils$b) == 0) {
         sds <- list(1, 1, 1, 1)
     } else {
-        sds <- makeSDs22(b, regr)
+        sds <- makeSDs3(b, regr)
     }
 
     linkfcn <- switch(link,
@@ -182,20 +205,18 @@ makeProbs22 <- function(b, regr, link, type)
     return(list(p1 = p1, p2 = p2, p3 = p3, p4 = p4))
 }
 
-logLik22 <- function(b, y, regr, link, type)
+logLik3 <- function(b, y, regr, link, type)
 {
-    probs <- makeProbs22(b, regr, link, type)
-    probs <- do.call(cbind, probs)
-    logProbs <- cbind(log(probs[, 1]), log(probs[, 2]) + log(probs[, 3]),
-                      log(probs[, 2]) + log(probs[, 4]))
+    probs <- makeProbs3(b, regr, link, type)
+    logProbs <- actionsToOutcomes(probs, game = "strat3", log = TRUE)
     ans <- logProbs[cbind(1:nrow(logProbs), y)]
     return(ans)
 }
 
-logLikGrad22 <- function(b, y, regr, link, type)
+logLikGrad3 <- function(b, y, regr, link, type)
 {
-    utils <- makeUtils22(b, regr)
-    probs <- makeProbs22(b, regr, link, type)
+    utils <- makeUtils3(b, regr)
+    probs <- makeProbs3(b, regr, link, type)
     rcols <- sapply(regr, ncol)
     assignList(utils)
     assignList(probs)
@@ -242,7 +263,7 @@ logLikGrad22 <- function(b, y, regr, link, type)
     return(ans)
 }
 
-strat22 <- function(formulas, data, subset, na.action,
+strat3 <- function(formulas, data, subset, na.action,
                     varformulas,
                     link = c("probit", "logit"),
                     type = c("private", "agent"),
@@ -292,7 +313,7 @@ strat22 <- function(formulas, data, subset, na.action,
     mf <- eval(mf, parent.frame())
 
     yf <- model.part(formulas, mf, lhs = 1, drop = TRUE)
-    if (!is.numeric(yf)) {
+    if (length(dim(yf))) {
         Y <- yf
         if (ncol(Y) > 2)
             warning("only first two columns of response will be used")
@@ -308,7 +329,7 @@ strat22 <- function(formulas, data, subset, na.action,
         yf <- as.factor(y)
         levels(yf) <- c(paste("~", names(Y)[1], sep = ""),
                         paste(names(Y)[1], ",~", names(Y)[2], sep = ""),
-                        names(Y)[2])
+                        paste(names(Y)[1], ",", names(Y)[2], sep = ""))
     } else {
         yf <- as.factor(yf)
         if (nlevels(yf) != 3) stop("dependent variable must have 3 values")
@@ -327,7 +348,7 @@ strat22 <- function(formulas, data, subset, na.action,
     } else if (startvals == "unif") {
         sval <- runif(sum(rcols), -1, 1)
     } else {
-        sval <- sbi22(y, regr, link)
+        sval <- sbi3(y, regr, link)
     }
 
     varNames <- sapply(regr, colnames)
@@ -340,9 +361,9 @@ strat22 <- function(formulas, data, subset, na.action,
     }
     names(sval) <- unlist(varNames)
 
-    gr <- if (missing(varformulas)) logLikGrad22 else NULL
+    gr <- if (missing(varformulas)) logLikGrad3 else NULL
 
-    results <- maxBFGS(fn = logLik22, grad = gr, start = sval, y = y, regr =
+    results <- maxBFGS(fn = logLik3, grad = gr, start = sval, y = y, regr =
                        regr, link = link, type = type, ...)
 
     ans <- list()
@@ -352,6 +373,7 @@ strat22 <- function(formulas, data, subset, na.action,
     ans$call <- cl
     ans$formulas <- formulas
     ans$model <- mf
+    ans$game <- "strat3"
     class(ans) <- "strat"
     
     return(ans)
