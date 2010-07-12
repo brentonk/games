@@ -16,6 +16,24 @@
 - [ ] Add corrections in the wrapper function to ensure there aren't problems
       when including varformulas (e.g., length of start values)
 
-- [ ] Allow for outcomes to be specified as two dummy variables
+- [X] Allow for outcomes to be specified as two dummy variables
+
+- [ ] Write a routine to make the list of regressors
+
+- [ ] Write a predict method
 
 - [ ] Divide by sqrt(2) in SBI routine?
+
+- [ ] Generalize predict method to not just work for 22 case --- may have to
+  just include lots of switches?  Or maybe use multiple inheritance, so that the
+  class of a strat object is c("strat", "strat22")?
+
+- [ ] Does logit link need to be excluded for regressors in variance?
+
+- [X] Change it so that the log-likelihood in the strat object is the vector of
+  individual log-likelihoods, then have the logLik method sum them
+
+- [ ] Add comments to strat.r!
+
+- [ ] Make it so that NAs for unobserved cases in the dummy outcomes case don't
+  cause hiccups; also, document this in na.action

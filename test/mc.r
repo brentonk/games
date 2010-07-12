@@ -1,4 +1,4 @@
-source("../strat/R/strat.r")
+source("~/.strat/strat/R/strat.r")
 
 n <- 1000
 nmc <- 100
@@ -11,8 +11,8 @@ for (i in seq_len(nmc)) {
 
     attach(mcData)
     u24 <- 3 - 2 * z1 + z2
-    u14 <- 3 * x4
-    u13 <- 2 - 3 * x3
+    u14 <- 2 * x4
+    u13 <- -2 + 3 * x3
     u11 <- 1 - x1 + 2 * x2
     detach(mcData)
 
@@ -24,7 +24,7 @@ for (i in seq_len(nmc)) {
     y[y1 == 1] <- 3
     y[y1 == 1 & y2 == 1] <- 4
     mcData$y <- y
-    m1 <- strat22(y ~ x1 + x2 | x3 | x4 - 1 | z1 + z2,
+    m1 <- strat3(y ~ x1 + x2 | x3 | x4 - 1 | z1 + z2,
                   data = mcData, link = "probit", type = "agent")
     ans1[i, ] <- coef(m1)
 
@@ -36,7 +36,7 @@ for (i in seq_len(nmc)) {
     y[y1 == 1] <- 3
     y[y1 == 1 & y2 == 1] <- 4
     mcData$y <- y
-    m2 <- strat22(y ~ x1 + x2 | x3 | x4 - 1 | z1 + z2,
+    m2 <- strat3(y ~ x1 + x2 | x3 | x4 - 1 | z1 + z2,
                   data = mcData, link = "logit", type = "agent")
     ans2[i, ] <- coef(m2)
 
@@ -49,7 +49,7 @@ for (i in seq_len(nmc)) {
     y[y1 == 1] <- 3
     y[y1 == 1 & y2 == 1] <- 4
     mcData$y <- y
-    m3 <- strat22(y ~ x1 + x2 | x3 | x4 - 1 | z1 + z2,
+    m3 <- strat3(y ~ x1 + x2 | x3 | x4 - 1 | z1 + z2,
                   data = mcData, link = "probit", type = "private")
     ans3[i, ] <- coef(m3)
 

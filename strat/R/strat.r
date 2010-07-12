@@ -1,10 +1,21 @@
-################################################################################
-### strat.r
-################################################################################
-
 library(Formula)
 library(maxLik)
 
+##' A package for estimating strategic statistical models.
+##' 
+##' @name strat-package
+##' @docType package
+NULL
+
+##' The default method for printing a \code{strat} object.
+##'
+##' Prints the call and coefficients of a fitted strategic model.
+##' @title Print a Strategic Model object
+##' @method print strat
+##' @param x a fitted model of class \code{strat}
+##' @param ... other arguments, currently ignored
+##' @return \code{x}, invisibly
+##' @author Brenton Kenkel <brenton.kenkel@@gmail.com>
 print.strat <- function(x, ...)
 {
     cat("\nCall:\n")
@@ -15,6 +26,19 @@ print.strat <- function(x, ...)
     invisible(x)
 }
 
+##' The default method for summarizing a \code{strat} object.
+##'
+##' Forms the standard regression results table from a fitted strategic model.
+##' Normally used interactively, in conjunction with
+##' \code{\link{print.summary.strat}}.
+##' @title Summarize a Strategic Model object
+##' @method summary strat
+##' @param object a fitted model of class \code{strat}
+##' @param ... other arguments, currently ignored
+##' @return an object of class \code{summary.strat}, containing the coefficient
+##' matrix and other information needed for printing
+##' @seealso \code{\link{print.summary.strat}}
+##' @author Brenton Kenkel <brenton.kenkel@@gmail.com>
 summary.strat <- function(object, ...)
 {
     cf <- object$coefficients
@@ -27,7 +51,7 @@ summary.strat <- function(object, ...)
     colnames(ans$coefficients) <- c("Estimate", "Std. Error", "z value",
                                     "Pr(>|z|)")
     ans$call <- object$call
-    ans$log.likelihood <- object$log.likelihood
+    ans$log.likelihood <- sum(object$log.likelihood)
     ans$nobs <- nrow(object$model)
     class(ans) <- "summary.strat"
 
@@ -46,11 +70,29 @@ print.summary.strat <- function(x, ...)
     invisible(x)
 }
 
+##' Get coefficients from a strategic model
+##'
+##' Extracts the coefficient vector from a fitted model of class \code{strat}.
+##' @title Coefficients of a Strategic Model object
+##' @method coef strat
+##' @param object a fitted model of class \code{strat}
+##' @param ... other arguments, currently ignored
+##' @return numeric vector containing coefficients
+##' @author Brenton Kenkel <brenton.kenkel@@gmail.com>
 coef.strat <- function(object, ...)
 {
     object$coefficients
 }
 
+##' Get covariance matrix from a strategic model
+##'
+##' Extracts the covariance matrix from a fitted model of class \code{strat}.
+##' @title Covariance matrix of a Strategic Model object
+##' @method vcov strat
+##' @param object a fitted model of class \code{strat}
+##' @param ... other arguments, currently ignored
+##' @return covariance matrix
+##' @author Brenton Kenkel <brenton.kenkel@@gmail.com>
 vcov.strat <- function(object, ...)
 {
     object$vcov
@@ -58,7 +100,7 @@ vcov.strat <- function(object, ...)
 
 logLik.strat <- function(object, ...)
 {
-    ans <- object$log.likelihood
+    ans <- sum(object$log.likelihood)
     attr(ans, "df") <- length(object$coefficients)
     attr(ans, "nobs") <- nrow(object$model)
     class(ans) <- "logLik"
@@ -74,14 +116,40 @@ logLik.summary.strat <- function(object, ...)
     return(ans)
 }
 
-predict.strat <- function(object, newdata, ...)
+predict.strat <- function(object, newdata, probs = c("outcome", "action"), ...)
 {
+    probs <- match.arg(probs)
+    
+    if (object$game != "strat3")
+        stop("predict not yet implemented for strat models other than strat3")
+
     if (missing(newdata))
         newdata <- object$model
 
-    ## to do: make model matrices
+    mf <- match(c("subset", "na.action"), names(object$call), 0L)
+    mf <- object$call[c(1L, mf)]
+    mf$formula <- object$formulas
+    mf$data <- newdata
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf <- eval(mf, parent.frame())
 
-    ## to do: pass to makeProbs, then 
+    regr <- list()
+    for (i in seq_len(length(object$formulas)[2]))
+        regr[[i]] <- model.matrix(object$formulas, data = mf, rhs = i)
+
+    ans <- makeProbs3(object$coefficients, regr = regr, link = object$link, type
+                      = object$type)
+    ans <- do.call(cbind, ans)
+
+    if (probs == "outcome") {
+        ans <- data.frame(cbind(ans[, 1], ans[, 2] * ans[, 3],
+                                ans[, 2] * ans[, 4]))
+        names(ans) <- paste("Pr(", levels(object$y), ")", sep = "")
+    }
+
+    ans <- as.data.frame(ans)
+    return(ans)
 }
 
 finiteProbs <- function(x)
@@ -263,6 +331,21 @@ logLikGrad3 <- function(b, y, regr, link, type)
     return(ans)
 }
 
+##' <description>
+##'
+##' <details>
+##' @title 
+##' @param formulas 
+##' @param data 
+##' @param subset 
+##' @param na.action 
+##' @param varformulas 
+##' @param link 
+##' @param type 
+##' @param startvals 
+##' @param ... 
+##' @return A \code{strat} object
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 strat3 <- function(formulas, data, subset, na.action,
                     varformulas,
                     link = c("probit", "logit"),
@@ -309,6 +392,7 @@ strat3 <- function(formulas, data, subset, na.action,
     mf <- match(c("data", "subset", "na.action"), names(cl), 0L)
     mf <- cl[c(1L, mf)]
     mf$formula <- formulas
+    mf$drop.unused.levels <- TRUE
     mf[[1]] <- as.name("model.frame")
     mf <- eval(mf, parent.frame())
 
@@ -346,7 +430,9 @@ strat3 <- function(formulas, data, subset, na.action,
     if (startvals == "zero") {
         sval <- rep(0, sum(rcols))
     } else if (startvals == "unif") {
-        sval <- runif(sum(rcols), -1, 1)
+        if (!hasArg(unif))
+            unif <- c(-1, 1)
+        sval <- runif(sum(rcols), unif[1], unif[2])
     } else {
         sval <- sbi3(y, regr, link)
     }
@@ -369,10 +455,14 @@ strat3 <- function(formulas, data, subset, na.action,
     ans <- list()
     ans$coefficients <- results$estimate
     ans$vcov <- solve(-results$hessian)
-    ans$log.likelihood <- results$maximum
+    ans$log.likelihood <- logLik3(results$estimate, y = y, regr = regr, link =
+                                  link, type = type)
     ans$call <- cl
     ans$formulas <- formulas
+    ans$link <- link
+    ans$type <- type
     ans$model <- mf
+    ans$y <- yf
     ans$game <- "strat3"
     class(ans) <- "strat"
     
