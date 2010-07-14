@@ -1,10 +1,9 @@
-library(Formula)
-library(maxLik)
-
 ##' A package for estimating strategic statistical models.
 ##' 
 ##' @name strat-package
 ##' @docType package
+##' @examples
+##' mean(1)
 NULL
 
 ##' The default method for printing a \code{strat} object.
@@ -15,7 +14,8 @@ NULL
 ##' @param x a fitted model of class \code{strat}
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly
-##' @author Brenton Kenkel <brenton.kenkel@@gmail.com>
+##' @S3method print strat
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 print.strat <- function(x, ...)
 {
     cat("\nCall:\n")
@@ -38,7 +38,7 @@ print.strat <- function(x, ...)
 ##' @return an object of class \code{summary.strat}, containing the coefficient
 ##' matrix and other information needed for printing
 ##' @seealso \code{\link{print.summary.strat}}
-##' @author Brenton Kenkel <brenton.kenkel@@gmail.com>
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 summary.strat <- function(object, ...)
 {
     cf <- object$coefficients
@@ -58,6 +58,16 @@ summary.strat <- function(object, ...)
     return(ans)
 }
 
+##' <description>
+##'
+##' Prints the standard regression results table from a fitted strategic model,
+##' along with the log-likelihood, AIC, and number of observations.
+##' @title print summary
+##' @param x an object of class \code{summary.strat}, typically produced by
+##'running \code{summary} on a fitted model of class \code{strat}
+##' @param ... other arguments, currently ignored
+##' @return \code{x}, invisibly.
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 print.summary.strat <- function(x, ...)
 {
     cat("\nCall:\n")
@@ -78,7 +88,7 @@ print.summary.strat <- function(x, ...)
 ##' @param object a fitted model of class \code{strat}
 ##' @param ... other arguments, currently ignored
 ##' @return numeric vector containing coefficients
-##' @author Brenton Kenkel <brenton.kenkel@@gmail.com>
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 coef.strat <- function(object, ...)
 {
     object$coefficients
@@ -92,7 +102,7 @@ coef.strat <- function(object, ...)
 ##' @param object a fitted model of class \code{strat}
 ##' @param ... other arguments, currently ignored
 ##' @return covariance matrix
-##' @author Brenton Kenkel <brenton.kenkel@@gmail.com>
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 vcov.strat <- function(object, ...)
 {
     object$vcov
@@ -158,14 +168,6 @@ finiteProbs <- function(x)
     x <- replace(x, x > 1 - .Machine$double.neg.eps,
                  1 - .Machine$double.neg.eps)
     return(x)
-}
-
-assignList <- function(x)
-{
-    for (i in seq_len(length(x)))
-        assign(names(x)[i], x[[i]], pos = parent.frame())
-
-    invisible(x)
 }
 
 sbi3 <- function(y, regr, link)
@@ -250,7 +252,7 @@ makeProbs3 <- function(b, regr, link, type)
     if (length(utils$b) == 0) {
         sds <- list(1, 1, 1, 1)
     } else {
-        sds <- makeSDs3(b, regr)
+        sds <- makeSDs3(utils$b, regr)
     }
 
     linkfcn <- switch(link,
@@ -283,26 +285,25 @@ logLik3 <- function(b, y, regr, link, type)
 
 logLikGrad3 <- function(b, y, regr, link, type)
 {
-    utils <- makeUtils3(b, regr)
-    probs <- makeProbs3(b, regr, link, type)
+    u <- makeUtils3(b, regr)
+    p <- makeProbs3(b, regr, link, type)
     rcols <- sapply(regr, ncol)
-    assignList(utils)
-    assignList(probs)
 
     if (link == "probit" && type == "private") {
-        dp4 <- dnorm(u24)
+        dp4 <- dnorm(u$u24)
         dgp4 <- dp4 * regr$Z
         Dp4 <- cbind(matrix(0L, nrow = nrow(regr$X1), ncol = sum(rcols[1:3])),
                      dgp4)
         Dp3 <- -Dp4
 
-        dp1 <- dnorm((u11 - p3 * u13 - p4 * u14) / sqrt(1 + p3^2 + p4^2))
-        dp1 <- dp1 / sqrt(1 + p3^2 + p4^2)
-        dbp1 <- dp1 * cbind(regr$X1, -p3 * regr$X3, -p4 * regr$X4)
-        dgp1 <- (dp1 * dgp4) / sqrt(1 + p3^2 + p4^2)
-        dgp1 <- dgp1 * ((u13 - u14) * sqrt(1 + p3^2 + p4^2) -
-                        (u11 - p3*u13 - p4*u14) *
-                        ((p4 - p3) / sqrt(1 + p3^2 + p4^2)))
+        dp1 <- dnorm((u$u11 - p$p3 * u$u13 - p$p4 * u$u14) /
+                     sqrt(1 + p$p3^2 + p$p4^2))
+        dp1 <- dp1 / sqrt(1 + p$p3^2 + p$p4^2)
+        dbp1 <- dp1 * cbind(regr$X1, -p$p3 * regr$X3, -p$p4 * regr$X4)
+        dgp1 <- (dp1 * dgp4) / sqrt(1 + p$p3^2 + p$p4^2)
+        dgp1 <- dgp1 * ((u$u13 - u$u14) * sqrt(1 + p$p3^2 + p$p4^2) -
+                        (u$u11 - p$p3*u$u13 - p$p4*u$u14) *
+                        ((p$p4 - p$p3) / sqrt(1 + p$p3^2 + p$p4^2)))
         Dp1 <- cbind(dbp1, dgp1)
         Dp2 <- -Dp1
     } else if (type == "agent") {
@@ -310,21 +311,22 @@ logLikGrad3 <- function(b, y, regr, link, type)
                            logit = dlogis,
                            probit = dnorm)
         
-        dp4 <- derivCDF(u24 / sqrt(2)) / sqrt(2)
+        dp4 <- derivCDF(u$u24 / sqrt(2)) / sqrt(2)
         Dp4 <- cbind(matrix(0L, nrow = nrow(regr$X1), ncol = sum(rcols[1:3])),
                      dp4 * regr$Z)
         Dp3 <- -Dp4
 
-        dp1 <- derivCDF((u11 - p3 * u13 - p4 * u14) / sqrt(2)) / sqrt(2)
-        dbp1 <- dp1 * cbind(regr$X1, -p3 * regr$X3, -p4 * regr$X4)
-        dgp1 <- dp1 * dp4 * (u13 - u14) * regr$Z
+        dp1 <- derivCDF((u$u11 - p$p3 * u$u13 - p$p4 * u$u14) / sqrt(2)) /
+            sqrt(2)
+        dbp1 <- dp1 * cbind(regr$X1, -p$p3 * regr$X3, -p$p4 * regr$X4)
+        dgp1 <- dp1 * dp4 * (u$u13 - u$u14) * regr$Z
         Dp1 <- cbind(dbp1, dgp1)
         Dp2 <- -Dp1
     }
 
-    dL1 <- Dp1 / p1
-    dL3 <- Dp2 / p2 + Dp3 / p3
-    dL4 <- Dp2 / p2 + Dp4 / p4
+    dL1 <- Dp1 / p$p1
+    dL3 <- Dp2 / p$p2 + Dp3 / p$p3
+    dL4 <- Dp2 / p$p2 + Dp4 / p$p4
 
     ans <- as.numeric(y == 1) * dL1 + as.numeric(y == 2) * dL3 +
         as.numeric(y == 3) * dL4
@@ -334,22 +336,28 @@ logLikGrad3 <- function(b, y, regr, link, type)
 ##' <description>
 ##'
 ##' <details>
-##' @title 
-##' @param formulas 
-##' @param data 
-##' @param subset 
-##' @param na.action 
-##' @param varformulas 
-##' @param link 
-##' @param type 
-##' @param startvals 
-##' @param ... 
+##' @title Fit a strategic model 
+##' @param formulas set of formulas describing utilities
+##' @param data a data frame
+##' @param subset logical vector, optional, specifying subset of \code{data} to
+##' use
+##' @param na.action how to deal with \code{NA}s in \code{data}
+##' @param varformulas set of formulas for regressors in variance, optional
+##' @param link whether to use probit or logit errors (default probit)
+##' @param type whether to use an agent-error or private-information stochastic
+##' structure (default agent)
+##' @param startvals whether to get starting values for the optimization from
+##' statistical backwards induction ("sbi," the default), from a uniform
+##' distribution ("unif"), or to set them all to 0 ("zero")
+##' @param ... other arguments, currently ignored
 ##' @return A \code{strat} object
+##' @export
+##' @references Signorino 2003
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 strat3 <- function(formulas, data, subset, na.action,
                     varformulas,
                     link = c("probit", "logit"),
-                    type = c("private", "agent"),
+                    type = c("agent", "private"),
                     startvals = c("sbi", "unif", "zero"),
                     ...)
 {
@@ -359,6 +367,7 @@ strat3 <- function(formulas, data, subset, na.action,
     type <- match.arg(type)
     startvals <- match.arg(startvals)
 
+    ## various sanity checks
     if (inherits(formulas, "list")) {
         formulas <- do.call(as.Formula, formulas)
     } else if (inherits(formulas, "formula")) {
@@ -369,12 +378,6 @@ strat3 <- function(formulas, data, subset, na.action,
 
     if (!missing(varformulas))
     {
-        if (link == "logit") {
-            link <- "probit"
-            warning("logit link can't be used with regressors in variance; ",
-                    "using probit link instead")
-        }
-
         if (inherits(varformulas, "list")) {
             varformulas <- do.call(as.Formula, varformulas)
         } else if (!inherits(varformulas, "formula")) {
@@ -389,6 +392,7 @@ strat3 <- function(formulas, data, subset, na.action,
                 "changing to agent model with logit link")
     }
 
+    ## make the model frame
     mf <- match(c("data", "subset", "na.action"), names(cl), 0L)
     mf <- cl[c(1L, mf)]
     mf$formula <- formulas
@@ -397,7 +401,7 @@ strat3 <- function(formulas, data, subset, na.action,
     mf <- eval(mf, parent.frame())
 
     yf <- model.part(formulas, mf, lhs = 1, drop = TRUE)
-    if (length(dim(yf))) {
+    if (length(dim(yf))) {              # response specified as dummies
         Y <- yf
         if (ncol(Y) > 2)
             warning("only first two columns of response will be used")
@@ -420,6 +424,8 @@ strat3 <- function(formulas, data, subset, na.action,
         y <- as.numeric(yf)
     }
 
+    ## makes a list of the 4 (or 8, if variance formulas specified) matrices of
+    ## regressors to be passed to estimation functions
     regr <- list()
     for (i in seq_len(length(formulas)[2]))
         regr[[i]] <- model.matrix(formulas, data = mf, rhs = i)
@@ -427,6 +433,8 @@ strat3 <- function(formulas, data, subset, na.action,
                      "V4")[1:length(regr)]    
     rcols <- sapply(regr, ncol)
 
+    ## makes starting values -- specify "unif" (a numeric vector of length two)
+    ## to control the interval from which uniform values are drawn
     if (startvals == "zero") {
         sval <- rep(0, sum(rcols))
     } else if (startvals == "unif") {
@@ -435,9 +443,19 @@ strat3 <- function(formulas, data, subset, na.action,
         sval <- runif(sum(rcols), unif[1], unif[2])
     } else {
         sval <- sbi3(y, regr, link)
+        sval <- c(sval, rep(0, sum(rcols) - length(sval)))
     }
 
+    ## identification check
     varNames <- sapply(regr, colnames)
+    if (any(idCheck <- (varNames[[1]] %in% varNames[[2]]) &
+            (varNames[[1]] %in% varNames[[3]]))) {
+        stop("Identification problem: the following variables appear in all ",
+             "three of player 1's utility equations: ",
+             paste(varNames[[1]][idCheck], collapse = ", "))
+    }
+
+    ## gives names to starting values
     prefixes <- paste(c(rep("u1(", 3), "u2("), c(levels(yf), levels(yf)[3]),
                        ")", sep = "")
     prefixes <- c(prefixes, "v1", "v2", "v3", "v4")
@@ -447,6 +465,7 @@ strat3 <- function(formulas, data, subset, na.action,
     }
     names(sval) <- unlist(varNames)
 
+    ## use the gradient iff no regressors in variance
     gr <- if (missing(varformulas)) logLikGrad3 else NULL
 
     results <- maxBFGS(fn = logLik3, grad = gr, start = sval, y = y, regr =

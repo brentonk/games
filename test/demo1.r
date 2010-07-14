@@ -6,12 +6,13 @@
 ### First demo of "strat" R package.
 ################################################################################
 
-source("strat.r")
+source("../strat/R/strat.r")
 
 ## make dataset with logit link and agent error
 n <- 1000
 x1 <- rnorm(n); x2 <- rnorm(n); x3 <- rnorm(n); x4 <- rnorm(n)
 z1 <- rnorm(n); z2 <- rnorm(n)
+w1 <- rnorm(n); w2 <- rnorm(n)
 
 u24 <- 3 - 2 * z1 + z2
 u14 <- 2 * x4
@@ -25,7 +26,8 @@ y <- rep(1L, n)
 y[y1 == 1] <- 3
 y[y1 == 1 & y2 == 1] <- 4
 
-mcData <- data.frame(x1 = x1, x2 = x2, x3 = x3, x4 = x4, z1 = z1, z2 = z2)
+mcData <- data.frame(x1 = x1, x2 = x2, x3 = x3, x4 = x4, z1 = z1, z2 = z2, w1 =
+                     w1, w2 = w2)
 mcData$y1 <- y1
 mcData$y2 <- y2
 mcData$y <- y
@@ -57,7 +59,7 @@ mcData$yf <- factor(y, levels = c(1, 3, 4), labels = c("sq", "cap", "war"))
 
 ## formulas all together, outcome as numeric
 m1 <- strat3(y ~ x1 + x2 | x3 | x4 - 1 | z1 + z2, data = mcData, link =
-             "logit", type = "agent")
+             "logit", type = "agent", varformulas = ~ w1 | w2 | 0 | 0)
 print(m1)
 summary(m1)
 

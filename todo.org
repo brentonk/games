@@ -13,14 +13,14 @@
 
 - [X] Make subroutine for SBI
 
-- [ ] Add corrections in the wrapper function to ensure there aren't problems
+- [X] Add corrections in the wrapper function to ensure there aren't problems
       when including varformulas (e.g., length of start values)
 
 - [X] Allow for outcomes to be specified as two dummy variables
 
 - [ ] Write a routine to make the list of regressors
 
-- [ ] Write a predict method
+- [X] Write a predict method
 
 - [ ] Divide by sqrt(2) in SBI routine?
 
@@ -37,3 +37,5 @@
 
 - [ ] Make it so that NAs for unobserved cases in the dummy outcomes case don't
   cause hiccups; also, document this in na.action
+
+- [ ] Look at what Zelig does for making and plotting predicted probabilities

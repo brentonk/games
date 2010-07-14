@@ -1,0 +1,2 @@
+S3method(print, strat)
+export(strat3)
