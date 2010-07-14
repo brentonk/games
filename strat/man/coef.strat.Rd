@@ -1,6 +1,6 @@
 \name{coef.strat}
 \alias{coef.strat}
-\title{Coefficients of a Strategic Model object}
+\title{Coefficients of a strategic model object}
 \usage{\method{coef}{strat}(object, ...)
 }
 \description{Get coefficients from a strategic model}

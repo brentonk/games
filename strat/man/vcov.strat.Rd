@@ -1,6 +1,6 @@
 \name{vcov.strat}
 \alias{vcov.strat}
-\title{Covariance matrix of a Strategic Model object}
+\title{Covariance matrix of a strategic model object}
 \usage{\method{vcov}{strat}(object, ...)
 }
 \description{Get covariance matrix from a strategic model}

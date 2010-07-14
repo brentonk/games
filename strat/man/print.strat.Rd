@@ -1,6 +1,6 @@
 \name{print.strat}
 \alias{print.strat}
-\title{Print a Strategic Model object}
+\title{Print a strategic model object}
 \usage{\method{print}{strat}(x, ...)
 }
 \description{The default method for printing a \code{strat} object.}

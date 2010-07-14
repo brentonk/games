@@ -1,6 +1,6 @@
 \name{summary.strat}
 \alias{summary.strat}
-\title{Summarize a Strategic Model object}
+\title{Summarize a strategic model object}
 \usage{\method{summary}{strat}(object, ...)
 }
 \description{The default method for summarizing a \code{strat} object.}
