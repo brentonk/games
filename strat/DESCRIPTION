@@ -4,8 +4,8 @@ Version: 0.1-0
 Date: 2010-07-13
 Author: Curt Signorino and Brenton Kenkel
 Maintainer: Brenton Kenkel <brenton.kenkel@gmail.com>
-Description: Provides estimation and analysis functions for
-    discrete-choice strategic models.
+Description: Provides estimation and analysis functions for discrete-choice
+    strategic models.
 License: GPL (>= 2)
 Depends: Formula (>= 0.2-0), maxLik
 LazyLoad: yes

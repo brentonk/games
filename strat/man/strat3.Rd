@@ -1,9 +1,8 @@
 \name{strat3}
 \alias{strat3}
 \title{Fit a strategic model with 3 terminal nodes}
-\usage{strat3(formulas, data, subset, na.action, varformulas, link=c("probit",
-    "logit"), type=c("agent", "private"), startvals=c("sbi", "unif",
-    "zero"), ...)
+\usage{strat3(formulas, data, subset, na.action, varformulas, link=c("probit", "logit"),
+    type=c("agent", "private"), startvals=c("sbi", "unif", "zero"), ...)
 }
 \description{Fits a strategic model with three terminal nodes, as in the game illustrated
 below in \dQuote{Details}.}
@@ -33,9 +32,12 @@ message, because the model is then unidentified (see Lewis and Schultz
 2003).  There are two equivalent ways to express the formulas passed to this
 argument.  One is to use a list of four formulas, where the first contains
 the response variable(s) (discussed below) on the left-hand side and the
-other three are one-sided.  For instance, suppose u11 is a function of
-\code{x1}, \code{x2}, and a constant; u13 is set to 0; u14 is a function of
-\code{x3} and a constant; and u24 is a function of \code{z} and a constant.
+other three are one-sided.  For instance, suppose:
+\itemize{
+\item u11 is a function of \code{x1}, \code{x2}, and a constant
+\item u13 is set to 0
+\item u14 is a function of \code{x3} and a constant
+\item u24 is a function of \code{z} and a constant.}
 The list notation would be \code{formulas = list(y ~ x1 + x2, ~ 0, ~ x3, ~
 z)}.  The other method is to use the \code{\link{Formula}} syntax, with one
 left-hand side and four right-hand sides (separated by vertical bars).  This
@@ -58,8 +60,8 @@ when using indicators variables is, for example, \code{y1 + y2 ~ x1 + x2 | 0
 \code{strat} object is a list containing: \describe{
 \item{\code{coefficients}}{estimated parameters of the model}
 \item{\code{vcov}}{estimated variance-covariance matrix}
-\item{\code{log.likelihood}}{vector of individual log likelihoods (left unsummed
-for use with non-nested model tests)}
+\item{\code{log.likelihood}}{vector of individual log likelihoods (left
+unsummed for use with non-nested model tests)}
 \item{\code{call}}{the call used to produce the model}
 \item{\code{formulas}}{the final \code{Formula} object passed to
 \code{model.frame}}
@@ -84,7 +86,7 @@ four right-hand sides.  See \dQuote{Details} and \dQuote{Examples}.}
 \code{data} to use in fitting}
 \item{na.action}{how to deal with \code{NA}s in \code{data}.  Defaults to
 the \code{na.action} setting of \code{\link{options}}.  See
-?\code{\link{na.omit}}}
+\code{\link{na.omit}}}
 \item{varformulas}{an optional list of four formulas or \code{Formula}
 object with four right-hand sides.  If omitted, all error terms are assumed
 to have scale parameter 1.  See \dQuote{Details}.}

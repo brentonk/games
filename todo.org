@@ -3,35 +3,7 @@
 #+EMAIL: brenton.kenkel@gmail.com
 
 
-* Code
-
-- [X] Figure out the case that should be excluded (private info with logit
-      link?), and add a warning for it
-
-- [X] Make it so that the model matrices aren't evaluated when we just need to
-      get the lengths --- add an argument for number of regressors
-
-- [X] Make subroutine for SBI
-
-- [X] Add corrections in the wrapper function to ensure there aren't problems
-      when including varformulas (e.g., length of start values)
-
-- [X] Allow for outcomes to be specified as two dummy variables
-
-- [ ] Write a routine to make the list of regressors
-
-- [X] Write a predict method
-
-- [ ] Divide by sqrt(2) in SBI routine?
-
-- [ ] Generalize predict method to not just work for 22 case --- may have to
-  just include lots of switches?  Or maybe use multiple inheritance, so that the
-  class of a strat object is c("strat", "strat22")?
-
-- [ ] Does logit link need to be excluded for regressors in variance?
-
-- [X] Change it so that the log-likelihood in the strat object is the vector of
-  individual log-likelihoods, then have the logLik method sum them
+* General
 
 - [ ] Add comments to strat.r!
 
@@ -39,3 +11,19 @@
   cause hiccups; also, document this in na.action
 
 - [ ] Look at what Zelig does for making and plotting predicted probabilities
+
+- [ ] Change it so strat.r contains just the methods for strat objects, then add
+  strat3.r, strat4.r, and stratult.r for the model and predict functions
+
+
+* strat3
+
+- [ ] Fix the assignment of coefficients and calculation of vcov under
+  fixedUtils
+
+- [ ] Add an example to the "predict.strat3" function, preferably one using
+  predicted probabilities the way political scientists normally do
+
+- [ ] The variance terms that only enter the equation together cannot be
+  individually identified (e.g., v1 and v2 in the case of agent errors), so one
+  of them needs to be fixed to 1 or the like for identification

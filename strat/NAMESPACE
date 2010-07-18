@@ -1,2 +1,7 @@
 S3method(print, strat)
+S3method(summary, strat)
+S3method(coef, strat)
+S3method(vcov, strat)
+S3method(predict, strat3)
+export(latexTable)
 export(strat3)

@@ -6,7 +6,9 @@
 ### First demo of "strat" R package.
 ################################################################################
 
-source("../strat/R/strat.r")
+source("~/.strat/strat/R/strat.r")
+library(Formula)
+library(maxLik)
 
 ## make dataset with logit link and agent error
 n <- 1000

@@ -3,7 +3,7 @@
 \title{print summary}
 \usage{print.summary.strat(x, ...)
 }
-\description{<description>}
+\description{Print output from \code{summary.strat}}
 \details{Prints the standard regression results table from a fitted strategic model,
 along with the log-likelihood, AIC, and number of observations.}
 \value{\code{x}, invisibly.}
