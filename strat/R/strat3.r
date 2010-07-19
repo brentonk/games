@@ -65,7 +65,7 @@ actionsToOutcomes3 <- function(probs, log.p = TRUE)
 sbi3 <- function(y, regr, link)
 {
     ## have to do this because binomial() issues warning if it's not directly
-    ## passed a character string to its family argument
+    ## passed a character string to its link argument
     if (link == "probit") {
         fam <- binomial(link = "probit")
     } else {
@@ -75,15 +75,14 @@ sbi3 <- function(y, regr, link)
     Z2 <- regr$Z[y != 1, ]
     y2 <- as.numeric(y == 3)[y != 1]
     m2 <- glm.fit(Z2, y2, family = fam)
-    class(m2) <- "glm"
-    p4 <- as.numeric(regr$Z %*% coef(m2)) / sqrt(2)
+    p4 <- as.numeric(regr$Z %*% coef(m2))
     p4 <- if (link == "probit") pnorm(p4) else plogis(p4)
 
     X1 <- cbind(-regr$X1, (1 - p4) * regr$X3, p4 * regr$X4)
     y1 <- as.numeric(y != 1)
     m1 <- glm.fit(X1, y1, family = fam)
 
-    ans <- c(coef(m1), coef(m2))
+    ans <- sqrt(2) * c(coef(m1), coef(m2))
     return(ans)
 }
 
