@@ -82,7 +82,10 @@ summary(m3)
 
 
 ## formulas as list, outcome as numeric
-m4 <- strat3(list(y ~ x1 + x2, ~ x3, ~ x4 - 1, ~ z1 + z2), data = mcData, link
+m4 <- strat3(list(y ~ x1 + x2,
+                  ~ x3,
+                  ~ x4 - 1,
+                  ~ z1 + z2), data = mcData, link
              = "logit", type = "agent")
 print(m4)
 summary(m4)

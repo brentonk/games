@@ -19,10 +19,26 @@ NULL
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 print.strat <- function(x, ...)
 {
-    cat("\nCall:\n")
+    cat("\nA fitted strategic model\n\nCALL:\n\n")
     print(x$call)
-    cat("\nCoefficients:\n")
-    print(x$coef)
+    cat("\nCOEFFICIENTS:\n")
+
+    for (eq in x$equations) {
+        cf <- grep(eq, names(x$coefficients), fixed = TRUE)
+        cat("\n  ", prefixToString(eq), "\n", sep = "")
+        if (length(cf) > 0) {
+            cf <- x$coefficients[cf]
+            names(cf) <- sapply(strsplit(names(cf), paste(eq, ":", sep = ""),
+                                         fixed = TRUE), "[", -1)
+            names(cf) <- paste("     ", names(cf), sep = "")
+            cf <- data.frame(as.matrix(cf))
+            names(cf) <- " "
+            print(cf)
+        } else {
+            cat("\n    fixed to 0\n")
+        }
+    }
+    
     cat("\n")
     invisible(x)
 }
@@ -236,5 +252,56 @@ finiteProbs <- function(x)
     x <- replace(x, x < .Machine$double.eps, .Machine$double.eps)
     x <- replace(x, x > 1 - .Machine$double.neg.eps,
                  1 - .Machine$double.neg.eps)
+    return(x)
+}
+
+finitize <- function(x)
+{
+    x <- ifelse(is.finite(x), x, sign(x) * .Machine$double.xmax)
+    return(x)
+}
+
+checkFormulas <- function(f, argname = "formulas")
+{
+    if (inherits(f, "list")) {
+        f <- do.call(as.Formula, f)
+    } else if (inherits(f, "formula")) {
+        f <- as.Formula(f)
+    } else {
+        stop(argname, " must be a list of formulas or a formula")
+    }
+
+    return(f)
+}
+
+intersectAll <- function(...)
+{
+    x <- list(...)
+    ans <- x[[1]]
+    for (i in 1:length(x)) ans <- intersect(ans, x[[i]])
+
+    return(ans)
+}
+
+prefixToString <- function(x)
+{
+    first <- substr(x, 1, 1)
+    
+    if (first == "u") {
+        n <- 3
+        while (substr(x, n, n) != "(") n <- n + 1
+
+        player <- substr(x, 2, n - 1)
+        outcome <- substr(x, n + 1, nchar(x) - 1)
+
+        x <- paste("Player ", player, "'s utility for ", outcome, ":", sep = "")
+    } else if (first == "v" || first == "s") {
+        x <- paste("Standard dev. term ", substr(x, 2, nchar(x)), " (logged):",
+                   sep = "")
+    } else if (first == "R") {
+        x <- paste("Player ", substr(x, 2, nchar(x)), "'s reservation value:",
+                   sep = "")
+    }
+
     return(x)
 }

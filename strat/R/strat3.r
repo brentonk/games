@@ -51,17 +51,6 @@ predict.strat3 <- function(object, newdata, probs = c("outcome", "action"), ...)
     return(ans)
 }
 
-actionsToOutcomes3 <- function(probs, log.p = TRUE)
-{
-    probs <- do.call(cbind, probs)
-    ans <- cbind(log(probs[, 1]),
-                 log(probs[, 2]) + log(probs[, 3]),
-                 log(probs[, 2]) + log(probs[, 4]))
-
-    if (!log.p) ans <- exp(ans)
-    return(ans)
-}
-
 sbi3 <- function(y, regr, link)
 {
     ## have to do this because binomial() issues warning if it's not directly
@@ -128,7 +117,7 @@ makeProbs3 <- function(b, regr, link, type)
 
     ## length(utils$b) == 0 means no terms left for the variance components
     if (length(utils$b) == 0) {
-        sds <- list(1, 1, 1, 1)
+        sds <- as.list(rep(1, 4))
     } else {
         sds <- makeSDs3(utils$b, regr)
     }
@@ -153,10 +142,21 @@ makeProbs3 <- function(b, regr, link, type)
     return(list(p1 = p1, p2 = p2, p3 = p3, p4 = p4))
 }
 
-logLik3 <- function(b, y, regr, link, type)
+actionsToOutcomes3 <- function(probs, log.p = TRUE)
+{
+    probs <- do.call(cbind, probs)
+    ans <- cbind(log(probs[, 1]),
+                 log(probs[, 2]) + log(probs[, 3]),
+                 log(probs[, 2]) + log(probs[, 4]))
+
+    if (!log.p) ans <- exp(ans)
+    return(ans)
+}
+
+logLik3 <- function(b, y, regr, link, type, ...)
 {
     probs <- makeProbs3(b, regr, link, type)
-    logProbs <- actionsToOutcomes3(probs, log = TRUE)
+    logProbs <- actionsToOutcomes3(probs, log.p = TRUE)
     ans <- logProbs[cbind(1:nrow(logProbs), y)]
     return(ans)
 }
@@ -209,6 +209,33 @@ logLikGrad3 <- function(b, y, regr, link, type, ...)
     ans <- as.numeric(y == 1) * dL1 + as.numeric(y == 2) * dL3 +
         as.numeric(y == 3) * dL4
     return(ans)
+}
+
+makeResponse3 <- function(yf)
+{
+    if (length(dim(yf))) {              # response specified as dummies
+        Y <- yf
+        if (ncol(Y) > 2)
+            warning("only first two columns of response will be used")
+        
+        Y <- Y[, 1:2]
+        if (!identical(sort(unique(unlist(yf))), c(0, 1)))
+            stop("dummy responses must be dummy variables")
+        
+        y <- numeric(nrow(Y))
+        y[Y[, 1] == 0] <- 1
+        y[Y[, 1] == 1 & Y[, 2] == 0] <- 2
+        y[Y[, 1] == 1 & Y[, 2] == 1] <- 3
+        yf <- as.factor(y)
+        levels(yf) <- c(paste("~", names(Y)[1], sep = ""),
+                        paste(names(Y)[1], ",~", names(Y)[2], sep = ""),
+                        paste(names(Y)[1], ",", names(Y)[2], sep = ""))
+    } else {
+        yf <- as.factor(yf)
+        if (nlevels(yf) != 3) stop("dependent variable must have 3 values")
+    }
+
+    return(yf)
 }
 
 ##' Fits a strategic model with three terminal nodes, as in the game illustrated
@@ -327,13 +354,7 @@ strat3 <- function(formulas, data, subset, na.action,
     startvals <- match.arg(startvals)
 
     ## various sanity checks
-    if (inherits(formulas, "list")) {
-        formulas <- do.call(as.Formula, formulas)
-    } else if (inherits(formulas, "formula")) {
-        formulas <- as.Formula(formulas)
-    } else {
-        stop("formulas must be a list of formulas or a formula")
-    }
+    formulas <- checkFormulas(formulas)
 
     ## what to do with fixed utilities
     if (!is.null(fixedUtils)) {
@@ -356,11 +377,7 @@ strat3 <- function(formulas, data, subset, na.action,
 
     if (!missing(varformulas))
     {
-        if (inherits(varformulas, "list")) {
-            varformulas <- do.call(as.Formula, varformulas)
-        } else if (!inherits(varformulas, "formula")) {
-            stop("varformulas must be a list of formulas or a formula")
-        }
+        varformulas <- checkFormulas(varformulas)
         formulas <- as.Formula(formula(formulas), formula(varformulas))
     }
 
@@ -379,28 +396,8 @@ strat3 <- function(formulas, data, subset, na.action,
     mf <- eval(mf, parent.frame())
 
     yf <- model.part(formulas, mf, lhs = 1, drop = TRUE)
-    if (length(dim(yf))) {              # response specified as dummies
-        Y <- yf
-        if (ncol(Y) > 2)
-            warning("only first two columns of response will be used")
-        
-        Y <- Y[, 1:2]
-        if (!identical(sort(unique(unlist(yf))), c(0, 1)))
-            stop("dummy responses must be dummy variables")
-
-        y <- numeric(nrow(Y))
-        y[Y[, 1] == 0] <- 1
-        y[Y[, 1] == 1 & Y[, 2] == 0] <- 2
-        y[Y[, 1] == 1 & Y[, 2] == 1] <- 3
-        yf <- as.factor(y)
-        levels(yf) <- c(paste("~", names(Y)[1], sep = ""),
-                        paste(names(Y)[1], ",~", names(Y)[2], sep = ""),
-                        paste(names(Y)[1], ",", names(Y)[2], sep = ""))
-    } else {
-        yf <- as.factor(yf)
-        if (nlevels(yf) != 3) stop("dependent variable must have 3 values")
-        y <- as.numeric(yf)
-    }
+    yf <- makeResponse3(yf)
+    y <- as.numeric(yf)
 
     ## makes a list of the 4 (or 8, if variance formulas specified) matrices of
     ## regressors to be passed to estimation functions
@@ -467,6 +464,7 @@ strat3 <- function(formulas, data, subset, na.action,
     ans$type <- type
     ans$model <- mf
     ans$y <- yf
+    ans$equations <- prefixes[1:(length(formulas)[2])]
     class(ans) <- c("strat", "strat3")
     
     return(ans)

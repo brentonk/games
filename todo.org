@@ -8,22 +8,66 @@
 - [ ] Add comments to strat.r!
 
 - [ ] Make it so that NAs for unobserved cases in the dummy outcomes case don't
-  cause hiccups; also, document this in na.action
+      cause hiccups; also, document this in na.action
 
 - [ ] Look at what Zelig does for making and plotting predicted probabilities
 
-- [ ] Change it so strat.r contains just the methods for strat objects, then add
-  strat3.r, strat4.r, and stratult.r for the model and predict functions
+- [X] Change it so strat.r contains just the methods for strat objects, then add
+      strat3.r, strat4.r, and stratult.r for the model and predict functions
+
+- [ ] Informative names for variance terms (or is this obviated by new
+      ~print.strat~ behavior?)
+
+- [X] Change ~print.strat~ to give slightly saner output: something like "player
+      1's utility for [name]:", followed by list of coefficients
+
+- [ ] Fix ~latexTable~ and ~strat3~ documentation to use/mention new ~equations~
+      attribute
+
+- [ ] Fix latexTable to deal properly with variance terms in stratult
+
+- [ ] Fix ~summary.strat~ to deal properly with fixed variance terms and fixed
+      regressors --- this may require adding more stuff to the strat class
+
+- [ ] Issue warnings for nonconvergence
 
 
 * strat3
 
 - [ ] Fix the assignment of coefficients and calculation of vcov under
-  fixedUtils
+      fixedUtils
 
 - [ ] Add an example to the "predict.strat3" function, preferably one using
-  predicted probabilities the way political scientists normally do
+      predicted probabilities the way political scientists normally do
 
 - [ ] The variance terms that only enter the equation together cannot be
-  individually identified (e.g., v1 and v2 in the case of agent errors), so one
-  of them needs to be fixed to 1 or the like for identification
+      individually identified (e.g., v1 and v2 in the case of agent errors), so
+      one of them needs to be fixed to 1 or the like for identification
+
+
+* strat4
+
+- [ ] Write a ~predict.strat4~ method
+
+- [ ] Finish writing up the model fitting and output assignment in ~strat4~
+
+- [ ] Documentation!
+
+
+* stratult
+
+- [ ] Allow response to be one column when ~outcome~ isn't "both"; include
+      warning when two-column response is specified in that case
+
+- [ ] Figure out how to get starting values for acceptance
+
+- [ ] The gradient still seems a bit sketchy --- run Monte Carlos with a
+      substantial amount of zeroes and Qs in the dependent variable to make sure
+      everything is OK when using it
+
+- [ ] Fix how ~print.strat~ deals with the variance terms
+
+- [ ] Add indicator (to be printed with results) for when the only outcome being
+      considered is the offer (i.e., not acceptance)
+
+- [ ] Deal with starting values when acceptance is not supplied
