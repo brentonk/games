@@ -23,7 +23,7 @@ offerPDF <- function(y, maxOffer, fit1, fit2, s1, s2)
     return(ans)
 }
 
-logLikUlt <- function(b, y, acc, regr, maxOffer, outcome, ...)
+logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
 {
     s1 <- exp(b[length(b) - 1])
     s2 <- exp(b[length(b)])
@@ -44,12 +44,13 @@ logLikUlt <- function(b, y, acc, regr, maxOffer, outcome, ...)
     ans <- ifelse(y == maxOffer, highball,
                   ifelse(y == 0, lowball, interior))
     ans <- replace(ans, ans < .Machine$double.eps, .Machine$double.eps)
-    ## ans <- ans * finiteProbs(ifelse(acc == 1, prAccept, 1 - prAccept))
+    if (!offerOnly)
+        ans <- ans * finiteProbs(ifelse(acc == 1, prAccept, 1 - prAccept))
     ans <- log(ans)
     return(ans)
 }
 
-logLikGradUlt <- function(b, y, acc, regr, maxOffer, outcome, ...)
+logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
 {
     s1 <- exp(b[length(b) - 1])
     s2 <- exp(b[length(b)])
@@ -92,11 +93,34 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, outcome, ...)
     ans[y == 0, ] <- dF[y == 0, ]
     ans[y == maxOffer, ] <- d1mF[y == maxOffer, ]
 
+    if (!offerOnly) {
+        ey2ey <- exp((fit2 - y) / s2) / (1 + exp((fit2 - y) / s2))
+        
+        dPdb <- matrix(0L, nrow = nrow(regr$X), ncol = ncol(regr$X))
+        dPdg <- -ey2ey * regr$Z / s2
+        dPdlns1 <- 0L
+        dPdlns2 <- -ey2ey * (y - fit2) / s2
+
+        d1mPdb <- dPdb
+        d1mPdg <- regr$Z / s2 - dPdg
+        d1mPdlns1 <- 0L
+        d1mPdlns2 <- ((y - fit2) / s2) - dPdlns2
+
+        dAcc <- cbind(dPdb, dPdg, dPdlns1, dPdlns2)
+        dRej <- cbind(d1mPdb, d1mPdg, d1mPdlns1, d1mPdlns2)
+
+        ans2 <- dAcc
+        ans2[acc == 0, ] <- dRej[acc == 0, ]
+
+        ans <- ans + ans2
+    }
+
     return(ans)
 }
 
 stratult <- function(formulas, data, subset, na.action, maxOffer, s1 = NULL, s2
-                     = NULL, outcome = c("both", "offer"), ..., reltol = 1e-12)
+                     = NULL, outcome = c("both", "offer"), ..., usegrad = FALSE,
+                     reltol = 1e-12)
 {
     cl <- match.call()
 
@@ -120,7 +144,7 @@ stratult <- function(formulas, data, subset, na.action, maxOffer, s1 = NULL, s2
         y <- ya[, 1]
         a <- ya[, 2]
     } else {
-        if (!onlyOffer) {
+        if (!offerOnly) {
             stop("a dependent variable for acceptance must be specified if",
                  " `outcome == \"both\"`; see `?stratult`")
         }
@@ -157,37 +181,48 @@ stratult <- function(formulas, data, subset, na.action, maxOffer, s1 = NULL, s2
     if (!s1null) fixed <- c(fixed, length(sval) - 1)
     if (!s2null) fixed <- c(fixed, length(sval))
     if (length(fixed) == 0) fixed <- NULL
-    
+    fvec <- logical(length(sval))
+    fvec[fixed] <- TRUE
+    names(fvec) <- names(sval)
+
     ##results <- maxSANN(fn = logLikUlt, start = sval, y = y, acc = a, regr =
     ##                   regr, maxOffer = maxOffer, fixed = fixed, ...)
     results <- maxBFGS(fn = logLikUlt, grad = logLikGradUlt, start = sval, y =
                        y, acc = a, regr = regr, maxOffer = maxOffer, offerOnly =
                        offerOnly, fixed = fixed, reltol = reltol, ...)
+    if (results$code) {
+        warning("Model fitting did not converge\nMessage: ",
+                results$message)
+    }
 
     ans <- list()
     ans$coefficients <- results$estimate
     ans$vcov <- solve(-results$hessian)
-    ans$log.likelihood <- logLikUlt(results$estimate, y = y, acc = a, regr =
-                                    regr, maxOffer = maxOffer)
+    ans$log.likelihood <-
+        logLikUlt(results$estimate, y = y, acc = a, regr = regr, maxOffer =
+                  maxOffer, offerOnly = offerOnly)
     ans$call <- cl
+    ans$convergence <- list(code = results$code, message = results$message)
     ans$formulas <- formulas
     ans$link <- "logit"
     ans$model <- mf
     ans$y <- y
     ans$equations <- c("R1", "R2", "log(s1)", "log(s2)")
+    ans$fixed <- fvec
     class(ans) <- c("strat", "stratult")
 
     return(ans)
 }
 
-## m1 <- stratult(OffersP + accepts ~ USmaleS + RmaleS | 1, data = usrussia, maxOffer = 100, s2 = 1)
+m1 <- stratult(OffersP + accepts ~ USmaleS + RmaleS | 1, data = usrussia,
+               maxOffer = 100, s2 = 1, outcome = "offer")
 
 ## m2 <- stratult(OffersP + accepts ~ USmaleS + RmaleS + whiteS + SlavS + ScienceS
 ##                + BusS | 1, data = usrussia, maxOffer = 100, s2 = 1)
 
-m3 <- stratult(OffersP + accepts ~ US_round2 + US_round3 + US_round4 + US_round5
-               + Russia + russia_round2 + russia_round3 + russia_round4 +
-               russia_round5 + RmaleS + USmaleS | US_round2 + US_round3 +
-               US_round4 + US_round5 + Russia + russia_round2 + russia_round3 +
-               russia_round4 + russia_round5 + RmaleS + USmaleS, data =
-               usrussia, maxOffer = 100, s2 = 1, reltol = 1e-12)
+## m3 <- stratult(OffersP + accepts ~ US_round2 + US_round3 + US_round4 + US_round5
+##                + Russia + russia_round2 + russia_round3 + russia_round4 +
+##                russia_round5 + RmaleS + USmaleS | US_round2 + US_round3 +
+##                US_round4 + US_round5 + Russia + russia_round2 + russia_round3 +
+##                russia_round4 + russia_round5 + RmaleS + USmaleS, data =
+##                usrussia, maxOffer = 100, s2 = 1, reltol = 1e-12)

@@ -19,9 +19,13 @@ NULL
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 print.strat <- function(x, ...)
 {
+    oldx <- x
     cat("\nA fitted strategic model\n\nCALL:\n\n")
     print(x$call)
     cat("\nCOEFFICIENTS:\n")
+
+    names(x$coefficients)[x$fixed] <-
+        paste(names(x$coefficients)[x$fixed], "fixed to", sep = ":")
 
     for (eq in x$equations) {
         cf <- grep(eq, names(x$coefficients), fixed = TRUE)
@@ -30,6 +34,7 @@ print.strat <- function(x, ...)
             cf <- x$coefficients[cf]
             names(cf) <- sapply(strsplit(names(cf), paste(eq, ":", sep = ""),
                                          fixed = TRUE), "[", -1)
+            names(cf)[names(cf) == "character(0)"] <- "estimated as"
             names(cf) <- paste("     ", names(cf), sep = "")
             cf <- data.frame(as.matrix(cf))
             names(cf) <- " "
@@ -38,9 +43,14 @@ print.strat <- function(x, ...)
             cat("\n    fixed to 0\n")
         }
     }
+
+    if (x$convergence$code) {
+        cat("\nWarning: Model fitting did not converge\nMessage:",
+            x$convergence$message)
+    }
     
     cat("\n")
-    invisible(x)
+    invisible(oldx)
 }
 
 ##' The default method for summarizing a \code{strat} object.
@@ -59,8 +69,8 @@ print.strat <- function(x, ...)
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 summary.strat <- function(object, ...)
 {
-    cf <- object$coefficients
-    se <- sqrt(diag(object$vcov))
+    cf <- object$coefficients[!object$fixed]
+    se <- sqrt(diag(object$vcov[!object$fixed, !object$fixed, drop = FALSE]))
     zval <- cf / se
     pval <- 2 * pnorm(-abs(zval))
 
@@ -71,6 +81,8 @@ summary.strat <- function(object, ...)
     ans$call <- object$call
     ans$log.likelihood <- sum(object$log.likelihood)
     ans$nobs <- nrow(object$model)
+    ans$fixed.terms <- object$coefficients[object$fixed]
+    ans$convergence <- object$convergence
     class(ans) <- "summary.strat"
 
     return(ans)
@@ -94,9 +106,15 @@ print.summary.strat <- function(x, ...)
     print(x$call)
     cat("\nCoefficients:\n")
     printCoefmat(x$coefficients)
+    cat("\nFixed terms:\n")
+    print(x$fixed)
     cat("\nLog-likelihood:", x$log.likelihood)
     cat("\nAIC:", AIC(x))
     cat("\nNo. observations:", x$nobs, "\n\n")
+    if (x$convergence$code) {
+        cat("\nWarning: Model fitting did not converge\nMessage:",
+            x$convergence$message, "\n")
+    }
     invisible(x)
 }
 

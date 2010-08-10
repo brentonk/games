@@ -119,6 +119,82 @@ logLik4 <- function(b, y, regr, link, type, ...)
     return(ans)
 }
 
+logLikGrad4 <- function(b, y, regr, link, type, ...)
+{
+    u <- makeUtils4(b, regr)
+    p <- makeProbs4(b, regr, link, type)
+    rcols <- sapply(regr, ncol)
+    n <- nrow(regr$X1)
+
+    if (link == "probit" && type == "private") {
+        dp4db <- matrix(0L, nrow = n, ncol = sum(rcols[1:4]))
+        dp4dg2 <- dnorm(u$u22) * regr$Z2
+        dp4dg4 <- matrix(0L, nrow = n, ncol = rcols[6])
+        dp4 <- cbind(dp4db, dp4dg2, dp4dg4)
+        dp3 <- -dp4
+
+        dp6db <- dp4db
+        dp6dg2 <- matrix(0L, nrow = n, ncol = rcols[5])
+        dp6dg4 <- dnorm(u$u24) * regr$Z4
+        dp6 <- cbind(dp6db, dp6dg2, dp6dg4)
+        dp5 <- -dp6
+
+        num2 <- p$p5 * u$u13 + p$p6 * u$u14 - p$p3 * u$u11 - p$p4 * u$u12
+        denom2 <- sqrt(p$p3^2 + p$p4^2 + p$p5^2 + p$p6^2)
+        dn2 <- dnorm(num2 / denom2)
+        dp2db1 <- dn2 * (-p$p3) * regr$X1 / denom2
+        dp2db2 <- dn2 * (-p$p4) * regr$X2 / denom2
+        dp2db3 <- dn2 * p$p5 * regr$X3 / denom2
+        dp2db4 <- dn2 * p$p6 * regr$X4 / denom2
+        dp2dg2 <- dn2 * ((u$u11 - u$u12) * denom2 - num2 * (p$p4 - p$p3) / denom2)
+        dp2dg2 <- (dp2dg2 * dp4dg2) / denom2^2
+        dp2dg4 <- dn2 * ((u$u14 - u$u13) * denom2 - num2 * (p$p6 - p$p5) / denom2)
+        dp2dg4 <- (dp2dg4 * dp6dg4) / denom2^2
+        dp2 <- cbind(dp2db1, dp2db2, dp2db3, dp2db4, dp2dg2, dp2dg4)
+        dp1 <- -dp2
+    } else if (type == "agent") {
+        dlink <- switch(link,
+                        logit = dlogis,
+                        probit = dnorm)
+
+        dp4db <- matrix(0L, nrow = n, ncol = sum(rcols[1:4]))
+        dp4dg2 <- dlink(u$u22 / sqrt(2)) * regr$Z2 / sqrt(2)
+        dp4dg4 <- matrix(0L, nrow = n, ncol = rcols[6])
+        dp4 <- cbind(dp4db, dp4dg2, dp4dg4)
+        dp3 <- -dp4
+
+        dp6db <- dp4db
+        dp6dg2 <- matrix(0L, nrow = n, ncol = rcols[5])
+        dp6dg4 <- dlink(u$u24 / sqrt(2)) * regr$Z4 / sqrt(2)
+        dp6 <- cbind(dp6db, dp6dg2, dp6dg4)
+        dp5 <- -dp6
+
+        dn2 <- dlink((p$p5 * u$u13 + p$p6 * u$u14 - p$p3 * u$u11 - p$p4 * u$u12)
+                     / sqrt(2))
+        dp2db1 <- dn2 * (-p$p3 / sqrt(2)) * regr$X1
+        dp2db2 <- dn2 * (-p$p4 / sqrt(2)) * regr$X2
+        dp2db3 <- dn2 * (p$p5 / sqrt(2)) * regr$X3
+        dp2db4 <- dn2 * (p$p6 / sqrt(2)) * regr$X4
+        dp2dg2 <- dn2 * (u$u11 - u$u12) * dlink(u$u22 / sqrt(2)) * regr$Z2 / 2
+        dp2dg4 <- dn2 * (u$u14 - u$u13) * dlink(u$u24 / sqrt(2)) * regr$Z4 / 2
+        dp2 <- cbind(dp2db1, dp2db2, dp2db3, dp2db4, dp2dg2, dp2dg4)
+        dp1 <- -dp2
+    }
+
+    dL1 <- (1 / p$p1) * dp1 + (1 / p$p3) * dp3
+    dL2 <- (1 / p$p1) * dp1 + (1 / p$p4) * dp4
+    dL3 <- (1 / p$p2) * dp2 + (1 / p$p5) * dp5
+    dL4 <- (1 / p$p2) * dp2 + (1 / p$p6) * dp6
+
+    ans <- matrix(NA, nrow = n, ncol = sum(rcols[1:6]))
+    ans[y == 1, ] <- dL1[y == 1, ]
+    ans[y == 2, ] <- dL2[y == 2, ]
+    ans[y == 3, ] <- dL3[y == 3, ]
+    ans[y == 4, ] <- dL4[y == 4, ]
+
+    return(ans)
+}
+
 makeResponse4 <- function(yf)
 {
     if (length(dim(yf))) {

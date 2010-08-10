@@ -21,8 +21,8 @@
 - [X] Change ~print.strat~ to give slightly saner output: something like "player
       1's utility for [name]:", followed by list of coefficients
 
-- [ ] Fix ~latexTable~ and ~strat3~ documentation to use/mention new ~equations~
-      attribute
+- [ ] Fix ~latexTable~ and ~strat3~ documentation to use/mention new
+      ~equations~, ~convergence~, and ~fixed~ attributes
 
 - [ ] Fix latexTable to deal properly with variance terms in stratult
 
@@ -37,12 +37,17 @@
 - [ ] Fix the assignment of coefficients and calculation of vcov under
       fixedUtils
 
-- [ ] Add an example to the "predict.strat3" function, preferably one using
+- [ ] Add an example to the ~predict.strat3~ function, preferably one using
       predicted probabilities the way political scientists normally do
 
 - [ ] The variance terms that only enter the equation together cannot be
       individually identified (e.g., v1 and v2 in the case of agent errors), so
       one of them needs to be fixed to 1 or the like for identification
+
+- [ ] Add something so that you can fix variance terms to something other than 1
+      in ~strat3~?  This would be more consistent with behavior in ~stratult~
+
+- [ ] Add convergence attribute to ~strat3~
 
 
 * strat4
@@ -56,14 +61,14 @@
 
 * stratult
 
-- [ ] Allow response to be one column when ~outcome~ isn't "both"; include
+- [X] Allow response to be one column when ~outcome~ isn't "both"; include
       warning when two-column response is specified in that case
-
-- [ ] Figure out how to get starting values for acceptance
 
 - [ ] The gradient still seems a bit sketchy --- run Monte Carlos with a
       substantial amount of zeroes and Qs in the dependent variable to make sure
       everything is OK when using it
+
+- [ ] Change the gradient to use log(s2)
 
 - [ ] Fix how ~print.strat~ deals with the variance terms
 
