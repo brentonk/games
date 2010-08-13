@@ -1,12 +1,12 @@
 ##' @include strat.r
 NULL
 
-library(maxLik)
-library(Formula)
-library(foreign)
-usrussia <- read.dta("~/.strat/USRussia_Table4B.dta")
+## library(maxLik)
+## library(Formula)
+## library(foreign)
+## usrussia <- read.dta("~/.strat/USRussia_Table4B.dta")
 
-source("strat.r")
+## source("strat.r")
 
 offerCDF <- function(y, maxOffer, fit1, fit2, s1, s2)
 {
@@ -118,6 +118,35 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
     return(ans)
 }
 
+##' <description>
+##'
+##' \preformatted{
+##' .       ___ 1 ___
+##' .      /         \
+##' .     /           \
+##' .    / y \in [0,Q] \
+##' .   /               \
+##' .   -----------------
+##' .           /\  2
+##' .          /  \
+##' .         /    \
+##' .        /      \
+##' .     Q - y     R1
+##' .     y         R2}
+##' @title 
+##' @param formulas 
+##' @param data 
+##' @param subset 
+##' @param na.action 
+##' @param maxOffer 
+##' @param s1 
+##' @param s2 
+##' @param outcome 
+##' @param ... 
+##' @param usegrad 
+##' @param reltol 
+##' @return 
+##' @author Brenton Kenkel
 stratult <- function(formulas, data, subset, na.action, maxOffer, s1 = NULL, s2
                      = NULL, outcome = c("both", "offer"), ..., usegrad = FALSE,
                      reltol = 1e-12)
@@ -214,8 +243,8 @@ stratult <- function(formulas, data, subset, na.action, maxOffer, s1 = NULL, s2
     return(ans)
 }
 
-m1 <- stratult(OffersP + accepts ~ USmaleS + RmaleS | 1, data = usrussia,
-               maxOffer = 100, s2 = 1, outcome = "offer")
+## m1 <- stratult(OffersP + accepts ~ USmaleS + RmaleS | 1, data = usrussia,
+##                maxOffer = 100, s2 = 1, outcome = "offer")
 
 ## m2 <- stratult(OffersP + accepts ~ USmaleS + RmaleS + whiteS + SlavS + ScienceS
 ##                + BusS | 1, data = usrussia, maxOffer = 100, s2 = 1)

@@ -1,7 +1,7 @@
 ##' @include strat.r
 NULL
 
-##' Makes predicted probabilities from a model fit by \code{\link{strat3}}
+##' Makes predicted probabilities from a discrete strategic model
 ##'
 ##' This function uses a fitted strategic model to make predictions for a new
 ##' set of data.  Useful for cross-validating or for graphical analysis.
@@ -244,9 +244,10 @@ makeResponse3 <- function(yf)
 ##' The model corresponds to the following extensive-form game, described in
 ##' Signorino (2003):
 ##' \preformatted{
+##' .     1
 ##' .     /\
 ##' .    /  \
-##' .   /    \
+##' .   /    \ 2
 ##' .  u11   /\
 ##' .       /  \
 ##' .      /    \
@@ -329,8 +330,8 @@ makeResponse3 <- function(yf)
 ##' }
 ##' The second class of the returned object, \code{strat3}, is for use with the
 ##' \code{predict} method.
-##' @seealso \code{\link{summary.strat}}, \code{\link{Formula}},
-##' \code{\link{predict.strat3}}
+##' @seealso \code{\link{summary.strat}} and \code{\link{predict.strat3}} for
+##' postestimation analysis; \code{\link{Formula}} for formula specification
 ##' @export
 ##' @references Jeffrey B. Lewis and Kenneth A Schultz.  2003.
 ##' \dQuote{Revealing Preferences: Empirical Estimation of a Crisis Bargaining

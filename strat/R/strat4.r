@@ -1,6 +1,39 @@
 ##' @include strat.r
 NULL
 
+##' @S3method predict strat4
+predict.strat4 <- function(object, newdata, probs = c("outcome", "action"), ...)
+{
+    probs <- match.arg(probs)
+
+    if (missing(newdata))
+        newdata <- object$model
+
+    mf <- match(c("subset", "na.action"), names(object$call), 0L)
+    mf <- object$call[c(1L, mf)]
+    mf$formula <- object$formulas
+    mf$data <- newdata
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf <- eval(mf, parent.frame())
+
+    regr <- list()
+    for (i in seq_len(length(object$formulas)[2]))
+        regr[[i]] <- model.matrix(object$formulas, data = mf, rhs = i)
+
+    ans <- makeProbs4(object$coefficients, regr = regr, link = object$link, type
+                      = object$type)
+    ans <- do.call(cbind, ans)
+
+    if (probs == "outcome") {
+        ans <- data.frame(actionsToOutcomes4(ans, log.p = FALSE))
+        names(ans) <- paste("Pr(", levels(object$y), ")", sep = "")
+    }
+
+    ans <- as.data.frame(ans)
+    return(ans)
+}
+
 sbi4 <- function(y, regr, link)
 {
     if (link == "probit") {
@@ -9,15 +42,15 @@ sbi4 <- function(y, regr, link)
         fam <- binomial(link = "logit")
     }
 
-    ZL <- regr$Z2[y == 1 | y == 2, ]
+    ZL <- regr$Z2[y == 1 | y == 2, , drop = FALSE]
     yL <- as.numeric(y == 2)[y == 1 | y == 2]
-    mL <- glm.fit(ZL, yL, family = fam)
+    mL <- suppressWarnings(glm.fit(ZL, yL, family = fam))
     p2 <- as.numeric(regr$Z2 %*% coef(mL))
     p2 <- if (link == "probit") pnorm(p2) else plogis(p2)
 
-    ZR <- regr$Z4[y == 3 | y == 4]
+    ZR <- regr$Z4[y == 3 | y == 4, , drop = FALSE]
     yR <- as.numeric(y == 4)[y == 3 | y == 4]
-    mR <- glm.fit(ZR, yR, family = fam)
+    mR <- suppressWarnings(glm.fit(ZR, yR, family = fam))
     p4 <- as.numeric(regr$Z4 %*% coef(mR))
     p4 <- if (link == "probit") pnorm(p4) else plogis(p4)
 
@@ -69,7 +102,7 @@ makeSDs4 <- function(b, regr)
 makeProbs4 <- function(b, regr, link, type)
 {
     private <- type == "private"
-    
+
     utils <- makeUtils4(b, regr)
 
     if (length(utils$b) == 0) {
@@ -217,7 +250,7 @@ makeResponse4 <- function(yf)
         } else {
             ylevs <- c(paste("~", names(Y)[1], ",~", names(Y)[2], sep = ""),
                        paste("~", names(Y)[1], ",", names(Y)[2], sep = ""),
-                       paste(names(Y)[1], ",~", names(Y)[2], sep = "")
+                       paste(names(Y)[1], ",~", names(Y)[2], sep = ""),
                        paste(names(Y)[1], ",", names(Y)[2], sep = ""))
         }
 
@@ -237,6 +270,31 @@ makeResponse4 <- function(yf)
     return(yf)
 }
 
+##' <description>
+##'
+##' \preformatted{
+##' .        ___ 1 ___
+##' .       /         \
+##' .      /           \
+##' .   2 /             \ 2
+##' .    / \           / \
+##' .   /   \         /   \
+##' .  /     \       /     \
+##' . u11    u12    u13    u14
+##' . 0      u22    0      u24}
+##' @title 
+##' @param formulas 
+##' @param data 
+##' @param subset 
+##' @param na.action 
+##' @param varformulas 
+##' @param fixedUtils 
+##' @param link 
+##' @param type 
+##' @param startvals 
+##' @param ... 
+##' @return 
+##' @author Brenton Kenkel
 strat4 <- function(formulas, data, subset, na.action,
                    varformulas,
                    fixedUtils = NULL,
@@ -332,5 +390,25 @@ strat4 <- function(formulas, data, subset, na.action,
     }
     names(sval) <- unlist(varNames)
 
+    gr <- if (missing(varformulas)) logLikGrad4 else NULL
+
     ## TODO: the actual model fitting!
+    results <- maxBFGS(fn = logLik4, grad = gr, start = sval, y = y, regr =
+                       regr, link = link, type = type, ...)
+    ans <- list()
+    ans$coefficients <- results$estimate
+    ans$vcov <- solve(-results$hessian)
+    ans$log.likelihood <-
+        logLik4(results$estimate, y = y, regr = regr, link = link, type = type)
+    ans$call <- cl
+    ans$convergence <- list(code = results$code, message = results$message)
+    ans$formulas <- formulas
+    ans$link <- link
+    ans$model <- mf
+    ans$y <- y
+    ans$equations <- prefixes[1:length(formulas)[2]]
+    ans$fixed <- rep(FALSE, length(sval))  ## fix this!
+    class(ans) <- c("strat", "strat4")
+
+    return(ans)
 }

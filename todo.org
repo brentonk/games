@@ -5,7 +5,8 @@
 
 * General
 
-- [ ] Add comments to strat.r!
+- [ ] Add comments all over the place!  Curt wants this stuff to be maintainable
+      by non-me people in the future
 
 - [ ] Make it so that NAs for unobserved cases in the dummy outcomes case don't
       cause hiccups; also, document this in na.action
@@ -24,12 +25,29 @@
 - [ ] Fix ~latexTable~ and ~strat3~ documentation to use/mention new
       ~equations~, ~convergence~, and ~fixed~ attributes
 
-- [ ] Fix latexTable to deal properly with variance terms in stratult
+- [ ] Fix ~latexTable~ to deal properly with variance terms in stratult -- or to
+      deal with ~stratult~ objects at *all*
 
 - [ ] Fix ~summary.strat~ to deal properly with fixed variance terms and fixed
       regressors --- this may require adding more stuff to the strat class
 
 - [ ] Issue warnings for nonconvergence
+
+- [ ] Change ~strat3~ and ~strat4~ so that terms set to 0 have standard
+      deviations of 0?  (maybe ask Curt about this)
+
+- [ ] Need more examples!
+
+- [ ] Make sure the ~predict~ functions actually work with new data (especially
+      watch out for weird environment issues in the model frame creation)
+
+- [ ] Check code for commented-out things and other extraneous crap
+
+- [ ] Code for bootstrapping!
+
+- [ ] Add code to ~predict~ functions that deals properly with levels of factor
+      variables (which will be important in the predicted probability stuff) ---
+      may want to look into using the "dataClasses" attribute of terms object
 
 
 * strat3
@@ -52,11 +70,13 @@
 
 * strat4
 
-- [ ] Write a ~predict.strat4~ method
+- [X] Write a ~predict.strat4~ method
 
-- [ ] Finish writing up the model fitting and output assignment in ~strat4~
+- [X] Finish writing up the model fitting and output assignment in ~strat4~
 
 - [ ] Documentation!
+
+- [X] Suppress warnings for glm fitting in ~sbi4~
 
 
 * stratult
@@ -76,3 +96,5 @@
       considered is the offer (i.e., not acceptance)
 
 - [ ] Deal with starting values when acceptance is not supplied
+
+- [ ] Write a ~predict.stratult~ method

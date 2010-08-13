@@ -40,7 +40,7 @@ print.strat <- function(x, ...)
             names(cf) <- " "
             print(cf)
         } else {
-            cat("\n    fixed to 0\n")
+            cat("\n     fixed to 0\n")
         }
     }
 
@@ -106,8 +106,10 @@ print.summary.strat <- function(x, ...)
     print(x$call)
     cat("\nCoefficients:\n")
     printCoefmat(x$coefficients)
-    cat("\nFixed terms:\n")
-    print(x$fixed)
+    if (length(x$fixed.terms)) {
+        cat("\nFixed terms:\n")
+        print(x$fixed)
+    }
     cat("\nLog-likelihood:", x$log.likelihood)
     cat("\nAIC:", AIC(x))
     cat("\nNo. observations:", x$nobs, "\n\n")
@@ -214,7 +216,7 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2),
     cf <- format(cf, digits = digits, trim = TRUE)
     if (math.style.negative)
         cf <- sub("-", "$-$", cf)
-    
+
     eqNames <- unique(sapply(strsplit(n, ":"), '[', 1))
     varNames <- sapply(sapply(strsplit(n, ":"), '[', -1), paste, collapse = ":")
     varNames <- unique(varNames)
@@ -265,6 +267,8 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2),
     invisible(x)
 }
 
+## Ensures that estimated probabilities aren't numerically equal to 1 or 0, in
+## order to ensure no -Infs or 0s in log-likelihoods
 finiteProbs <- function(x)
 {
     x <- replace(x, x < .Machine$double.eps, .Machine$double.eps)
@@ -279,6 +283,9 @@ finitize <- function(x)
     return(x)
 }
 
+## Used to ensure that the "formulas" argument of each fitting function contains
+## a valid type of object and coerces it to "Formula" class.  Returns an error
+## if the function isn't a formula, Formula, or list of formulas.
 checkFormulas <- function(f, argname = "formulas")
 {
     if (inherits(f, "list")) {
@@ -292,6 +299,7 @@ checkFormulas <- function(f, argname = "formulas")
     return(f)
 }
 
+## Takes a list of vectors and finds their intersection
 intersectAll <- function(...)
 {
     x <- list(...)
@@ -322,4 +330,24 @@ prefixToString <- function(x)
     }
 
     return(x)
+}
+
+makeProfile <- function(x, ...)
+{
+    cl <- match.call(expand.dots = FALSE)
+
+    ## TODO: get means, etc
+    ## to get mode of y: y[rev(order(table(y)))[1]]
+
+    if ("..." %in% names(cl)) {
+        dots <- eval(substitute(list(...)), x)
+    }
+
+    ## also need to double-check that if, for example, we specify
+    ## `factorVariable = "b"` in ..., that all the levels of factorVariable are
+    ## preserved (though perhaps not, if the predict methods are already making
+    ## that kind of check -- just need to make sure it's done in a way that will
+    ## catch errors)
+    
+    return(dots)
 }
