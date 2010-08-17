@@ -68,8 +68,10 @@ summary(m1)
 
 ## formulas all together, outcome as factor (notice that the levels of the
 ## factor are used as names in the output)
-m2 <- strat3(yf ~ x1 + x2 | x3 | x4 - 1 | z1 + z2, data = mcData, link =
-             "logit", type = "agent")
+system.time({
+m2 <- strat12(yf ~ x1 + x2 | x3 | x4 - 1 | z1 + z2, data = mcData, link =
+             "logit", type = "agent", boot = 5)
+})
 print(m2)
 summary(m2)
 

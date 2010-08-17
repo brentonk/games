@@ -50,7 +50,7 @@
       may want to look into using the "dataClasses" attribute of terms object
 
 
-* strat3
+* strat12
 
 - [ ] Fix the assignment of coefficients and calculation of vcov under
       fixedUtils
@@ -67,8 +67,10 @@
 
 - [ ] Add convergence attribute to ~strat3~
 
+- [ ] Rewrite gradient function along lines of others
 
-* strat4
+
+* strat122
 
 - [X] Write a ~predict.strat4~ method
 
@@ -78,8 +80,10 @@
 
 - [X] Suppress warnings for glm fitting in ~sbi4~
 
+- [ ] Add fixed utilities and bootstrapping
 
-* stratult
+
+* ultimatum
 
 - [X] Allow response to be one column when ~outcome~ isn't "both"; include
       warning when two-column response is specified in that case
@@ -95,6 +99,7 @@
 - [ ] Add indicator (to be printed with results) for when the only outcome being
       considered is the offer (i.e., not acceptance)
 
-- [ ] Deal with starting values when acceptance is not supplied
+- [ ] Deal with starting values (and the value of the variable "a") when
+      acceptance is not supplied
 
 - [ ] Write a ~predict.stratult~ method

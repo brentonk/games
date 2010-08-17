@@ -7,6 +7,6 @@ Maintainer: Brenton Kenkel <brenton.kenkel@gmail.com>
 Description: Provides estimation and analysis functions for
     discrete-choice strategic models.
 License: GPL (>= 2)
-Depends: Formula (>= 0.2-0), maxLik
+Depends: Formula (>= 0.2-0), maxLik, MASS
 LazyLoad: yes
 Collate: 'strat.r' 'strat3.r'
