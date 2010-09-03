@@ -11,7 +11,7 @@
 - [ ] Make it so that NAs for unobserved cases in the dummy outcomes case don't
       cause hiccups; also, document this in na.action
 
-- [ ] Look at what Zelig does for making and plotting predicted probabilities
+- [X] Look at what Zelig does for making and plotting predicted probabilities
 
 - [X] Change it so strat.r contains just the methods for strat objects, then add
       strat3.r, strat4.r, and stratult.r for the model and predict functions
@@ -28,6 +28,11 @@
 - [ ] Fix ~latexTable~ to deal properly with variance terms in stratult -- or to
       deal with ~stratult~ objects at *all*
 
+    - For dealing with log(s2) and the like, the best thing might be to add a
+      "hasColon" attribute to the "equations" slot, then have latexTable (and
+      also possibly print.strat?) read that to know to put it at the bottom of
+      the table
+
 - [ ] Fix ~summary.strat~ to deal properly with fixed variance terms and fixed
       regressors --- this may require adding more stuff to the strat class
 
@@ -43,17 +48,24 @@
 
 - [ ] Check code for commented-out things and other extraneous crap
 
-- [ ] Code for bootstrapping!
+- [X] Code for bootstrapping!
 
-- [ ] Add code to ~predict~ functions that deals properly with levels of factor
+- [X] Add code to ~predict~ functions that deals properly with levels of factor
       variables (which will be important in the predicted probability stuff) ---
       may want to look into using the "dataClasses" attribute of terms object
+
+- [ ] Fix LatexTable to have useboot option
+
+- [ ] Include ~varformulas~ in application of ~predict~ methods?  Or is that
+      already done implicitly?
 
 
 * strat12
 
 - [ ] Fix the assignment of coefficients and calculation of vcov under
       fixedUtils
+
+- [ ] Check for length of fixedUtils
 
 - [ ] Add an example to the ~predict.strat3~ function, preferably one using
       predicted probabilities the way political scientists normally do

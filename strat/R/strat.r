@@ -24,31 +24,33 @@ print.strat <- function(x, ...)
     print(x$call)
     cat("\nCOEFFICIENTS:\n")
 
-    names(x$coefficients)[x$fixed] <-
-        paste(names(x$coefficients)[x$fixed], "fixed to", sep = ":")
-
-    for (eq in x$equations) {
+    for (i in seq_along(x$equations)) {
+        eq <- x$equations[i]
+        hc <- attr(x$equations, "hasColon")[i]
         cf <- grep(eq, names(x$coefficients), fixed = TRUE)
+
         cat("\n  ", prefixToString(eq), "\n", sep = "")
         if (length(cf) > 0) {
+            isFixed <- all(x$fixed[cf])
             cf <- x$coefficients[cf]
 
-            ## this strips out the equation prefix in each term; e.g.,
-            ## "u1(war):x1" becomes "x1"
-            names(cf) <- sapply(strsplit(names(cf), paste(eq, ":", sep = ""),
-                                         fixed = TRUE), "[", -1)
-
-            ## this is a hack for the estimated variance terms in `stratult`;
-            ## the strsplit code just above returns character(0) in these cases
-            ## since the names of these ("log(s1)", "log(s2)") don't contain a
-            ## colon
-            names(cf)[names(cf) == "character(0)"] <- "estimated as"
+            if (hc) {
+                ## this strips out the equation prefix in each term; e.g.,
+                ## "u1(war):x1" becomes "x1"
+                names(cf) <- sapply(strsplit(names(cf),
+                                             paste(eq, ":", sep = ""),
+                                             fixed = TRUE), "[", -1)
+            } else {  ## i.e., the term is estimated itself, without regressors
+                names(cf) <- if (isFixed) "fixed to" else "estimated as"
+            }
             
             names(cf) <- paste("     ", names(cf), sep = "")
             cf <- data.frame(as.matrix(cf))
             names(cf) <- " "
             print(cf)
         } else {
+            ## this is for cases when there is a utility equation with no terms
+            ## estimated
             cat("\n     fixed to 0\n")
         }
     }
@@ -188,6 +190,25 @@ logLik.summary.strat <- function(object, ...)
     return(ans)
 }
 
+##
+## Converts a character vector for use in LaTeX by inserting escape sequences
+## where appropriate.  Not comprehensive, but should catch most common
+## problems.
+## 
+latexEsc <- function(x)
+{
+    x <- gsub("{", "\\{", x, fixed = TRUE)
+    x <- gsub("}", "\\}", x, fixed = TRUE)
+    x <- gsub("_", "\\_", x, fixed = TRUE)
+    x <- gsub("#", "\\#", x, fixed = TRUE)
+    x <- gsub("$", "\\$", x, fixed = TRUE)
+    x <- gsub("%", "\\%", x, fixed = TRUE)
+    x <- gsub("^", "\\^", x, fixed = TRUE)
+    x <- gsub("&", "\\&", x, fixed = TRUE)
+    x <- gsub("~", "\\textasciitilde{}", x, fixed = TRUE)
+    return(x)
+}
+
 ##' Makes a LaTeX table of strategic model results.
 ##'
 ##' \code{latexTable} prints LaTeX code for the presentation of results from a
@@ -203,44 +224,43 @@ logLik.summary.strat <- function(object, ...)
 ##' The \code{digits} option does not yet work seamlessly; you may have to
 ##' resort to trial and error.
 ##' @title LaTeX table for strategic models
-##' @param x a fitted model of class \code{strat}
-##' @param digits number of digits to print
+##' @param x a fitted model of class \code{strat}.
+##' @param digits number of digits to print.
+##' @param scientific logical or integer value to control use of scientific
+##' notation.  See \code{\link{format}}.
 ##' @param blankfill text to fill empty cells (those where a certain variable
-##' did not enter the given equation)
+##' did not enter the given equation).
 ##' @param math.style.negative whether negative signs should be "math style" or
-##' plain hyphens.  Defaults to \code{TRUE}
+##' plain hyphens.  Defaults to \code{TRUE}.
 ##' @param file file to save the output in.  Defaults to \code{""}, which prints
-##' the table to the R console
+##' the table to the R console.
 ##' @param floatplace where to place the table float; e.g., for
-##' \code{\\begin\{table\}[htp]}, use \code{floatplace = "htp"}
-##' @param rowsep amount of space (in points) to put between rows
-##' @return \code{x}, invisibly
+##' \code{\\begin\{table\}[htp]}, use \code{floatplace = "htp"}.
+##' @param rowsep amount of space (in points) to put between rows.
+##' @return \code{x}, invisibly.
 ##' @export
 ##' @references Curtis S. Signorino and Ahmer Tarar.  2006.  \dQuote{A Unified
 ##' Theory and Test of Extended Immediate Deterrence.}  \emph{American Journal
 ##' of Political Science} 50(3):586--605.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-latexTable <- function(x, digits = max(3, getOption("digits") - 2),
-                       blankfill = "", math.style.negative = TRUE,
-                       file = "", floatplace = "htbp", rowsep = 2)
+latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
+                       NA, blankfill = "", math.style.negative = TRUE, file =
+                       "", floatplace = "htbp", rowsep = 2)
 {
-    ## TODO: use `equations` attribute of strat objects instead
-    if (any(grepl(":", levels(x$y)))) {
-        warning("names of outcomes (", paste(levels(x$y), collapse = ", "),
-                ") contain colons; undefined behavior may result")
-    }
-    
     lcat <- function(...) cat(..., file = file, sep = "", append = TRUE)
 
     n <- names(coef(x))
     cf <- summary(x)$coefficients[, 1:2]
-    cf <- format(cf, digits = digits, trim = TRUE)
+    cf <- rbind(cf, c(sum(x$log.likelihood), 0))
+    cf <- format(cf, digits = digits, trim = TRUE, scientific = scientific)
     if (math.style.negative)
-        cf <- sub("-", "$-$", cf)
+        cf <- gsub("-", "$-$", cf)
 
-    eqNames <- unique(sapply(strsplit(n, ":"), '[', 1))
+    eqNames <- x$equations[attr(x$equations, "hasColon")]
     varNames <- sapply(sapply(strsplit(n, ":"), '[', -1), paste, collapse = ":")
-    varNames <- unique(varNames)
+    varNames <- unique(varNames[nchar(varNames) > 0])
+    otherNames <- x$equations[!attr(x$equations, "hasColon") &
+                              x$equations %in% n[!x$fixed]]
 
     lcat("\n%% latex table generated in R ", as.character(getRversion()),
          " by strat package\n")
@@ -251,11 +271,11 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2),
     lcat("\\begin{tabular}{",
          paste(c("l", rep("c", length(eqNames))), collapse = ""), "}\n")
     lcat("\\hline\n")
-    lcat(paste(c("", eqNames), collapse = " & "), " \\\\\n")
+    lcat(paste(c("", latexEsc(eqNames)), collapse = " & "), " \\\\\n")
     lcat("\\hline\n")
 
     for (i in varNames) {
-        lcat("\\multirow{2}{*}{", i, "} & ")
+        lcat("\\multirow{2}{*}{", latexEsc(i), "} & ")
         for (J in 1:length(eqNames)) {
             j <- eqNames[J]
             ji <- paste(j, i, sep = ":")
@@ -280,7 +300,19 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2),
 
     }
 
+    if (length(otherNames) > 0) {
+        lcat("\\hline\n")
+        for (i in otherNames) {
+            lcat("\\multirow{2}{*}{", i, "} & ", cf[i, 1], " \\\\\n & (",
+                 cf[i, 2], ") \\\\[", rowsep, "pt]\n")
+        }
+    }
+
+    lcat("\\hline \\hline\n")
+    lcat("Log-likelihood & ", cf[nrow(cf), 1], " \\\\\n $N$ & ",
+         nrow(x$model), "\\\\\n")
     lcat("\\hline\n")
+    
     lcat("\\end{tabular}\n")
     lcat("\\end{center}\n")
     lcat("\\end{table}\n")
@@ -335,6 +367,33 @@ intersectAll <- function(...)
 }
 
 ##
+## Makes the names of the variables for strat12 and strat122
+## 
+makeVarNames <- function(varNames, prefixes, link, sdterms)
+{
+    vname <- if (link == "logit") "log(lambda" else "log(sigma"
+    if (sdterms == 1) {
+        prefixes <- c(prefixes, paste(vname, ")", sep = ""))
+    } else if (sdterms == 2) {
+        prefixes <- c(prefixes, paste(vname, 1:2, ")", sep = ""))
+    }
+
+    hasColon <- sapply(varNames, function(x) length(x) > 0 &&
+                       !all(x == "(Intercept)"))
+    names(hasColon) <- prefixes
+    for (i in seq_len(length(formulas)[2])) {
+        if (hasColon[i]) {
+            varNames[[i]] <- paste(prefixes[i], varNames[[i]], sep = ":")
+        } else {
+            varNames[[i]] <- prefixes[i][length(varNames[[i]])]
+        }
+    }
+    varNames <- unlist(varNames)
+    ans <- list(varNames = varNames, hasColon = hasColon)
+    return(ans)
+}
+
+##
 ## Takes an equation prefix from a strategic model (e.g., "u1(war)") and
 ## translates it into plain English (e.g., "Player 1's utility for war")
 ##
@@ -350,9 +409,14 @@ prefixToString <- function(x)
         outcome <- substr(x, n + 1, nchar(x) - 1)
 
         x <- paste("Player ", player, "'s utility for ", outcome, ":", sep = "")
-    } else if (first == "v" || first == "s") {
-        x <- paste("Standard dev. term ", substr(x, 2, nchar(x)), " (logged):",
-                   sep = "")
+    } else if (first == "l") {
+        player <- substr(x, nchar(x) - 1, nchar(x) - 1)
+        if (player == "1" || player == "2") {
+            x <- paste("Logged standard deviation for player ", player, ":", sep
+                       = "")
+        } else {
+            x <- "Logged standard deviation:"
+        }
     } else if (first == "R") {
         x <- paste("Player ", substr(x, 2, nchar(x)), "'s reservation value:",
                    sep = "")
@@ -361,46 +425,86 @@ prefixToString <- function(x)
     return(x)
 }
 
+##
+## Gets the variance-covariance matrix from a fitted model, including a
+## procedure for catching the error (and returning a matrix of NAs) in case the
+## Hessian is non-invertible
+##
+getStratVcov <- function(hessian, fixed)
+{
+    hes <- hessian[!fixed, !fixed]
+    vv <- tryCatch(solve(-hes), error = function(e) e)
+    if (inherits(vv, "error")) {
+        warning("variance-covariance matrix could not be calculated: ",
+                vv$message)
+        vv <- matrix(NA, nrow(hes), nrow(hes))
+    }
+    ans <- hessian
+    ans[] <- NA
+    ans[!fixed, !fixed] <- vv
+    return(ans)
+}
+
+##
+## Returns a matrix of bootstrap results from an estimated strategic model
+## 
+stratBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
+                      fixed, ...)
+{
+    bootMatrix <- matrix(NA, nrow = boot, ncol = length(estimate))
+    failedBoot <- logical(boot)
+    if (report) {
+        cat("\nRunning bootstrap iterations...\n")
+        pb <- txtProgressBar(min = 1, max = boot)
+    }
+    for (i in seq_len(boot)) {
+        bootSamp <- sample(seq_len(length(y)), replace = TRUE)
+        newy <- y[bootSamp]
+        newa <- a[bootSamp]  ## for the ultimatum model
+        newregr <- lapply(regr, function(x) x[bootSamp, , drop = FALSE])
+        bootResults <- maxBFGS(fn = fn, grad = gr, start = estimate, fixed =
+                               fixed, y = newy, acc = newa, regr = newregr, ...)
+        if (bootResults$code) {
+            warning("bootstrap iteration ", i,
+                      "failed to converge and will be removed")
+            failedBoot[i] <- TRUE
+        }
+        bootMatrix[i, ] <- bootResults$estimate
+
+        if (report)
+            setTxtProgressBar(pb, i)
+    }
+    if (report)
+        cat("\n")
+    bootMatrix <- bootMatrix[!failedBoot, , drop = FALSE]
+    colnames(bootMatrix) <- names(estimate)
+    return(bootMatrix)
+}
+
 ##' <description>
 ##'
-##' <details>
-##' @title Mode of a vector
-##' @param x A vector of class \code{numeric}, \code{logical}, \code{character},
-##' \code{factor}, or \code{ordered}
-##' @return The mode of \code{x}, in a vector of the same class
-##' @export
-##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-Mode <- function(x)
+##' \url{http://rwiki.sciviews.org/doku.php?id=tips:stats-basic:modalvalue}
+##' @title 
+##' @param x 
+##' @param na.rm 
+##' @return 
+##' @author R Wiki contributors
+Mode <- function(x, na.rm = FALSE)
 {
-    makechar <- is.character(x)
-    if (makechar)
-        x <- as.factor(x)
-
-    makenum <- is.numeric(x)
-    if (makenum)
-        x <- as.factor(x)
-
-    makelog <- is.logical(x)
-
-    xtab <- table(x)
-    ans <- which(xtab == max(xtab))
-    if (length(ans) > 1) {
-        warning("multiple modes: ", paste(names(ans), collapse = ", "),
-                "; ", names(ans)[1], " will be used")
-        ans <- ans[1]
+    x <- unlist(x);
+    if (na.rm)
+        x <- x[!is.na(x)]
+    u <- unique(x);
+    n <- length(u);
+    frequencies <- rep(0, n);
+    for (i in seq_len(n)) {
+        if (is.na(u[i])) {
+            frequencies[i] <- sum(is.na(x))
+        } else {
+            frequencies[i] <- sum(x == u[i], na.rm = TRUE)
+        }
     }
-    ans <- x[x == names(ans)][1]
-    
-    if (makenum)
-        ans <- as.numeric(as.character(ans))
-
-    if (makelog)
-        ans <- as.logical(ans)
-
-    if (makechar)
-        ans <- as.character(ans)
-
-    return(ans)
+    return(u[which.max(frequencies)])
 }
 
 ##
@@ -492,7 +596,7 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
     if (report)
         cat("\n")
 
-    q <- (1 - ci) / 2
+    q <- .5 - (ci / 2)
     lows <- lapply(ans, function(x) apply(x, 2, quantile, probs = q))
     lows <- do.call(cbind, lows)
     highs <- lapply(ans, function(x) apply(x, 2, quantile, probs = 1 - q))
@@ -504,7 +608,7 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
     return(list(lows = lows, highs = highs))
 }
 
-predProbs <- function(x, model, xlim = c(min(x), max(x)), n = 100, ci = .95,
+predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
                       makePlots = TRUE, report = TRUE, ...)
 {
     xc <- charmatch(x, names(model$model))
@@ -582,6 +686,8 @@ predProbs <- function(x, model, xlim = c(min(x), max(x)), n = 100, ci = .95,
     attr(ans, "xcol") <- xcol
     class(ans) <- c("stratpp", "data.frame")
 
+    if (makePlots)
+        plot(ans)
     invisible(ans)
 }
 
