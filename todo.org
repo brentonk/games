@@ -22,7 +22,7 @@
 - [X] Change ~print.strat~ to give slightly saner output: something like "player
       1's utility for [name]:", followed by list of coefficients
 
-- [ ] Fix ~latexTable~ and ~strat3~ documentation to use/mention new
+- [X] Fix ~latexTable~ and ~strat3~ documentation to use/mention new
       ~equations~, ~convergence~, and ~fixed~ attributes
 
 - [X] Fix ~latexTable~ to deal properly with variance terms in stratult -- or to

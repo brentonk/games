@@ -179,24 +179,37 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' \code{\link{strat12}}.
 ##' @title Statistical ultimatum game
 ##' @param formulas e
-##' @param data e
-##' @param subset e
-##' @param na.action e
-##' @param maxOffer numeric: the highest offer Player 1 could feasibly make
+##' @param data data frame containing the variables in the model.
+##' @param subset optional logical expression specifying which observations from
+##' \code{data} to use in fitting.
+##' @param na.action how to deal with \code{NA}s in \code{data}.  Defaults to
+##' the \code{na.action} setting of \code{\link{options}}.  See
+##' \code{\link{na.omit}}.
+##' @param maxOffer numeric: the highest offer Player 1 could feasibly make.
 ##' @param offertol numeric: offers within \code{offertol} of \code{maxOffer}
 ##' will be considered to be at the maximum.  If \code{maxOffer} and all
 ##' observed offers are integer-valued, the value of \code{offertol} should not
 ##' matter.
-##' @param s1 e
-##' @param s2 e
-##' @param outcome e
-##' @param boot e
-##' @param bootreport e
+##' @param s1 numeric: scale parameter for Player 1.  If \code{NULL} (the
+##' default), the parameter will be estimated.
+##' @param s2 numeric: scale parameter for Player 2.  If \code{NULL} (the
+##' default), the parameter will be estimated.
+##' @param outcome the outcome of interest: just Player 1's offer
+##' (\dQuote{offer}) or both the offer and its acceptance (\dQuote{both}).  If
+##' \dQuote{offer} is chosen, then estimates for variables in Player 2's
+##' reservation value equation should be interpreted as Player 1's expectations
+##' about those parameters.  See \dQuote{Details} for more.
+##' @param boot integer: number of bootstrap iterations to perform (if any).
+##' @param bootreport logical: whether to print status bar when performing
+##' bootstrap iterations.
 ##' @param ... other arguments to pass to the fitting function (see
-##' \code{\link{maxBFGS}})
+##' \code{\link{maxBFGS}}).
 ##' @param reltol numeric: relative convergence tolerance level (see
 ##' \code{\link{optim}}).  Use of values higher than the default is discouraged.
-##' @return fitted model
+##' @return An object of class \code{c("strat", "ultimatum")}.  For details on
+##' the \code{strat} class, see \code{\link{strat12}}.  The \code{ultimatum}
+##' class is just for use in the generation of predicted values (see
+##' \code{\link{predProbs}}).
 ##' @export
 ##' @references Kristopher W. Ramsay and Curtis S. Signorino.  2009.  \dQuote{A
 ##' Statistical Model of the Ultimatum Game.}  Available online at

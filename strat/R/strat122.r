@@ -110,17 +110,23 @@ makeUtils122 <- function(b, regr)
     return(utils)
 }
 
-makeSDs122 <- function(b, regr)
+makeSDs122 <- function(b, regr, type)
 {
     sds <- vector("list", 6)
-
     rcols <- sapply(regr, ncol)
-    for (i in 1:6) {
-        if (rcols[i+6] > 0) {
-            sds[[i]] <- exp(as.numeric(regr[[i+6]] %*% b[1:rcols[i+6]]))
-            b <- b[-(1:rcols[i+6])]
+
+    if (length(rcols) == 7) {  ## sdByPlayer == FALSE
+        v <- exp(as.numeric(regr[[7]] %*% b))
+        for (i in 1:6) sds[[i]] <- v
+    } else {
+        v1 <- exp(as.numeric(regr[[7]] %*% b[1:rcols[7]]))
+        v2 <- exp(as.numeric(regr[[8]] %*% b[(rcols[7]+1):length(b)]))
+        if (type == "agent") {
+            sds[[1]] <- sds[[2]] <- v1
+            sds[[3]] <- sds[[4]] <- sds[[5]] <- sds[[6]] <- v2
         } else {
-            sds[[i]] <- rep(1, nrow(regr[[i+6]]))
+            sds[[1]] <- sds[[2]] <- sds[[3]] <- sds[[4]] <- v1
+            sds[[5]] <- sds[[6]] <- v2
         }
     }
 
@@ -136,7 +142,7 @@ makeProbs122 <- function(b, regr, link, type)
     if (length(utils$b) == 0) {
         sds <- as.list(rep(1, 6))
     } else {
-        sds <- makeSDs122(utils$b, regr)
+        sds <- makeSDs122(utils$b, regr, type)
     }
 
     linkfcn <- switch(link,
@@ -301,6 +307,7 @@ makeResponse122 <- function(yf)
 ##' Fits a strategic model with four terminal nodes, as in the game illustrated
 ##' below in \dQuote{Details}.
 ##'
+##' The model corresponds to the following extensive-form game:
 ##' \preformatted{
 ##' .        ___ 1 ___
 ##' .       /         \
@@ -312,9 +319,9 @@ makeResponse122 <- function(yf)
 ##' . u11    u12    u13    u14
 ##' . 0      u22    0      u24}
 ##'
-##' See \code{\link{strat12}} for details about the specification of the
-##' right-hand side of \code{formulas} (the only difference here being that
-##' there must be six equations, not four).
+##' For additional details on any of the function arguments or options, see
+##' \code{\link{strat12}}.  The only difference is that the right-hand side of
+##' \code{formulas} must have six components (rather than four) in this case.
 ##' @title Strategic model with 4 terminal nodes
 ##' @param formulas a list of six formulas, or a \code{Formula} object with six
 ##' right-hand sides.  See \dQuote{Details} and \dQuote{Examples}.
@@ -333,8 +340,12 @@ makeResponse122 <- function(yf)
 ##' @param fixedUtils numeric vector of values to fix for u11, u12, u13, u14,
 ##' u22, and u24.  \code{NULL} (the default) indicates that these should be
 ##' estimated with regressors, not fixed.
-##' @param sdformula ef
-##' @param sdByPlayer wef
+##' @param sdformula an optional list of formulas or a \code{\link{Formula}}
+##' containing a regression equation for the scale parameter.  See
+##' \code{\link{strat12}} for details.
+##' @param sdByPlayer logical: if scale parameters are being estimated (i.e.,
+##' \code{sdformula} or \code{fixedUtils} is non-\code{NULL}), should a separate
+##' one be estimated for each player?
 ##' @param boot integer: number of bootstrap iterations to perform (if any).
 ##' @param bootreport logical: whether to print status bar during bootstrapping.
 ##' @param ... other arguments to pass to the fitting function (see
@@ -358,6 +369,22 @@ makeResponse122 <- function(yf)
 ##' fr2 <- update(Formula(fr1), a1 + a2 ~ .)
 ##' m2 <- strat122(fr2, data = sim122)
 ##' summary(m2)
+##'
+##' ## estimation of scale parameters
+##' fr3 <- y ~ x1 | x2 | 0 | x3 | z1 | z2
+##' m3 <- strat122(fr3, data = sim122, sdformula = ~ x4 + z3)
+##' summary(m3)
+##'
+##' m4 <- strat122(fr3, data = sim122, sdformula = ~ x4 + x5 | z3, sdByPlayer = TRUE)
+##' summary(m4)
+##'
+##' ## fixed utilities
+##' utils <- c(0.5, -0.5, 0, 0.5, 1, -1)
+##' m5 <- strat122(y ~ 1, data = sim122, fixedUtils = utils)
+##' summary(m5)
+##'
+##' m6 <- strat122(y ~ 1, data = sim122, fixedUtils = utils, sdByPlayer = TRUE)
+##' summary(m6)
 strat122 <- function(formulas, data, subset, na.action,
                      link = c("probit", "logit"),
                      type = c("agent", "private"),
@@ -384,6 +411,8 @@ strat122 <- function(formulas, data, subset, na.action,
             warning("only the first 6 elements of fixedUtils will be used")
             fixedUtils <- fixedUtils[1:6]
         }
+
+        formulas <- update(formulas, . ~ 1 | 1 | 1 | 1 | 1 | 1)
 
         if (startvals == "sbi")
             startvals <- "zero"
@@ -443,7 +472,7 @@ strat122 <- function(formulas, data, subset, na.action,
     }
 
     ## identification check
-    varNames <- sapply(regr, colnames)
+    varNames <- lapply(regr, colnames)
     idCheck <- do.call(intersectAll, varNames[1:4])
     if (is.null(fixedUtils) && length(idCheck) > 0) {
         stop("Identification problem: the following variables appear in all four of player 1's utility equations: ",

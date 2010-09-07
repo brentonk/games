@@ -112,7 +112,7 @@ makeSDs12 <- function(b, regr, type)
     sds <- vector("list", 4)
     rcols <- sapply(regr, ncol)
 
-    if (length(rcols) == 5) {  ## i.e., sdByPlayer == FALSE
+    if (length(rcols) == 5) {  ## sdByPlayer == FALSE
         v <- exp(as.numeric(regr[[5]] %*% b))
         for (i in 1:4) sds[[i]] <- v
     } else {
@@ -121,7 +121,7 @@ makeSDs12 <- function(b, regr, type)
         if (type == "agent") {
             sds[[1]] <- sds[[2]] <- v1
             sds[[3]] <- sds[[4]] <- v2
-        } else if (type == "private") {
+        } else {
             sds[[1]] <- sds[[2]] <- sds[[3]] <- v1
             sds[[4]] <- v2
         }
@@ -316,12 +316,22 @@ makeResponse12 <- function(yf)
 ##' when using indicators variables is, for example, \code{y1 + y2 ~ x1 + x2 | 0
 ##' | x3 | z}.
 ##'
-##' (talk about lambda, sigma, fixedutils, etc)
+##' If \code{fixedUtils} or \code{sdformula} is specified, the estimated
+##' parameters will include terms labeled \code{log(sigma)} (for probit links)
+##' or \code{log(lambda)}.  These are the scale parameters of the stochastic
+##' components of the players' utility.  If \code{sdByPlayer} is \code{FALSE},
+##' then the variance of error terms (or the equation describing it, if
+##' \code{sdformula} contains non-constant regressors) is assumed to be common
+##' across all players.  If \code{sdByPlayer} is \code{TRUE}, then two variances
+##' (or equations) are estimated: one for each player.  For more on the
+##' interpretation of the scale parameters in these models and how it differs
+##' between the agent error and private information models, see Signorino
+##' (2003).
 ##' @title Strategic model with 3 terminal nodes
-##' @param formulas a list of four formulas, or a \code{Formula} object with
-##' four right-hand sides.  See \dQuote{Details} and \dQuote{Examples}.
-##' @param data a data frame.
-##' @param subset an optional logical vector specifying which observations from
+##' @param formulas a list of four formulas, or a \code{\link{Formula}} object
+##' with four right-hand sides.  See \dQuote{Details} and the examples below.
+##' @param data a data frame containing the variables in the model.
+##' @param subset optional logical expression specifying which observations from
 ##' \code{data} to use in fitting.
 ##' @param na.action how to deal with \code{NA}s in \code{data}.  Defaults to
 ##' the \code{na.action} setting of \code{\link{options}}.  See
@@ -335,8 +345,15 @@ makeResponse12 <- function(yf)
 ##' @param fixedUtils numeric vector of values to fix for u11, u13, u14, and u24
 ##' respectively.  \code{NULL} (the default) indicates that these should be
 ##' estimated with regressors rather than fixed.
-##' @param sdformula qef
-##' @param sdByPlayer qef
+##' @param sdformula an optional list of formulas or a \code{\link{Formula}}
+##' containing a regression equation for the scale parameter.  The formula(s)
+##' should have nothing on the left-hand side; the right-hand side should have
+##' one equation if \code{sdByPlayer} is \code{FALSE} and two equations if
+##' \code{sdByPlayer} is \code{TRUE}.  See the examples below for how to specify
+##' \code{sdformula}.
+##' @param sdByPlayer logical: if scale parameters are being estimated (i.e.,
+##' \code{sdformula} or \code{fixedUtils} is non-\code{NULL}), should a separate
+##' one be estimated for each player?
 ##' @param boot integer: number of bootstrap iterations to perform (if any).
 ##' @param bootreport logical: whether to print status bar when performing
 ##' bootstrap iterations.
@@ -344,20 +361,30 @@ makeResponse12 <- function(yf)
 ##' \code{\link{maxBFGS}}).
 ##' @return An object of class \code{c("strat", "strat12")}. A
 ##' \code{strat} object is a list containing: \describe{
-##' \item{\code{coefficients}}{estimated parameters of the model}
-##' \item{\code{vcov}}{estimated variance-covariance matrix}
+##' \item{\code{coefficients}}{estimated parameters of the model.}
+##' \item{\code{vcov}}{estimated variance-covariance matrix.  Cells referring to
+##' a fixed parameter (e.g., a utility when \code{fixedUtils} is specified) will
+##' contain \code{NA}s.}
 ##' \item{\code{log.likelihood}}{vector of individual log likelihoods (left
-##' unsummed for use with non-nested model tests)}
-##' \item{\code{call}}{the call used to produce the model}
+##' unsummed for use with non-nested model tests).}
+##' \item{\code{call}}{the call used to produce the model.}
+##' \item{\code{convergence}}{a list containing the convergence code and message
+##' returned by \code{\link{maxBFGS}}.}
 ##' \item{\code{formulas}}{the final \code{Formula} object passed to
-##' \code{model.frame}}
-##' \item{\code{link}}{the link function used}
-##' \item{\code{type}}{the stochastic structure used}
-##' \item{\code{model}}{the model frame containing all variables used in fitting}
-##' \item{\code{y}}{the dependent variable, represented as a factor}
+##' \code{model.frame} (including anything specified for the scale parameters).}
+##' \item{\code{link}}{the specified link function.}
+##' \item{\code{type}}{the specified stochastic structure.}
+##' \item{\code{model}}{the model frame containing all variables used in fitting.}
+##' \item{\code{y}}{the dependent variable, represented as a factor.}
+##' \item{\code{equations}}{names of each separate equation (e.g.,
+##' \dQuote{u1(sq)}, \dQuote{u1(cap)}, etc.).}
+##' \item{\code{fixed}}{logical vector specifying which parameter values, if
+##' any, were fixed in the estimation procedure.}
+##' \item{\code{boot.matrix}}{if \code{boot} was non-zero, a matrix of bootstrap
+##' parameter estimates (otherwise \code{NULL}).}
 ##' }
-##' The second class of the returned object, \code{strat12}, is for use with the
-##' \code{predict} method.
+##' The second class of the returned object, \code{strat12}, is for use in
+##' generation of predicted probabilities.
 ##' @seealso \code{\link{summary.strat}} and \code{predProbs} for
 ##' postestimation analysis; \code{\link{Formula}} for formula specification.
 ##' @export
@@ -380,25 +407,37 @@ makeResponse12 <- function(yf)
 ##' summary(m1)
 ##' 
 ##' m2 <- strat12(f1, data = war1800, link = "logit")
+##' summary(m2)
+##' 
 ##' m3 <- strat12(f1, data = war1800, subset = year >= 1850)
+##' summary(m3)
+##'
 ##' m4 <- strat12(f1, data = war1800, boot = 10)
+##' summary(m4)
+##' summary(m4, useboot = FALSE)
 ##'
 ##' ## estimating scale parameters under fixed utilities
 ##' utils <- c(-1, 0, -1.4, 0.1)
 ##' m5 <- strat12(esc + war ~ 1, data = war1800, fixedUtils = utils)
+##' summary(m5)
+##' 
 ##' m6 <- strat12(esc + war ~ 1, data = war1800, fixedUtils = utils, sdByPlayer = TRUE)
 ##' summary(m6)
 ##' 
 ##' ## estimating scale parameters with regressors
 ##' m7 <- strat12(f1, data = war1800, sdformula = ~ balanc)
-##'
+##' summary(m7)
+##' 
+##' m8 <- strat12(f1, data = war1800, sdformula = ~ balanc | revis2, sdByPlayer = TRUE)
+##' summary(m8)
+##' 
 ##' ## using a factor outcome
 ##' y <- ifelse(war1800$esc == 1, ifelse(war1800$war == 1, "war", "cap"), "sq")
 ##' war1800$y <- as.factor(y)
 ##' f2 <- update(Formula(f1), y ~ .)
 ##' 
-##' m8 <- strat12(f2, data = war1800)
-##' summary(m8)
+##' m9 <- strat12(f2, data = war1800)
+##' summary(m9)
 strat12 <- function(formulas, data, subset, na.action,
                     link = c("probit", "logit"),
                     type = c("agent", "private"),
@@ -428,7 +467,7 @@ strat12 <- function(formulas, data, subset, na.action,
             warning("only the first 4 elements of fixedUtils will be used")
             fixedUtils <- fixedUtils[1:4]
         }
-        
+
         formulas <- update(formulas, . ~ 1 | 1 | 1 | 1)
 
         if (startvals == "sbi")
@@ -492,7 +531,7 @@ strat12 <- function(formulas, data, subset, na.action,
     }
 
     ## identification check
-    varNames <- sapply(regr, colnames)
+    varNames <- lapply(regr, colnames)
     idCheck <- (varNames[[1]] %in% varNames[[2]])
     idCheck <- idCheck & (varNames[[1]] %in% varNames[[3]])
     if (is.null(fixedUtils) && any(idCheck)) {
