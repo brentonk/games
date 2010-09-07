@@ -1,5 +1,3 @@
-.. -*- mode: org; -*-
-
 #+TITLE: Strategic Models in R
 #+AUTHOR: Brenton Kenkel
 #+EMAIL: brenton.kenkel@gmail.com
