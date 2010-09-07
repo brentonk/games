@@ -7,15 +7,77 @@
 ##' in Discrete Choice Models.}  \emph{Political Analysis} 11:316--344.
 NULL
 
+##' Dataset of militarized international disputes between 1816 and 1899.
+##'
+##' The dataset is taken from the Correlates of War project.  The unit of
+##' observation is the dyad-year, and the variables are: \describe{
+##' \item{\code{ccode1}}{Initiator's COW country code}
+##' \item{\code{ccode2}}{Respondent's COW country code}
+##' \item{\code{year}}{Year of dispute}
+##' \item{\code{cap_1}}{Initiator's military capabilities (as percent of total
+##' system capabilities)}
+##' \item{\code{cap_2}}{Respondent's military capabilities (as percent of total
+##' system capabilities)}
+##' \item{\code{balanc}}{Balance of dyadic capabilities possessed by the
+##' initiator (i.e., \code{cap_1 / (cap_1 + cap_2)})}
+##' \item{\code{s_wt_re1}}{Dyadic S-score (see Signorino and Ritter 1998),
+##' weighted by initiator's region}
+##' \item{\code{s_wt_re2}}{Dyadic S-score, weighted by respondent's region}
+##' \item{\code{dem1}}{Initiator's Polity score}
+##' \item{\code{dem2}}{Respondent's Polity score}
+##' \item{\code{distance}}{Distance (in miles) between initiator and respondent}
+##' \item{\code{peaceyrs}}{Years since last dispute in this dyad}
+##' \item{\code{midnum}}{Dispute's number in the MID data set}
+##' \item{\code{revis1}}{Whether the initiator had \dQuote{revisionist} aims}
+##' \item{code{revis2}}{Whether the respondent had \dQuote{revisionist} aims}
+##' \item{\code{sq}}{Indicator for status quo outcome}
+##' \item{\code{capit}}{Indicator for capitulation outcome}
+##' \item{\code{war}}{Indicator for war outcome}
+##' \item{\code{esc}}{Indicator for escalation (i.e., either capitulation or war
+##' occurs)}
+##' \item{\code{regime1}}{Initiator's regime type (calculated from \code{dem1})}
+##' \item{\code{regime2}}{Respondent's regime type (calculated from \code{dem2})}
+##' }
+##' @name war1800
+##' @usage war1800
+##' @title 19th-century international disputes
+##' @docType data
+##' @references Daniel M. Jones, Stuart A. Bremer and J. David Singer.  1996.
+##' \dQuote{Militarized Interstate Disputes, 1816-1992: Rationale, Coding Rules,
+##' and Empirical Patterns.} \emph{Conflict Management and Peace Science}
+##' 15(2): 163--213.
+##' @seealso \code{\link{strat12}}
+##' @keywords data
+NULL
+
+##' Simulated data for illustrating \code{\link{strat122}}
+##'
+##' The variables are: \describe{
+##' \item{\code{f1}, \code{f2}}{Factors with levels \dQuote{a}, \dQuote{b},
+##' \dQuote{c}}
+##' \item{\code{x1}--\code{x5}}{Numeric variables entering Player 1's utilities}
+##' \item{\code{z1}--\code{z3}}{Numeric variables entering Player 2's utilities}
+##' \item{\code{a1}}{Indicator for Player 1's move (L or R)}
+##' \item{\code{a2}}{Indicator for Player 2's move (L or R)}
+##' \item{\code{y}}{Factor containing outcome}
+##' }
+##' @name sim122
+##' @usage sim122
+##' @title Simulated strat122 data
+##' @docType data
+##' @seealso \code{\link{strat122}}
+##' @keywords data
+NULL
+
 ##' The default method for printing a \code{strat} object.
 ##'
 ##' Prints the call and coefficients of a fitted strategic model.
 ##' @title Print a strategic model object
-##' @method print strat
 ##' @param x a fitted model of class \code{strat}
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly
 ##' @S3method print strat
+##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 print.strat <- function(x, ...)
 {
@@ -70,7 +132,6 @@ print.strat <- function(x, ...)
 ##' Normally used interactively, in conjunction with
 ##' \code{\link{print.summary.strat}}.
 ##' @title Summarize a strategic model object
-##' @method summary strat
 ##' @S3method summary strat
 ##' @param object a fitted model of class \code{strat}
 ##' @param useboot logical: use bootstrap estimates (if present) to construct
@@ -79,6 +140,7 @@ print.strat <- function(x, ...)
 ##' @return an object of class \code{summary.strat}, containing the coefficient
 ##' matrix and other information needed for printing
 ##' @seealso \code{\link{print.summary.strat}}
+##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 summary.strat <- function(object, useboot = TRUE, ...)
 {
@@ -110,12 +172,12 @@ summary.strat <- function(object, useboot = TRUE, ...)
 ##' Prints the standard regression results table from a fitted strategic model,
 ##' along with the log-likelihood, AIC, and number of observations.
 ##' @title Print strategic model summary
-##' @method print summary.strat
 ##' @S3method print summary.strat
 ##' @param x an object of class \code{summary.strat}, typically produced by
 ##'running \code{summary} on a fitted model of class \code{strat}
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly.
+##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 print.summary.strat <- function(x, ...)
 {
@@ -142,31 +204,11 @@ print.summary.strat <- function(x, ...)
     invisible(x)
 }
 
-##' Get coefficients from a strategic model
-##'
-##' Extracts the coefficient vector from a fitted model of class \code{strat}.
-##' @title Coefficients of a strategic model object
-##' @method coef strat
-##' @S3method coef strat
-##' @param object a fitted model of class \code{strat}
-##' @param ... other arguments, currently ignored
-##' @return numeric vector containing coefficients
-##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 coef.strat <- function(object, ...)
 {
     object$coefficients
 }
 
-##' Get covariance matrix from a strategic model
-##'
-##' Extracts the covariance matrix from a fitted model of class \code{strat}.
-##' @title Covariance matrix of a strategic model object
-##' @method vcov strat
-##' @S3method vcov strat
-##' @param object a fitted model of class \code{strat}
-##' @param ... other arguments, currently ignored
-##' @return covariance matrix
-##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 vcov.strat <- function(object, ...)
 {
     object$vcov
@@ -188,6 +230,11 @@ logLik.summary.strat <- function(object, ...)
     attr(ans, "nobs") <- object$nobs
     class(ans) <- "logLik"
     return(ans)
+}
+
+predict.strat <- function(object, ...)
+{
+    NextMethod("predict", object, ...)
 }
 
 ##
@@ -214,11 +261,11 @@ latexEsc <- function(x)
 ##' \code{latexTable} prints LaTeX code for the presentation of results from a
 ##' strategic model.  Each row contains one regressor, and each column contains
 ##' one of the utility (or variance term) equations in the model.  For example,
-##' in a model fit with \code{\link{strat3}}, the four columns will be u11, u13,
-##' u14, and u24 respectively.  Each cell contains the estimated parameter, atop
-##' its standard error in parentheses.  Cells that are empty because a regressor
-##' is not included in a particular equation are filled with the string
-##' specified in the option \code{blankfill}.  Signorino and Tarar (2003,
+##' in a model fit with \code{\link{strat12}}, the four columns will be u11,
+##' u13, u14, and u24 respectively.  Each cell contains the estimated parameter,
+##' atop its standard error in parentheses.  Cells that are empty because a
+##' regressor is not included in a particular equation are filled with the
+##' string specified in the option \code{blankfill}.  Signorino and Tarar (2003,
 ##' p. 593) contains a table of this variety.
 ##' 
 ##' The \code{digits} option does not yet work seamlessly; you may have to
@@ -237,20 +284,31 @@ latexEsc <- function(x)
 ##' @param floatplace where to place the table float; e.g., for
 ##' \code{\\begin\{table\}[htp]}, use \code{floatplace = "htp"}.
 ##' @param rowsep amount of space (in points) to put between rows.
+##' @param useboot logical: use bootstrap estimates (if available) to get
+##' standard errors?
 ##' @return \code{x}, invisibly.
 ##' @export
 ##' @references Curtis S. Signorino and Ahmer Tarar.  2006.  \dQuote{A Unified
 ##' Theory and Test of Extended Immediate Deterrence.}  \emph{American Journal
 ##' of Political Science} 50(3):586--605.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @examples
+##' data(war1800)
+##' f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | balanc + revis1 | balanc
+##' m1 <- strat12(f1, data = war1800)
+##'
+##' latexTable(m1)
+##' latexTable(m1, digits = 8)
+##' latexTable(m1, blankfill = "--")  ## dashes in blank cells
+##' \dontrun{latexTable(m1, file = "my_table.tex")  ## write to file}
 latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
                        NA, blankfill = "", math.style.negative = TRUE, file =
-                       "", floatplace = "htbp", rowsep = 2)
+                       "", floatplace = "htbp", rowsep = 2, useboot = TRUE)
 {
     lcat <- function(...) cat(..., file = file, sep = "", append = TRUE)
 
     n <- names(coef(x))
-    cf <- summary(x)$coefficients[, 1:2]
+    cf <- summary(x, useboot = useboot)$coefficients[, 1:2]
     cf <- rbind(cf, c(sum(x$log.likelihood), 0))
     cf <- format(cf, digits = digits, trim = TRUE, scientific = scientific)
     if (math.style.negative)
@@ -320,8 +378,10 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
     invisible(x)
 }
 
+##
 ## Ensures that estimated probabilities aren't numerically equal to 1 or 0, in
-## order to ensure no -Infs or 0s in log-likelihoods
+## order to ensure no -Infs or 0s in log-likelihoods.
+##
 finiteProbs <- function(x)
 {
     x <- replace(x, x < .Machine$double.eps, .Machine$double.eps)
@@ -367,7 +427,7 @@ intersectAll <- function(...)
 }
 
 ##
-## Makes the names of the variables for strat12 and strat122
+## Makes the names of the variables for strat12 and strat122 models.
 ## 
 makeVarNames <- function(varNames, prefixes, link, sdterms)
 {
@@ -381,7 +441,7 @@ makeVarNames <- function(varNames, prefixes, link, sdterms)
     hasColon <- sapply(varNames, function(x) length(x) > 0 &&
                        !all(x == "(Intercept)"))
     names(hasColon) <- prefixes
-    for (i in seq_len(length(formulas)[2])) {
+    for (i in seq_along(varNames)) {
         if (hasColon[i]) {
             varNames[[i]] <- paste(prefixes[i], varNames[[i]], sep = ":")
         } else {
@@ -395,7 +455,7 @@ makeVarNames <- function(varNames, prefixes, link, sdterms)
 
 ##
 ## Takes an equation prefix from a strategic model (e.g., "u1(war)") and
-## translates it into plain English (e.g., "Player 1's utility for war")
+## translates it into plain English (e.g., "Player 1's utility for war").
 ##
 prefixToString <- function(x)
 {
@@ -412,10 +472,10 @@ prefixToString <- function(x)
     } else if (first == "l") {
         player <- substr(x, nchar(x) - 1, nchar(x) - 1)
         if (player == "1" || player == "2") {
-            x <- paste("Logged standard deviation for player ", player, ":", sep
+            x <- paste("Logged scale parameter for player ", player, ":", sep
                        = "")
         } else {
-            x <- "Logged standard deviation:"
+            x <- "Logged scale parameter:"
         }
     } else if (first == "R") {
         x <- paste("Player ", substr(x, 2, nchar(x)), "'s reservation value:",
@@ -428,11 +488,11 @@ prefixToString <- function(x)
 ##
 ## Gets the variance-covariance matrix from a fitted model, including a
 ## procedure for catching the error (and returning a matrix of NAs) in case the
-## Hessian is non-invertible
+## Hessian is non-invertible.
 ##
 getStratVcov <- function(hessian, fixed)
 {
-    hes <- hessian[!fixed, !fixed]
+    hes <- hessian[!fixed, !fixed, drop = FALSE]
     vv <- tryCatch(solve(-hes), error = function(e) e)
     if (inherits(vv, "error")) {
         warning("variance-covariance matrix could not be calculated: ",
@@ -446,7 +506,7 @@ getStratVcov <- function(hessian, fixed)
 }
 
 ##
-## Returns a matrix of bootstrap results from an estimated strategic model
+## Gets bootstrap results for a strategic model.
 ## 
 stratBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
                       fixed, ...)
@@ -481,14 +541,30 @@ stratBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
     return(bootMatrix)
 }
 
-##' <description>
+##' Gets the modal value of a vector of any class.
 ##'
-##' \url{http://rwiki.sciviews.org/doku.php?id=tips:stats-basic:modalvalue}
-##' @title 
-##' @param x 
-##' @param na.rm 
-##' @return 
+##' Based on code from the R wiki:
+##' \url{http://rwiki.sciviews.org/doku.php?id=tips:stats-basic:modalvalue}.
+##' @title Mode of a vector
+##' @param x a vector (lists and arrays will be flattened).
+##' @param na.rm logical: strip \code{NA} values?
+##' @return The value of \code{x} that occurs most often.  If there is a tie,
+##' the one that appears first (among those tied) is chosen.
+##' @export
 ##' @author R Wiki contributors
+##' @examples
+##' x <- c(1, 3, 3, 4)
+##' Mode(x)  ## 3
+##' x.char <- letters[x]
+##' Mode(x.char)  ## "c"
+##' x.factor <- as.factor(x.char)
+##' Mode(x.factor)  ## "c", with levels "a", "c", "d"
+##' x.logical <- x > 3
+##' Mode(x.logical)  ## FALSE
+##'
+##' ## behavior with ties
+##' y <- c(3, 3, 1, 1, 2)
+##' Mode(y)  ## 3
 Mode <- function(x, na.rm = FALSE)
 {
     x <- unlist(x);
@@ -532,8 +608,8 @@ makeProfile <- function(x, ...)
             ans[, i] <- median(xvar)
         } else if (isDummy) {
             if (sum(xvar == 0) == sum(xvar == 1)) {
-                warning(names(x)[i], " has equal number of 0s and 1s; ",
-                        "defaulting to 1")
+                warning(names(x)[i],
+                        " has equal number of 0s and 1s; defaulting to 1")
                 ans[, i] <- 1
             }
         } else {
@@ -571,6 +647,10 @@ makeProfile <- function(x, ...)
     return(ans)
 }
 
+##
+## Makes bootstrap confidence intervals for predicted probabilities from a
+## fitted strategic model.
+## 
 CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
 {
     n <- nrow(x$boot.matrix)
@@ -608,8 +688,42 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
     return(list(lows = lows, highs = highs))
 }
 
+##' Easy generation and plotting of predicted probabilities from a fitted
+##' strategic model.
+##'
+##' (give general discussion)
+##'
+##' (talk about making a profile)
+##'
+##' (talk about plotting)
+##' @title User-friendly predicted probability analysis
+##' @param model a fitted model of class \code{strat}.
+##' @param x character string giving the name of the variable to place
+##' \dQuote{on the x-axis} while all others are held constant.  Partial matches
+##' are accepted.
+##' @param xlim numeric, length 2: the range that \code{x} should be varied over
+##' (if \code{x} is continuous).  Defaults to the observed range of \code{x}.
+##' @param n integer: the number of observations to generate (if \code{x} is
+##' continuous).
+##' @param ci numeric: width of the confidence interval to estimate around each
+##' predicted probability.  Set to \code{0} to estimate no confidence intervals.
+##' @param makePlots logical: whether to automatically make the default plot
+##' for the returned object.  See \code{\link{plot.stratpp}}.
+##' @param report logical: whether to print a status bar while obtaining the
+##' confidence intervals for the predicted probabilities.
+##' @param ... used to set values for variables other than \code{x} in the
+##' profile of observations.  See \dQuote{Details} and \dQuote{Examples}.
+##' @return An object of class \code{stratpp}.  This is a data frame containing
+##' each hypothetical observation's predicted probability, the upper and lower
+##' bounds of the confidence interval, and the value of each regressor.
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @seealso \code{\link{predict.strat12}} for somewhat more flexible (but
+##' fussier) generation of predicted probabilities.
+##' @examples
+##'
+##' ## (give some examples!)
 predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
-                      makePlots = TRUE, report = TRUE, ...)
+                      makePlots = FALSE, report = TRUE, ...)
 {
     xc <- charmatch(x, names(model$model))
     if (is.na(xc)) {
@@ -657,8 +771,7 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
         ans <- do.call(cbind, ans)
 
     if (ci > 0 && is.null(model$boot.matrix)) {
-        warning("Bootstrap values unavailable; using normal resampling to ",
-                "generate confidence intervals")
+        warning("Bootstrap values unavailable; using normal resampling to generate confidence intervals")
         vcv <- vcov(model)
         vcv[model$fixed, ] <- vcv[, model$fixed] <- 0L
         model$boot.matrix <- mvrnorm(1000, mu = coef(model), Sigma = vcv)
@@ -698,6 +811,26 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ## and some of the code below closely matches it.
 ## 
 
+##' Plots predicted probabilities and associated confidence bands, using the
+##' data returned from a call to \code{\link{predProbs}}.
+##'
+##' <details>
+##' @title Plot predicted probabilities
+##' @param x an object of class \code{stratpp} (i.e., a data frame returned by
+##' \code{\link{predProbs}}.
+##' @param which optional integer specifying which plot (as numbered in the menu
+##' displayed when \code{ask == TRUE}) to make.  If none is given, all available
+##' plots are printed in succession.
+##' @param ask logical: display interactive menu with options for which plot to
+##' make?
+##' @param ... further arguments to pass to the plotting function.  See
+##' \code{\link{plot.default}} (when the variable on the x-axis is continuous)
+##' or \code{\link{bxp}} (when it is discrete).
+##' @return \code{x}, invisibly
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @examples
+##'
+##' ## (give some examples)
 plot.stratpp <- function(x, which = NULL, ask = FALSE, ...)
 {
     probs <- x[, attr(x, "probcols"), drop = FALSE]
@@ -776,4 +909,59 @@ plot.preplot.stratpp <- function(x, xlab = x$xlab, ylab = x$ylab,
             lines(x$x, x$high, lty = lty.ci)
         }
     }
+}
+
+##' Solves for W in the equation \eqn{W e^W = x}{W * exp(W) = x}.
+##'
+##' Based on the code given in Barry et al. (1995).
+##'
+##' If negative values of \code{x} are supplied, \code{NaN}s will likely be
+##' returned.
+##' @title Lambert's W
+##' @param x vector of values to solve for.
+##' @return Solutions to Lambert's W for each value in \code{x}.
+##' @export
+##' @references D.A. Barry, P.J. Culligan-Hensley, and S.J. Barry.  1995.
+##' \dQuote{Real Values of the W-Function.}  \emph{ACM Transactions on
+##' Mathematical Software} 21(2):161--171.
+##' @author Curt Signorino (\email{curt.signorino@@rochester.edu})
+##' @examples
+##' x <- rexp(10)
+##' w <- LW(x)
+##' all.equal(x, w * exp(w))
+LW <- function(x)
+{
+    ## Note: there is a Lambert's W package, but it depends on the gsl (GNU
+    ## Scientific Library) package, which is hellish for Windows users to
+    ## install, hence our hand-rolled Lambert's W.
+    
+    eW <- function(x, W)
+    {
+        zn <- log(x/W)-W
+        first <- zn/(1+W)
+        common <- 2*(1+W)*(1+W+2*zn/3)
+        first*(common-zn)/(common-2*zn)
+    }
+    
+    lx <- log(x)
+    wlt <- (x*(1+4/3*x))/(1+x*(7/3+5/6*x))
+    wgt <- lx-(24*(lx*(lx+2)-3))/(lx*(7*lx+58)+127)
+    W1 <- ifelse(x < 0.7385, wlt, wgt)
+    
+    xge20 <- x >= 20
+    i <- seq_along(x)
+    ixge20 <- i[xge20]
+    a1 <- 1.124491989777808
+    b1 <- .4225028202459761
+    xg <- x[ixge20]
+    h <- exp(-a1/(b1+log(xg)))
+    Wp2 <- log(xg/log(xg/(log(xg))^h))  # for x>20
+    W1[ixge20] <- Wp2;                   
+
+    ## iteration for improved accuracy
+    W2 <- W1*(1+eW(x,W1))
+    W3 <- W2*(1+eW(x,W2))
+    W4 <- W3*(1+eW(x,W3))               # enough
+
+    return(W4)
 }

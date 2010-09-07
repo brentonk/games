@@ -1,22 +1,24 @@
 ##' @include strat.r
 NULL
 
-##' Makes predicted probabilities from a discrete strategic model
+##' Makes predicted probabilities from fitted \code{strat12} models.
 ##'
-##' This function uses a fitted strategic model to make predictions for a new
+##' This method uses a fitted strategic model to make predictions for a new
 ##' set of data.  Useful for cross-validating or for graphical analysis.
-##' @title Predicted probabilities for a strat12 model
-##' @param object a fitted model of class \code{strat12}, usually the output of a
-##' call to the \code{\link{strat12}} fitting function
+##' @title Predicted probabilities for strategic models
+##' @aliases predict.strat12 predict.strat122 predict.ultimatum
+##' @param object a fitted model of class \code{strat12}, usually the output of
+##' \code{\link{strat12}}.
 ##' @param newdata data frame of values to make the predicted probabilities for.
 ##' If this is left empty, the original dataset is used.
 ##' @param probs whether to provide probabilities for outcomes (L, RL, or RR) or
-##' for actions (1 moves L or R, 2 moves L or R given that 1 moves R)
-##' @param ... other arguments, currently ignored
-##' @return data frame of predicted probabilities
-##' @method predict strat12
+##' for actions (1's move, 2's move if 1 moves R).
+##' @param ... other arguments, currently ignored.
+##' @return A data frame of predicted probabilities.
 ##' @S3method predict strat12
-##' @seealso \code{\link{strat12}}
+##' @export
+##' @seealso \code{\link{predProbs}} provides a more full-featured and
+##' user-friendly wrapper, including plots and confidence bands.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 predict.strat12 <- function(object, newdata, probs = c("outcome", "action"), ...)
 {
@@ -296,6 +298,10 @@ makeResponse12 <- function(yf)
 ##' left-hand side and four right-hand sides (separated by vertical bars).  This
 ##' notation would be \code{formulas = y ~ x1 + x2 | 0 | x3 | z}.
 ##'
+##' To fix a utility at 0, just use \code{0} as its equation, as in the example
+##' just given.  To estimate only a constant for a particular utility, use
+##' \code{1} as its equation.
+##'
 ##' There are three equivalent ways to specify the outcome in \code{formulas}.
 ##' One is to use a numeric vector with three unique values, with their values
 ##' (from lowest to highest) corresponding with the terminal nodes of the game
@@ -309,32 +315,33 @@ makeResponse12 <- function(yf)
 ##' data when \code{na.action = na.omit}.)  The way to specify \code{formulas}
 ##' when using indicators variables is, for example, \code{y1 + y2 ~ x1 + x2 | 0
 ##' | x3 | z}.
-##' @title Fit a strategic model with 3 terminal nodes
+##'
+##' (talk about lambda, sigma, fixedutils, etc)
+##' @title Strategic model with 3 terminal nodes
 ##' @param formulas a list of four formulas, or a \code{Formula} object with
 ##' four right-hand sides.  See \dQuote{Details} and \dQuote{Examples}.
-##' @param data a data frame
+##' @param data a data frame.
 ##' @param subset an optional logical vector specifying which observations from
-##' \code{data} to use in fitting
+##' \code{data} to use in fitting.
 ##' @param na.action how to deal with \code{NA}s in \code{data}.  Defaults to
 ##' the \code{na.action} setting of \code{\link{options}}.  See
-##' \code{\link{na.omit}}
-##' @param varformulas an optional list of four formulas or \code{Formula}
-##' object with four right-hand sides.  If omitted, all error terms are assumed
-##' to have scale parameter 1.  See \dQuote{Details}.
-##' @param fixedUtils numeric vector of values to fix for u11, u13, u14, and u24
-##' respectively.  \code{NULL} (the default) indicates that these should be
-##' estimated with regressors rather than fixed
-##' @param link whether to use a probit (default) or logit link structure
+##' \code{\link{na.omit}}.
+##' @param link whether to use a probit (default) or logit link structure,
 ##' @param type whether to use an agent-error (\dQuote{agent}, default) or
-##' private-information (\dQuote{private}) stochastic structure
+##' private-information (\dQuote{private}) stochastic structure.
 ##' @param startvals whether to get starting values for the optimization from
 ##' statistical backwards induction (\dQuote{sbi}, default), from a uniform
 ##' distribution (\dQuote{unif}), or to set them all to 0 (\dQuote{zero})
-##' @param boot number of bootstrap iterations to perform (if any)
+##' @param fixedUtils numeric vector of values to fix for u11, u13, u14, and u24
+##' respectively.  \code{NULL} (the default) indicates that these should be
+##' estimated with regressors rather than fixed.
+##' @param sdformula qef
+##' @param sdByPlayer qef
+##' @param boot integer: number of bootstrap iterations to perform (if any).
 ##' @param bootreport logical: whether to print status bar when performing
-##' bootstrap iterations
+##' bootstrap iterations.
 ##' @param ... other arguments to pass to the fitting function (see
-##' \code{\link{maxBFGS}})
+##' \code{\link{maxBFGS}}).
 ##' @return An object of class \code{c("strat", "strat12")}. A
 ##' \code{strat} object is a list containing: \describe{
 ##' \item{\code{coefficients}}{estimated parameters of the model}
@@ -351,8 +358,8 @@ makeResponse12 <- function(yf)
 ##' }
 ##' The second class of the returned object, \code{strat12}, is for use with the
 ##' \code{predict} method.
-##' @seealso \code{\link{summary.strat}} and \code{\link{predict.strat12}} for
-##' postestimation analysis; \code{\link{Formula}} for formula specification
+##' @seealso \code{\link{summary.strat}} and \code{predProbs} for
+##' postestimation analysis; \code{\link{Formula}} for formula specification.
 ##' @export
 ##' @references Jeffrey B. Lewis and Kenneth A Schultz.  2003.
 ##' \dQuote{Revealing Preferences: Empirical Estimation of a Crisis Bargaining
@@ -361,6 +368,37 @@ makeResponse12 <- function(yf)
 ##' Curtis S. Signorino.  2003.  \dQuote{Structure and Uncertainty
 ##' in Discrete Choice Models.}  \emph{Political Analysis} 11:316--344.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @examples
+##' data(war1800)
+##'
+##' ## the formula:
+##' f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | regime1 | balanc + regime2
+##' ##    ^^^^^^^^^   ^^^^^^^^^^^^^^^^^   ^   ^^^^^^^   ^^^^^^^^^^^^^^^^
+##' ##        y              u11         u13    u14           u24
+##' 
+##' m1 <- strat12(f1, data = war1800)
+##' summary(m1)
+##' 
+##' m2 <- strat12(f1, data = war1800, link = "logit")
+##' m3 <- strat12(f1, data = war1800, subset = year >= 1850)
+##' m4 <- strat12(f1, data = war1800, boot = 10)
+##'
+##' ## estimating scale parameters under fixed utilities
+##' utils <- c(-1, 0, -1.4, 0.1)
+##' m5 <- strat12(esc + war ~ 1, data = war1800, fixedUtils = utils)
+##' m6 <- strat12(esc + war ~ 1, data = war1800, fixedUtils = utils, sdByPlayer = TRUE)
+##' summary(m6)
+##' 
+##' ## estimating scale parameters with regressors
+##' m7 <- strat12(f1, data = war1800, sdformula = ~ balanc)
+##'
+##' ## using a factor outcome
+##' y <- ifelse(war1800$esc == 1, ifelse(war1800$war == 1, "war", "cap"), "sq")
+##' war1800$y <- as.factor(y)
+##' f2 <- update(Formula(f1), y ~ .)
+##' 
+##' m8 <- strat12(f2, data = war1800)
+##' summary(m8)
 strat12 <- function(formulas, data, subset, na.action,
                     link = c("probit", "logit"),
                     type = c("agent", "private"),
@@ -507,7 +545,7 @@ strat12 <- function(formulas, data, subset, na.action,
     ans$type <- type
     ans$model <- mf
     ans$y <- yf
-    ans$equations <- prefixes
+    ans$equations <- names(hasColon)
     attr(ans$equations, "hasColon") <- hasColon
     ans$fixed <- fvec
 

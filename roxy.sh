@@ -11,5 +11,8 @@ EOF
 rmdir strat.roxygen/inst/doc
 rmdir strat.roxygen/inst
 
+# for including S3 method directives for undocumented methods
+cat ./strat/NAMESPACE >> ./strat.roxygen/NAMESPACE
+
 R CMD check strat.roxygen
 R CMD build strat.roxygen

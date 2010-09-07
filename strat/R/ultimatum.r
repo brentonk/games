@@ -1,12 +1,50 @@
 ##' @include strat.r
 NULL
 
-library(maxLik)
-library(Formula)
-library(foreign)
-usrussia <- read.dta("~/.strat/USRussia_Table4B.dta")
+predict.ultimatum <- function(object, newdata, ...)
+{
+    if (missing(newdata))
+        newdata <- object$model
 
-source("~/.strat/strat/R/strat.r")
+    mf <- match(c("subset", "na.action"), names(object$call), 0L)
+    mf <- object$call[c(1L, mf)]
+    mf$formula <- object$formulas
+    mf$data <- newdata
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf <- eval(mf, parent.frame())
+
+    ## This is to prevent goofy things from happening with factor variables --
+    ## it ensures that the levels of factor variables in "newdata" are the same
+    ## as those in the model frame used in the original fitting
+    for (i in 1:ncol(mf)) {
+        if (is.factor(mf[, i])) {
+            iname <- names(mf)[i]
+            if (iname %in% names(object$model))
+                levels(mf[, i]) <- levels(object$model[, iname])
+        }
+    }
+
+    X <- model.matrix(object$formulas, data = mf, rhs = 1)
+    Z <- model.matrix(object$formulas, data = mf, rhs = 2)
+
+    b <- object$coefficients
+    s1 <- exp(b[length(b) - 1])
+    s2 <- exp(b[length(b)])
+    b <- head(b, length(b) - 2)
+    g <- tail(b, ncol(Z))
+    b <- head(b, length(b) - ncol(Z))
+    fit1 <- as.numeric(X %*% b)
+    fit2 <- as.numeric(Z %*% g)
+    Q <- object$maxOffer
+
+    Ey <- Q - fit1 - s2 * (1 + LW(exp((Q - fit1 - s2 - fit2) / s2)))
+    PrA <- 1 / (1 + exp(-(Ey - fit2) / s2))
+
+    ans <- as.data.frame(cbind(Ey, PrA))
+    names(ans) <- c("E(offer)", "Pr(accept)")
+    return(ans)
+}
 
 offerCDF <- function(y, maxOffer, fit1, fit2, s1, s2)
 {
@@ -16,33 +54,34 @@ offerCDF <- function(y, maxOffer, fit1, fit2, s1, s2)
 offerPDF <- function(y, maxOffer, fit1, fit2, s1, s2)
 {
     num <- exp(-(maxOffer - y - fit1 - s2 * (1 + exp((y - fit2) / s2))) / s1)
-    ## num <- finitize(num)
     denom <- s1 * (1 + num)^2
-    ## denom <- finitize(denom)
     ans <- (num / denom) * (1 + exp((y - fit2) / s2))
     return(ans)
 }
 
-logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
+logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol = offertol,
+                      ...)
 {
     s1 <- exp(b[length(b) - 1])
     s2 <- exp(b[length(b)])
     b <- head(b, length(b) - 2)
     g <- tail(b, ncol(regr$Z))
     b <- head(b, length(b) - ncol(regr$Z))
-    
+
     fit1 <- as.numeric(regr$X %*% b)
     fit2 <- as.numeric(regr$Z %*% g)
-    
+
     prAccept <- finiteProbs(1 / (1 + exp(-(y - fit2) / s2)))
-    
+
     lowball <- finiteProbs(offerCDF(0, maxOffer, fit1, fit2, s1, s2))
     highball <- finiteProbs(1 - offerCDF(maxOffer, maxOffer, fit1, fit2, s1,
                                          s2))
     interior <- offerPDF(y, maxOffer, fit1, fit2, s1, s2)
-    
-    ans <- ifelse(y == maxOffer, highball,
-                  ifelse(y == 0, lowball, interior))
+
+    isMax <- abs(y - maxOffer) < offertol
+    isMin <- abs(y) < offertol
+
+    ans <- ifelse(isMax, highball, ifelse(isMin, lowball, interior))
     ans <- replace(ans, ans < .Machine$double.eps, .Machine$double.eps)
     if (!offerOnly)
         ans <- ans * finiteProbs(ifelse(acc == 1, prAccept, 1 - prAccept))
@@ -95,7 +134,7 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
 
     if (!offerOnly) {
         ey2ey <- exp((fit2 - y) / s2) / (1 + exp((fit2 - y) / s2))
-        
+
         dPdb <- matrix(0L, nrow = nrow(regr$X), ncol = ncol(regr$X))
         dPdg <- -ey2ey * regr$Z / s2
         dPdlns1 <- 0L
@@ -133,22 +172,28 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
 ##' .        /      \
 ##' .     Q - y     R1
 ##' .     y         R2}
-##' @title 
-##' @param formulas 
-##' @param data 
-##' @param subset 
-##' @param na.action 
-##' @param maxOffer 
-##' @param s1 
-##' @param s2 
-##' @param outcome 
-##' @param ... 
-##' @param usegrad 
-##' @param reltol 
-##' @return 
-##' @author Brenton Kenkel
+##' @title ultimatum game
+##' @param formulas e
+##' @param data e
+##' @param subset e
+##' @param na.action e
+##' @param maxOffer e
+##' @param offertol numeric: offers within \code{offertol} of \code{maxOffer}
+##' will be considered to be at the maximum.  If \code{maxOffer} and all
+##' observed offers are integer-valued, the value of \code{offertol} should not
+##' matter.
+##' @param s1 e
+##' @param s2 e
+##' @param outcome e
+##' @param boot e
+##' @param bootreport e
+##' @param ... other arguments to pass to the fitting function (see
+##' \code{\link{maxBFGS}})
+##' @param reltol w
+##' @return fitted model
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 ultimatum <- function(formulas, data, subset, na.action,
-                      maxOffer,
+                      maxOffer, offertol = sqrt(.Machine$double.eps),
                       s1 = NULL, s2 = NULL,
                       outcome = c("both", "offer"),
                       boot = 0,
@@ -177,6 +222,8 @@ ultimatum <- function(formulas, data, subset, na.action,
     if (length(dim(ya))) {
         y <- ya[, 1]
         a <- ya[, 2]
+        if (!all(unique(a) %in% c(0, 1)))
+            stop("acceptance variable must be binary")
     } else {
         if (!offerOnly) {
             stop("a dependent variable for acceptance must be specified if",
@@ -184,6 +231,8 @@ ultimatum <- function(formulas, data, subset, na.action,
         }
         y <- ya
     }
+    if (any(y > maxOffer))
+        stop("observed offers greater than maxOffer")
 
     regr <- list()
     regr$X <- model.matrix(formulas, data = mf, rhs = 1)
@@ -194,13 +243,14 @@ ultimatum <- function(formulas, data, subset, na.action,
 
     ## suppressing warnings in the logit fitting because fitted probabilities
     ## numerically equal to 0/1 seem to occur often
-    m2 <- suppressWarnings(glm.fit(regr$Z, a, family = binomial(link = "logit"),
+    aa <- if (exists("a")) a else as.numeric(y >= mean(y))
+    m2 <- suppressWarnings(glm.fit(regr$Z, aa, family = binomial(link = "logit"),
                                    intercept = FALSE, offset = -y))
     m1 <- lsfit(regr$X, maxOffer - y, intercept = FALSE)
     sval <- c(m1$coefficients, m2$coefficients, s1, s2)
 
     firstTry <- logLikUlt(sval, y = y, acc = a, regr = regr, maxOffer =
-                          maxOffer, offerOnly = offerOnly)
+                          maxOffer, offerOnly = offerOnly, offertol = offertol)
     if (!is.finite(sum(firstTry))) {
         sval <- c(maxOffer - mean(y), rep(0, length(m1$coefficients) - 1),
                   maxOffer - mean(y), rep(0, length(m2$coefficients) - 1),
@@ -218,7 +268,8 @@ ultimatum <- function(formulas, data, subset, na.action,
 
     results <- maxBFGS(fn = logLikUlt, grad = logLikGradUlt, start = sval, fixed
                        = fvec, y = y, acc = a, regr = regr, maxOffer =
-                       maxOffer, offerOnly = offerOnly, reltol = reltol, ...)
+                       maxOffer, offerOnly = offerOnly, offertol = offertol,
+                       reltol = reltol, ...)
     if (results$code) {
         warning("Model fitting did not converge\nMessage: ",
                 results$message)
@@ -229,7 +280,7 @@ ultimatum <- function(formulas, data, subset, na.action,
                                 results$estimate, y = y, a = a, regr = regr, fn
                                 = logLikUlt, gr = logLikGradUlt, fixed = fvec,
                                 maxOffer = maxOffer, offerOnly = offerOnly,
-                                reltol = reltol, ...)
+                                offertol = offertol, reltol = reltol, ...)
     }
 
     ans <- list()
@@ -237,7 +288,7 @@ ultimatum <- function(formulas, data, subset, na.action,
     ans$vcov <- getStratVcov(results$hessian, fvec)
     ans$log.likelihood <-
         logLikUlt(results$estimate, y = y, acc = a, regr = regr, maxOffer =
-                  maxOffer, offerOnly = offerOnly)
+                  maxOffer, offertol = offertol, offerOnly = offerOnly)
     ans$call <- cl
     ans$convergence <- list(code = results$code, message = results$message)
     ans$formulas <- formulas
@@ -251,8 +302,9 @@ ultimatum <- function(formulas, data, subset, na.action,
     ans$fixed <- fvec
     if (boot > 0)
         ans$boot.matrix <- bootMatrix
-    
-    class(ans) <- c("strat", "stratult")
+    ans$maxOffer <- maxOffer
+
+    class(ans) <- c("strat", "ultimatum")
 
     return(ans)
 }

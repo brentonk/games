@@ -1,7 +1,24 @@
 ##' @include strat.r
 NULL
 
+##' Makes predicted probabilities from fitted \code{strat122} models
+##'
+##' This method uses a fitted strategic model to make predictions for a new set
+##' of data.  Useful for cross-validating or for graphical analysis.
+##' @title Predicted probabilities for a strat122 model
+##' @param object a fitted model of class \code{strat122}, usually the output of
+##' \code{\link{strat122}}
+##' @param newdata data frame of values to make predicted probabilities for.  If
+##' this is left empty, the original dataset is used.
+##' @param probs whether to provide probabilities for outcomes (LL, LR, RL, RR)
+##' or for actions (1's move, 2's move if 1 moves L, 2's move if 1 moves R).
+##' @param ... other arguments, currently ignored.
+##' @return A data frame of predicted probabilities.
 ##' @S3method predict strat122
+##' @export
+##' @seealso \code{\link{predProbs}} provides a more full-featured and
+##' user-friendly wrapper, including plots and confidence bands.
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 predict.strat122 <- function(object, newdata, probs = c("outcome", "action"), ...)
 {
     probs <- match.arg(probs)
@@ -281,7 +298,8 @@ makeResponse122 <- function(yf)
     return(yf)
 }
 
-##' <description>
+##' Fits a strategic model with four terminal nodes, as in the game illustrated
+##' below in \dQuote{Details}.
 ##'
 ##' \preformatted{
 ##' .        ___ 1 ___
@@ -293,19 +311,53 @@ makeResponse122 <- function(yf)
 ##' .  /     \       /     \
 ##' . u11    u12    u13    u14
 ##' . 0      u22    0      u24}
-##' @title
-##' @param formulas
-##' @param data
-##' @param subset
-##' @param na.action
-##' @param varformulas
-##' @param fixedUtils
-##' @param link
-##' @param type
-##' @param startvals
-##' @param ...
-##' @return
-##' @author Brenton Kenkel
+##'
+##' See \code{\link{strat12}} for details about the specification of the
+##' right-hand side of \code{formulas} (the only difference here being that
+##' there must be six equations, not four).
+##' @title Strategic model with 4 terminal nodes
+##' @param formulas a list of six formulas, or a \code{Formula} object with six
+##' right-hand sides.  See \dQuote{Details} and \dQuote{Examples}.
+##' @param data a data frame.
+##' @param subset an optional logical vector specifying which observations from
+##' \code{data} to use in fitting.
+##' @param na.action how to deal with \code{NA}s in \code{data}.  Defaults to
+##' the \code{na.action} setting of \code{\link{options}}.  See
+##' \code{\link{na.omit}}
+##' @param link whether to use a probit (default) or logit link structure,
+##' @param type whether to use an agent-error (\dQuote{agent}, default) or
+##' private-information (\dQuote{private}) stochastic structure.
+##' @param startvals whether to get starting values for the optimization from
+##' statistical backwards induction (\dQuote{sbi}, default), from a uniform
+##' distribution (\dQuote{unif}), or to set them all to 0 (\dQuote{zero})
+##' @param fixedUtils numeric vector of values to fix for u11, u12, u13, u14,
+##' u22, and u24.  \code{NULL} (the default) indicates that these should be
+##' estimated with regressors, not fixed.
+##' @param sdformula ef
+##' @param sdByPlayer wef
+##' @param boot integer: number of bootstrap iterations to perform (if any).
+##' @param bootreport logical: whether to print status bar during bootstrapping.
+##' @param ... other arguments to pass to the fitting function (see
+##' \code{\link{maxBFGS}})
+##' @return An object of class \code{c("strat", "strat122")}.  See
+##' \code{\link{strat12}} for a description of the \code{strat} class.
+##' @export
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @examples
+##' data(sim122)
+##'
+##' ## the formula:
+##' fr1 <- y ~ x1 + x2 | x3 + f1 | 0 | x4 + x5 | z1 + z2 | z3 + f2
+##' ##     ^   ^^^^^^^   ^^^^^^^   ^   ^^^^^^^   ^^^^^^^   ^^^^^^^
+##' ##     y     u11       u12    u13    u14       u22       u24
+##'
+##' m1 <- strat122(fr1, data = sim122)
+##' summary(m1)
+##'
+##' ## dummy specification of the dependent variable
+##' fr2 <- update(Formula(fr1), a1 + a2 ~ .)
+##' m2 <- strat122(fr2, data = sim122)
+##' summary(m2)
 strat122 <- function(formulas, data, subset, na.action,
                      link = c("probit", "logit"),
                      type = c("agent", "private"),
@@ -441,9 +493,8 @@ strat122 <- function(formulas, data, subset, na.action,
     ans$type <- type
     ans$model <- mf
     ans$y <- yf
-    ans$equations <- prefixes
+    ans$equations <- names(hasColon)
     attr(ans$equations, "hasColon") <- hasColon
-    names(attr(ans$equations, "hasColon")) <- ans$equations
     ans$fixed <- fvec
     if (boot > 0)
         ans$boot.matrix <- bootMatrix
