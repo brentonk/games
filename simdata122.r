@@ -1,4 +1,4 @@
-## simdata.r -- for simulating datasets included in the strat package
+## simdata122.r -- for simulating the dataset that goes with strat122
 
 n <- 1000
 for (i in 1:5)
@@ -12,7 +12,6 @@ for (i in 1:2) {
     for (j in 1:3)
         assign(paste("d", i, letters[j], sep = ""), as.numeric(f == letters[j]))
 }
-
 
 u11 <- 0.5 - 0.5 * x1 + 0.5 * x2
 u12 <- -0.5 + 0.5 * x3 - 0.5 * d1b + 0.5 * d1c

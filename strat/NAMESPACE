@@ -1,5 +1,5 @@
 export(predict.strat122)
-export(precict.ultimatum)
+export(predict.ultimatum)
 S3method(logLik, strat)
 S3method(logLik, summary.strat)
 S3method(coef, strat)

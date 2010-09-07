@@ -59,8 +59,7 @@ offerPDF <- function(y, maxOffer, fit1, fit2, s1, s2)
     return(ans)
 }
 
-logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol = offertol,
-                      ...)
+logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 {
     s1 <- exp(b[length(b) - 1])
     s2 <- exp(b[length(b)])
@@ -89,8 +88,11 @@ logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol = offertol,
     return(ans)
 }
 
-logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
+logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 {
+    isMax <- abs(y - maxOffer) < offertol
+    isMin <- abs(y) < offertol
+
     s1 <- exp(b[length(b) - 1])
     s2 <- exp(b[length(b)])
     b <- head(b, length(b) - 2)
@@ -118,32 +120,31 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
     dFdlns1 <- Qy2Qy * (-Qy)
     d1mFdlns1 <- dFdlns1 + Qy
 
-    ## change this to lns2!
-    dfds2 <- ((1 + ey) / s1) * (1 - (2 * Qy1Qy * exp(-Qy))) + (1 / (1 + ey))
-    dfds2 <- dfds2 * ey * ((fit2 - y) / s2^2)
-    dFds2 <- Qy2Qy * ((1 + ey) / s1) * ey * ((fit2 - y) / s2^2)
-    d1mFds2 <- dFds2 - ((1 + ey) / s1) * ey * ((fit2 - y) / s2^2)
+    dfdlns2 <- ((fit2 - y) * ey + s2 * (1 + ey)) / s1
+    dfdlns2 <- dfdlns2 - 2 * Qy1Qy * dfdlns2 + ey1ey * ((fit2 - y) / s2)
+    dFdlns2 <- (Qy2Qy / s1) * (ey * (fit2 - y) + s2 * (1 + ey))
+    d1mFdlns2 <- dFdlns2 - (ey * (fit2 - y) + s2 * (1 + ey)) / s1
 
-    df <- cbind(dfdb, dfdg, dfdlns1, dfds2)
-    dF <- cbind(dFdb, dFdg, dFdlns1, dFds2)
-    d1mF <- cbind(d1mFdb, d1mFdg, d1mFdlns1, d1mFds2)
+    df <- cbind(dfdb, dfdg, dfdlns1, dfdlns2)
+    dF <- cbind(dFdb, dFdg, dFdlns1, dFdlns2)
+    d1mF <- cbind(d1mFdb, d1mFdg, d1mFdlns1, d1mFdlns2)
 
     ans <- df
-    ans[y == 0, ] <- dF[y == 0, ]
-    ans[y == maxOffer, ] <- d1mF[y == maxOffer, ]
+    ans[isMin, ] <- dF[isMin, ]
+    ans[isMax, ] <- d1mF[isMax, ]
 
     if (!offerOnly) {
         ey2ey <- exp((fit2 - y) / s2) / (1 + exp((fit2 - y) / s2))
 
         dPdb <- matrix(0L, nrow = nrow(regr$X), ncol = ncol(regr$X))
-        dPdg <- -ey2ey * regr$Z / s2
+        dPdg <- -ey2ey * (regr$Z / s2)
         dPdlns1 <- 0L
-        dPdlns2 <- -ey2ey * (y - fit2) / s2
+        dPdlns2 <- -ey2ey * ((y - fit2) / s2)
 
         d1mPdb <- dPdb
-        d1mPdg <- regr$Z / s2 - dPdg
+        d1mPdg <- regr$Z / s2 + dPdg
         d1mPdlns1 <- 0L
-        d1mPdlns2 <- ((y - fit2) / s2) - dPdlns2
+        d1mPdlns2 <- ((y - fit2) / s2) + dPdlns2
 
         dAcc <- cbind(dPdb, dPdg, dPdlns1, dPdlns2)
         dRej <- cbind(d1mPdb, d1mPdg, d1mPdlns1, d1mPdlns2)
@@ -157,7 +158,8 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
     return(ans)
 }
 
-##' <description>
+##' Estimates the statistical ultimatum game described in Ramsay and Signorino
+##' (2009), illustrated below in \dQuote{Details}.
 ##'
 ##' \preformatted{
 ##' .       ___ 1 ___
@@ -172,12 +174,15 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
 ##' .        /      \
 ##' .     Q - y     R1
 ##' .     y         R2}
-##' @title ultimatum game
+##'
+##' For additional details on formula specification in general, see
+##' \code{\link{strat12}}.
+##' @title Statistical ultimatum game
 ##' @param formulas e
 ##' @param data e
 ##' @param subset e
 ##' @param na.action e
-##' @param maxOffer e
+##' @param maxOffer numeric: the highest offer Player 1 could feasibly make
 ##' @param offertol numeric: offers within \code{offertol} of \code{maxOffer}
 ##' will be considered to be at the maximum.  If \code{maxOffer} and all
 ##' observed offers are integer-valued, the value of \code{offertol} should not
@@ -189,9 +194,32 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, ...)
 ##' @param bootreport e
 ##' @param ... other arguments to pass to the fitting function (see
 ##' \code{\link{maxBFGS}})
-##' @param reltol w
+##' @param reltol numeric: relative convergence tolerance level (see
+##' \code{\link{optim}}).  Use of values higher than the default is discouraged.
 ##' @return fitted model
+##' @export
+##' @references Kristopher W. Ramsay and Curtis S. Signorino.  2009.  \dQuote{A
+##' Statistical Model of the Ultimatum Game.}  Available online at
+##' \url{http://www.rochester.edu/college/psc/signorino/research/RamsaySignorino_Ultimatum.pdf}.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @examples
+##' data(simult)
+##'
+##' ## the formula:
+##' f1 <- offer + accept ~ x1 + x2 + x3 + x4 + w1 + w2 | z1 + z2 + z3 + z4 + w1 + w2
+##' ##                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+##' ##                                  R1                              R2
+##' 
+##' m1 <- ultimatum(f1, data = simult, maxOffer = 15)
+##' summary(m1)
+##'
+##' ## estimating offer size only
+##' f2 <- update(Formula(f1), offer ~ .)
+##' m2 <- ultimatum(f2, data = simult, maxOffer = 15, outcome = "offer")
+##'
+##' ## fixing scale terms
+##' m3 <- ultimatum(f1, data = simult, maxOffer = 15, s1 = 5, s2 = 1)
+##' summary(m3)
 ultimatum <- function(formulas, data, subset, na.action,
                       maxOffer, offertol = sqrt(.Machine$double.eps),
                       s1 = NULL, s2 = NULL,
@@ -278,7 +306,7 @@ ultimatum <- function(formulas, data, subset, na.action,
     if (boot > 0) {
         bootMatrix <- stratBoot(boot, report = bootreport, estimate =
                                 results$estimate, y = y, a = a, regr = regr, fn
-                                = logLikUlt, gr = logLikGradUlt, fixed = fvec,
+                                = logLikUlt, gr = logLikGradUlt , fixed = fvec,
                                 maxOffer = maxOffer, offerOnly = offerOnly,
                                 offertol = offertol, reltol = reltol, ...)
     }
@@ -293,7 +321,7 @@ ultimatum <- function(formulas, data, subset, na.action,
     ans$convergence <- list(code = results$code, message = results$message)
     ans$formulas <- formulas
     ans$link <- "logit"
-    ans$type <- "private"  ## double check this!
+    ans$type <- "private"
     ans$model <- mf
     ans$y <- y
     ans$equations <- c("R1", "R2", "log(s1)", "log(s2)")
@@ -308,17 +336,3 @@ ultimatum <- function(formulas, data, subset, na.action,
 
     return(ans)
 }
-
-## m1 <- ultimatum(OffersP + accepts ~ USmaleS + RmaleS | 1, data = usrussia,
-##                 maxOffer = 100, s2 = 1, outcome = "offer")
-
-## m2 <- ultimatum(OffersP + accepts ~ USmaleS + RmaleS + whiteS + SlavS +
-##                 ScienceS + BusS | 1, data = usrussia, maxOffer = 100, s2 = 1,
-##                 outcome = "offer")
-
-## m3 <- ultimatum(OffersP + accepts ~ US_round2 + US_round3 + US_round4 + US_round5
-##                + Russia + russia_round2 + russia_round3 + russia_round4 +
-##                russia_round5 + RmaleS + USmaleS | US_round2 + US_round3 +
-##                US_round4 + US_round5 + Russia + russia_round2 + russia_round3 +
-##                russia_round4 + russia_round5 + RmaleS + USmaleS, data =
-##                usrussia, maxOffer = 100, s2 = 1, outcome = "offer")

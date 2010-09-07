@@ -39,7 +39,7 @@ NULL
 ##' \item{\code{regime2}}{Respondent's regime type (calculated from \code{dem2})}
 ##' }
 ##' @name war1800
-##' @usage war1800
+##' @usage data(war1800)
 ##' @title 19th-century international disputes
 ##' @docType data
 ##' @references Daniel M. Jones, Stuart A. Bremer and J. David Singer.  1996.
@@ -50,7 +50,7 @@ NULL
 ##' @keywords data
 NULL
 
-##' Simulated data for illustrating \code{\link{strat122}}
+##' Simulated data for illustrating \code{\link{strat122}}.
 ##'
 ##' The variables are: \describe{
 ##' \item{\code{f1}, \code{f2}}{Factors with levels \dQuote{a}, \dQuote{b},
@@ -62,10 +62,29 @@ NULL
 ##' \item{\code{y}}{Factor containing outcome}
 ##' }
 ##' @name sim122
-##' @usage sim122
+##' @usage data(sim122)
 ##' @title Simulated strat122 data
 ##' @docType data
 ##' @seealso \code{\link{strat122}}
+##' @keywords data
+NULL
+
+##' Simulated data for illustrating \code{\link{ultimatum}}.
+##'
+##' The variables are: \describe{
+##' \item{\code{offer}}{The offer made by Player 1}
+##' \item{\code{accept}}{Whether Player 2 accepted the offer (0 for rejection, 1
+##' for acceptance)}
+##' \item{\code{w1}, \code{w2}}{Variables entering both players' reservation values}
+##' \item{\code{x1}--\code{x4}}{Variables entering Player 1's reservation value}
+##' \item{\code{z1}--\code{z4}}{Variables entering Player 2's reservation value}
+##' }
+##' The maximum offer size is 15.
+##' @name simult
+##' @usage data(simult)
+##' @title Simulated ultimatum data
+##' @docType data
+##' @seealso \code{\link{ultimatum}}
 ##' @keywords data
 NULL
 
@@ -827,6 +846,7 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ##' \code{\link{plot.default}} (when the variable on the x-axis is continuous)
 ##' or \code{\link{bxp}} (when it is discrete).
 ##' @return \code{x}, invisibly
+##' @S3method plot stratpp
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 ##' @examples
 ##'
