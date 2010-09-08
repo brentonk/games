@@ -161,6 +161,8 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' Estimates the statistical ultimatum game described in Ramsay and Signorino
 ##' (2009), illustrated below in \dQuote{Details}.
 ##'
+##' The model corresponds to the following extensive-form game, described in
+##' Ramsay and Signorino (2009):
 ##' \preformatted{
 ##' .       ___ 1 ___
 ##' .      /         \
@@ -174,11 +176,33 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' .        /      \
 ##' .     Q - y     R1
 ##' .     y         R2}
+##' Q refers to the maximum feasible offer (the argument \code{maxOffer}).
 ##'
-##' For additional details on formula specification in general, see
-##' \code{\link{strat12}}.
+##' The two equations on the right-hand side of \code{formulas} refer to Player
+##' 1's and Player 2's reservation values respectively.  The left-hand side
+##' should take the form \code{offer + acceptance}, where \code{outcome}
+##' contains the numeric value of the offer made and \code{acceptance} is an
+##' indicator for whether it was accepted.  (If \code{outcome} is set to
+##' \dQuote{offer}, the acceptance indicator can be omitted.  See below for
+##' more.)
+##'
+##' The \code{outcome} argument refers to whether the outcome of interest is
+##' just the level of the offer made, or both the level of the offer and whether
+##' it was accepted.  If acceptance was unobserved, then \code{outcome} should
+##' be set to \dQuote{offer}.  If so, the estimates for Player 2's reservation
+##' value should be interpreted as Player 1's expectations about these
+##' parameters.  It may also be useful to set \code{outcome} to \dQuote{offer}
+##' even if acceptance data are available, for the purpose of comparing the
+##' strategic model to other models of offer levels (as in Ramsay and Signorino
+##' 2009).  If an acceptance variable is specified but \code{outcome} is set to
+##' \dQuote{offer}, the acceptance data will be used for starting values but not
+##' in the actual fitting.
+##'
+##' Numerical instability is not uncommon in the statistical ultimatum game,
+##' especially when the scale parameters are being estimated.
 ##' @title Statistical ultimatum game
-##' @param formulas e
+##' @param formulas a list of two formulas, or a \code{\link{Formula}} object
+##' with two right-hand sides.  See \dQuote{Details} and the examples below.
 ##' @param data data frame containing the variables in the model.
 ##' @param subset optional logical expression specifying which observations from
 ##' \code{data} to use in fitting.
@@ -195,10 +219,8 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' @param s2 numeric: scale parameter for Player 2.  If \code{NULL} (the
 ##' default), the parameter will be estimated.
 ##' @param outcome the outcome of interest: just Player 1's offer
-##' (\dQuote{offer}) or both the offer and its acceptance (\dQuote{both}).  If
-##' \dQuote{offer} is chosen, then estimates for variables in Player 2's
-##' reservation value equation should be interpreted as Player 1's expectations
-##' about those parameters.  See \dQuote{Details} for more.
+##' (\dQuote{offer}) or both the offer and its acceptance (\dQuote{both}).  See
+##' \dQuote{Details}.
 ##' @param boot integer: number of bootstrap iterations to perform (if any).
 ##' @param bootreport logical: whether to print status bar when performing
 ##' bootstrap iterations.

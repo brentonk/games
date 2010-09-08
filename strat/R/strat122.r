@@ -1,24 +1,6 @@
 ##' @include strat.r
 NULL
 
-##' Makes predicted probabilities from fitted \code{strat122} models
-##'
-##' This method uses a fitted strategic model to make predictions for a new set
-##' of data.  Useful for cross-validating or for graphical analysis.
-##' @title Predicted probabilities for a strat122 model
-##' @param object a fitted model of class \code{strat122}, usually the output of
-##' \code{\link{strat122}}
-##' @param newdata data frame of values to make predicted probabilities for.  If
-##' this is left empty, the original dataset is used.
-##' @param probs whether to provide probabilities for outcomes (LL, LR, RL, RR)
-##' or for actions (1's move, 2's move if 1 moves L, 2's move if 1 moves R).
-##' @param ... other arguments, currently ignored.
-##' @return A data frame of predicted probabilities.
-##' @S3method predict strat122
-##' @export
-##' @seealso \code{\link{predProbs}} provides a more full-featured and
-##' user-friendly wrapper, including plots and confidence bands.
-##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 predict.strat122 <- function(object, newdata, probs = c("outcome", "action"), ...)
 {
     probs <- match.arg(probs)

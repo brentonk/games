@@ -1,25 +1,6 @@
 ##' @include strat.r
 NULL
 
-##' Makes predicted probabilities from fitted \code{strat12} models.
-##'
-##' This method uses a fitted strategic model to make predictions for a new
-##' set of data.  Useful for cross-validating or for graphical analysis.
-##' @title Predicted probabilities for strategic models
-##' @aliases predict.strat12 predict.strat122 predict.ultimatum
-##' @param object a fitted model of class \code{strat12}, usually the output of
-##' \code{\link{strat12}}.
-##' @param newdata data frame of values to make the predicted probabilities for.
-##' If this is left empty, the original dataset is used.
-##' @param probs whether to provide probabilities for outcomes (L, RL, or RR) or
-##' for actions (1's move, 2's move if 1 moves R).
-##' @param ... other arguments, currently ignored.
-##' @return A data frame of predicted probabilities.
-##' @S3method predict strat12
-##' @export
-##' @seealso \code{\link{predProbs}} provides a more full-featured and
-##' user-friendly wrapper, including plots and confidence bands.
-##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 predict.strat12 <- function(object, newdata, probs = c("outcome", "action"), ...)
 {
     probs <- match.arg(probs)
@@ -279,7 +260,7 @@ makeResponse12 <- function(yf)
 ##' payoffs of u13 for Player 1 and 0 for Player 2, or R, with payoffs of u14
 ##' for 1 and u24 for 2.
 ##'
-##' The four formulas specified in the function's \code{formulas} argument
+##' The four equations specified in the function's \code{formulas} argument
 ##' correspond to the regressors to be placed in u11, u13, u14, and u24
 ##' respectively.  If there is any regressor (including the constant) placed in
 ##' all of u11, u13, and u14, \code{strat12} will stop and issue an error
