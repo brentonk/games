@@ -2,7 +2,11 @@
 #+AUTHOR: Brenton Kenkel
 #+EMAIL: brenton.kenkel@gmail.com
 
-* Notes
 
-This is the README for the ~strat~ R package.  It is currently empty.
+~strat~ is an R package for estimating the strategic statistical models
+developed by [[http://www.rochester.edu/college/psc/signorino/][Curt Signorino]].
 
+
+* DESCRIPTION file
+
+#+INCLUDE: "strat/DESCRIPTION" quote
