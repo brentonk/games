@@ -1,11 +1,11 @@
 Package: strat
 Title: Strategic Models
 Version: 0.1-0
-Date: 2010-07-13
+Date: 2010-09-23
 Author: Curtis S. Signorino and Brenton Kenkel
 Maintainer: Brenton Kenkel <brenton.kenkel@gmail.com>
 Description: Provides estimation and analysis functions for
-    discrete-choice strategic models.
+    strategic statistical models.
 License: GPL (>= 2)
 Depends: Formula (>= 0.2-0), maxLik (>= 0.7-0), MASS
 LazyLoad: yes

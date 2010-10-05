@@ -1,0 +1,74 @@
+\documentclass[11pt]{article}
+\usepackage{pstricks}
+\usepackage{color}
+\usepackage{egameps}
+
+\begin{document}
+
+\newcommand{\pb}[1]{\parbox{1in}{\centering #1}}
+
+\begin{center}
+\begin{egame}(400,600)
+  \putbranch(200,600)(2,3){200}
+  \iib{$1$}{$p_1 + \alpha_1$}{$p_2 + \alpha_2$}[$U_{11}$][]
+
+  \putbranch(400,300)(2,3){200}
+  \iib{$2$}[r]{$p_3 + \alpha_3$}{$p_4 + \alpha_4$}[\pb{$U_{13}$ \\ $0$}][\pb{$U_{14}$ \\ $U_{24}$}]
+\end{egame}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{egame}(400,600)
+  \putbranch(200,600)(2,3){200}
+  \iib{$1$}{$p_1$}{$p_2$}[$U_{11} + \epsilon_{11}$][]
+
+  \putbranch(400,300)(2,3){200}
+  \iib{$2$}[r]{$p_3$}{$p_4$}[\pb{$U_{13} + \epsilon_{13}$ \\ $0$}][\pb{$U_{14} + \epsilon_{14}$ \\ $U_{24} + \epsilon_{24}$}]
+\end{egame}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{egame}(400,600)
+  \putbranch(200,600)(3,3){300}
+  \iib{$1$}{$p_1 + \alpha_1$}{$p_2 + \alpha_2$}
+  
+  \putbranch(-100,300)(2,3){200}
+  \iib{$2$}[l]{$p_3 + \alpha_3$}{$p_4 + \alpha_4$}[\pb{$U_{11}$ \\ $0$}][\pb{$U_{12}$ \\ $U_{22}$}]
+
+  \putbranch(500,300)(2,3){200}
+  \iib{$2$}[r]{$p_5 + \alpha_5$}{$p_6 + \alpha_6$}[\pb{$U_{13}$ \\ $0$}][\pb{$U_{14}$ \\ $U_{24}$}]
+\end{egame}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{egame}(400,600)
+  \putbranch(200,600)(3,3){300}
+  \iib{$1$}{$p_1$}{$p_2$}
+  
+  \putbranch(-100,300)(2,3){200}
+  \iib{$2$}[l]{$p_3$}{$p_4$}[\pb{$U_{11} + \epsilon_{11}$ \\ $0$}][\pb{$U_{12} + \epsilon_{12}$ \\ $U_{22} + \epsilon_{22}$}]
+
+  \putbranch(500,300)(2,3){200}
+  \iib{$2$}[r]{$p_5$}{$p_6$}[\pb{$U_{13} + \epsilon_{13}$ \\ $0$}][\pb{$U_{14} + \epsilon_{14}$ \\ $U_{24} + \epsilon_{24}$}]
+\end{egame}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{egame}(400,600)
+  \putbranch(200,600)(3,3){300}
+  \ctmb{1}(1,3){$x \in [0, Q]$}[i]
+  
+  \putbranch(300,300)(2,3){200}
+  \iib{$2$}[r]{$A$}{$R$}[\pb{$x$ \\ $Q - x$}][\pb{$R_1 + \epsilon_1$ \\ $R_2 + \epsilon_2$}]
+\end{egame}
+\end{center}
+
+\end{document}

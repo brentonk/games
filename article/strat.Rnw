@@ -1,0 +1,52 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage[margin=1in]{geometry}
+\usepackage{natbib}
+\usepackage{hyperref}
+
+\title{The \texttt{strat} Package:\\ Strategic Statistical Models in R}
+\author{Curtis S. Signorino \and Brenton Kenkel}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\label{sec:introduction}
+
+
+\setkeys{Gin}{width=0.5\textwidth}
+\begin{figure}[tp]
+  \centering
+  \subfloat[Agent error]{\includegraphics{strat12_agent}}
+  \subfloat[Private information]{\includegraphics{strat12_private}}
+  \caption{Game trees corresponding to the \texttt{strat12} model.}
+  \label{fig:strat12}
+\end{figure}
+
+\setkeys{Gin}{width=0.75\textwidth}
+\begin{figure}[tp]
+  \centering
+  \subfloat[Agent error]{\includegraphics{strat122_agent}}
+  
+  \subfloat[Private information]{\includegraphics{strat122_private}}
+  \caption{Game trees corresponding to the \texttt{strat122} model.}
+  \label{fig:strat122}
+\end{figure}
+
+\setkeys{Gin}{width=0.5\textwidth}
+\begin{figure}[tp]
+  \centering
+  \includegraphics{ultimatum}
+  \caption{Game tree corresponding to the \texttt{ultimatum} model.}
+  \label{fig:strat12}
+\end{figure}
+
+\bibliographystyle{apsr}
+\bibliography{strat}
+
+\end{document}

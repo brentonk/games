@@ -13,7 +13,7 @@ developed by [[http://www.rochester.edu/college/psc/signorino/][Curt Signorino]]
 Package: strat
 Title: Strategic Models
 Version: 0.1-0
-Date: 2010-07-13
+Date: 2010-09-12
 Author: Curtis S. Signorino and Brenton Kenkel
 Maintainer: Brenton Kenkel <brenton.kenkel@gmail.com>
 Description: Provides estimation and analysis functions for
