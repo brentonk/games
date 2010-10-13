@@ -25,5 +25,6 @@ simult <- lapply(simultnames, get)
 simult <- do.call(data.frame, simult)
 names(simult) <- simultnames
 names(simult)[1] <- "offer"
+data_ult <- simult
 
-save(simult, file = "~/.strat/strat/data/simult.rda")
+save(data_ult, file = "~/.games/games/data/data_ult.rda")

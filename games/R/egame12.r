@@ -1,7 +1,7 @@
-##' @include strat.r
+##' @include games.r
 NULL
 
-predict.strat12 <- function(object, newdata, probs = c("outcome", "action"), ...)
+predict.egame12 <- function(object, newdata, probs = c("outcome", "action"), ...)
 {
     probs <- match.arg(probs)
     
@@ -263,7 +263,7 @@ makeResponse12 <- function(yf)
 ##' The four equations specified in the function's \code{formulas} argument
 ##' correspond to the regressors to be placed in u11, u13, u14, and u24
 ##' respectively.  If there is any regressor (including the constant) placed in
-##' all of u11, u13, and u14, \code{strat12} will stop and issue an error
+##' all of u11, u13, and u14, \code{egame12} will stop and issue an error
 ##' message, because the model is then unidentified (see Lewis and Schultz
 ##' 2003).  There are two equivalent ways to express the formulas passed to this
 ##' argument.  One is to use a list of four formulas, where the first contains
@@ -294,7 +294,7 @@ makeResponse12 <- function(yf)
 ##' second when Player 1 moves L should be set to 0 or 1, \strong{not}
 ##' \code{NA}, in order to ensure that observations are not dropped from the
 ##' data when \code{na.action = na.omit}.)  The way to specify \code{formulas}
-##' when using indicators variables is, for example, \code{y1 + y2 ~ x1 + x2 | 0
+##' when using indicator variables is, for example, \code{y1 + y2 ~ x1 + x2 | 0
 ##' | x3 | z}.
 ##'
 ##' If \code{fixedUtils} or \code{sdformula} is specified, the estimated
@@ -308,6 +308,12 @@ makeResponse12 <- function(yf)
 ##' interpretation of the scale parameters in these models and how it differs
 ##' between the agent error and private information models, see Signorino
 ##' (2003).
+##'
+##' The model is fit with the BFGS method, using the function
+##' \code{\link{maxBFGS}} from the \pkg{maxLik} package.  For the sake of speed
+##' and stability, the fitting procedure typically uses the gradient of the
+##' log-likelihood.  However, if \code{fixedUtils} or \code{sdformula} is
+##' specified, the gradient is not used.
 ##' @title Strategic model with 3 terminal nodes
 ##' @param formulas a list of four formulas, or a \code{\link{Formula}} object
 ##' with four right-hand sides.  See \dQuote{Details} and the examples below.
@@ -320,9 +326,10 @@ makeResponse12 <- function(yf)
 ##' @param link whether to use a probit (default) or logit link structure,
 ##' @param type whether to use an agent-error (\dQuote{agent}, default) or
 ##' private-information (\dQuote{private}) stochastic structure.
-##' @param startvals whether to get starting values for the optimization from
-##' statistical backwards induction (\dQuote{sbi}, default), from a uniform
-##' distribution (\dQuote{unif}), or to set them all to 0 (\dQuote{zero})
+##' @param startvals whether to calculate starting values for the optimization
+##' using statistical backwards induction (\dQuote{sbi}, default), draw them
+##' from a uniform distribution (\dQuote{unif}), or to set them all to 0
+##' (\dQuote{zero})
 ##' @param fixedUtils numeric vector of values to fix for u11, u13, u14, and u24
 ##' respectively.  \code{NULL} (the default) indicates that these should be
 ##' estimated with regressors rather than fixed.
@@ -334,14 +341,15 @@ makeResponse12 <- function(yf)
 ##' \code{sdformula}.
 ##' @param sdByPlayer logical: if scale parameters are being estimated (i.e.,
 ##' \code{sdformula} or \code{fixedUtils} is non-\code{NULL}), should a separate
-##' one be estimated for each player?
+##' one be estimated for each player?  This option is ignored unless
+##' \code{fixedUtils} or \code{sdformula} is specified.
 ##' @param boot integer: number of bootstrap iterations to perform (if any).
 ##' @param bootreport logical: whether to print status bar when performing
 ##' bootstrap iterations.
 ##' @param ... other arguments to pass to the fitting function (see
 ##' \code{\link{maxBFGS}}).
-##' @return An object of class \code{c("strat", "strat12")}. A
-##' \code{strat} object is a list containing: \describe{
+##' @return An object of class \code{c("game", "egame12")}. A
+##' \code{game} object is a list containing: \describe{
 ##' \item{\code{coefficients}}{estimated parameters of the model.}
 ##' \item{\code{vcov}}{estimated variance-covariance matrix.  Cells referring to
 ##' a fixed parameter (e.g., a utility when \code{fixedUtils} is specified) will
@@ -364,9 +372,9 @@ makeResponse12 <- function(yf)
 ##' \item{\code{boot.matrix}}{if \code{boot} was non-zero, a matrix of bootstrap
 ##' parameter estimates (otherwise \code{NULL}).}
 ##' }
-##' The second class of the returned object, \code{strat12}, is for use in
+##' The second class of the returned object, \code{egame12}, is for use in
 ##' generation of predicted probabilities.
-##' @seealso \code{\link{summary.strat}} and \code{predProbs} for
+##' @seealso \code{\link{summary.game}} and \code{\link{predProbs}} for
 ##' postestimation analysis; \code{\link{Formula}} for formula specification.
 ##' @export
 ##' @references Jeffrey B. Lewis and Kenneth A Schultz.  2003.
@@ -375,7 +383,8 @@ makeResponse12 <- function(yf)
 ##'
 ##' Curtis S. Signorino.  2003.  \dQuote{Structure and Uncertainty
 ##' in Discrete Choice Models.}  \emph{Political Analysis} 11:316--344.
-##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com}) and Curtis
+##' S. Signorino
 ##' @examples
 ##' data(war1800)
 ##'
@@ -384,32 +393,32 @@ makeResponse12 <- function(yf)
 ##' ##    ^^^^^^^^^   ^^^^^^^^^^^^^^^^^   ^   ^^^^^^^   ^^^^^^^^^^^^^^^^
 ##' ##        y              u11         u13    u14           u24
 ##' 
-##' m1 <- strat12(f1, data = war1800)
+##' m1 <- egame12(f1, data = war1800)
 ##' summary(m1)
 ##' 
-##' m2 <- strat12(f1, data = war1800, link = "logit")
+##' m2 <- egame12(f1, data = war1800, link = "logit")
 ##' summary(m2)
 ##' 
-##' m3 <- strat12(f1, data = war1800, subset = year >= 1850)
+##' m3 <- egame12(f1, data = war1800, subset = year >= 1850)
 ##' summary(m3)
 ##'
-##' m4 <- strat12(f1, data = war1800, boot = 10)
+##' m4 <- egame12(f1, data = war1800, boot = 10)
 ##' summary(m4)
 ##' summary(m4, useboot = FALSE)
 ##'
 ##' ## estimating scale parameters under fixed utilities
 ##' utils <- c(-1, 0, -1.4, 0.1)
-##' m5 <- strat12(esc + war ~ 1, data = war1800, fixedUtils = utils)
+##' m5 <- egame12(esc + war ~ 1, data = war1800, fixedUtils = utils)
 ##' summary(m5)
 ##' 
-##' m6 <- strat12(esc + war ~ 1, data = war1800, fixedUtils = utils, sdByPlayer = TRUE)
+##' m6 <- egame12(esc + war ~ 1, data = war1800, fixedUtils = utils, sdByPlayer = TRUE)
 ##' summary(m6)
 ##' 
 ##' ## estimating scale parameters with regressors
-##' m7 <- strat12(f1, data = war1800, sdformula = ~ balanc)
+##' m7 <- egame12(f1, data = war1800, sdformula = ~ balanc - 1)
 ##' summary(m7)
 ##' 
-##' m8 <- strat12(f1, data = war1800, sdformula = ~ balanc | revis2, sdByPlayer = TRUE)
+##' m8 <- egame12(f1, data = war1800, sdformula = ~ balanc | revis2, sdByPlayer = TRUE)
 ##' summary(m8)
 ##' 
 ##' ## using a factor outcome
@@ -417,9 +426,9 @@ makeResponse12 <- function(yf)
 ##' war1800$y <- as.factor(y)
 ##' f2 <- update(Formula(f1), y ~ .)
 ##' 
-##' m9 <- strat12(f2, data = war1800)
+##' m9 <- egame12(f2, data = war1800)
 ##' summary(m9)
-strat12 <- function(formulas, data, subset, na.action,
+egame12 <- function(formulas, data, subset, na.action,
                     link = c("probit", "logit"),
                     type = c("agent", "private"),
                     startvals = c("sbi", "unif", "zero"),
@@ -547,7 +556,7 @@ strat12 <- function(formulas, data, subset, na.action,
     }
 
     if (boot > 0) {
-        bootMatrix <- stratBoot(boot, report = bootreport, estimate =
+        bootMatrix <- gameBoot(boot, report = bootreport, estimate =
                                 results$estimate, y = y, regr = regr, fn =
                                 logLik12, gr = gr, fixed = fvec, link = link,
                                 type = type, ...)
@@ -555,7 +564,7 @@ strat12 <- function(formulas, data, subset, na.action,
 
     ans <- list()
     ans$coefficients <- results$estimate
-    ans$vcov <- getStratVcov(results$hessian, fvec)
+    ans$vcov <- getGameVcov(results$hessian, fvec)
     ans$log.likelihood <- logLik12(results$estimate, y = y, regr = regr, link =
                                    link, type = type)
     ans$call <- cl
@@ -572,7 +581,7 @@ strat12 <- function(formulas, data, subset, na.action,
     if (boot > 0)
         ans$boot.matrix <- bootMatrix
     
-    class(ans) <- c("strat", "strat12")
+    class(ans) <- c("game", "egame12")
     
     return(ans)
 }

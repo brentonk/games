@@ -1,4 +1,4 @@
-##' @include strat.r
+##' @include games.r
 NULL
 
 predict.ultimatum <- function(object, newdata, ...)
@@ -164,18 +164,18 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' The model corresponds to the following extensive-form game, described in
 ##' Ramsay and Signorino (2009):
 ##' \preformatted{
-##' .       ___ 1 ___
-##' .      /         \
-##' .     /           \
-##' .    / y \in [0,Q] \
-##' .   /               \
-##' .   -----------------
-##' .           /\  2
-##' .          /  \
-##' .         /    \
-##' .        /      \
-##' .     Q - y     R1
-##' .     y         R2}
+##' .       1
+##' .      / \
+##' .     /   \
+##' .    /     \ y in [0, Q]
+##' .   /       \
+##' .   ---------
+##' .       /\  2
+##' .      /  \
+##' .     /    \
+##' .    /      \
+##' . Q - y     R1
+##' . y         R2}
 ##' Q refers to the maximum feasible offer (the argument \code{maxOffer}).
 ##'
 ##' The two equations on the right-hand side of \code{formulas} refer to Player
@@ -228,32 +228,33 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' \code{\link{maxBFGS}}).
 ##' @param reltol numeric: relative convergence tolerance level (see
 ##' \code{\link{optim}}).  Use of values higher than the default is discouraged.
-##' @return An object of class \code{c("strat", "ultimatum")}.  For details on
-##' the \code{strat} class, see \code{\link{strat12}}.  The \code{ultimatum}
+##' @return An object of class \code{c("game", "ultimatum")}.  For details on
+##' the \code{game} class, see \code{\link{egame12}}.  The \code{ultimatum}
 ##' class is just for use in the generation of predicted values (see
 ##' \code{\link{predProbs}}).
 ##' @export
 ##' @references Kristopher W. Ramsay and Curtis S. Signorino.  2009.  \dQuote{A
 ##' Statistical Model of the Ultimatum Game.}  Available online at
 ##' \url{http://www.rochester.edu/college/psc/signorino/research/RamsaySignorino_Ultimatum.pdf}.
-##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com}) and Curtis
+##' S. Signorino
 ##' @examples
-##' data(simult)
+##' data(data_ult)
 ##'
 ##' ## the formula:
 ##' f1 <- offer + accept ~ x1 + x2 + x3 + x4 + w1 + w2 | z1 + z2 + z3 + z4 + w1 + w2
 ##' ##                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ##' ##                                  R1                              R2
-##' 
-##' m1 <- ultimatum(f1, data = simult, maxOffer = 15)
+##'
+##' m1 <- ultimatum(f1, data = data_ult, maxOffer = 15)
 ##' summary(m1)
 ##'
 ##' ## estimating offer size only
 ##' f2 <- update(Formula(f1), offer ~ .)
-##' m2 <- ultimatum(f2, data = simult, maxOffer = 15, outcome = "offer")
+##' m2 <- ultimatum(f2, data = data_ult, maxOffer = 15, outcome = "offer")
 ##'
 ##' ## fixing scale terms
-##' m3 <- ultimatum(f1, data = simult, maxOffer = 15, s1 = 5, s2 = 1)
+##' m3 <- ultimatum(f1, data = data_ult, maxOffer = 15, s1 = 5, s2 = 1)
 ##' summary(m3)
 ultimatum <- function(formulas, data, subset, na.action,
                       maxOffer, offertol = sqrt(.Machine$double.eps),
@@ -290,7 +291,7 @@ ultimatum <- function(formulas, data, subset, na.action,
     } else {
         if (!offerOnly) {
             stop("a dependent variable for acceptance must be specified if",
-                 " `outcome == \"both\"`; see `?stratult`")
+                 " `outcome == \"both\"`; see `?ultimatum`")
         }
         y <- ya
     }
@@ -339,7 +340,7 @@ ultimatum <- function(formulas, data, subset, na.action,
     }
 
     if (boot > 0) {
-        bootMatrix <- stratBoot(boot, report = bootreport, estimate =
+        bootMatrix <- gameBoot(boot, report = bootreport, estimate =
                                 results$estimate, y = y, a = a, regr = regr, fn
                                 = logLikUlt, gr = logLikGradUlt , fixed = fvec,
                                 maxOffer = maxOffer, offerOnly = offerOnly,
@@ -348,7 +349,7 @@ ultimatum <- function(formulas, data, subset, na.action,
 
     ans <- list()
     ans$coefficients <- results$estimate
-    ans$vcov <- getStratVcov(results$hessian, fvec)
+    ans$vcov <- getGameVcov(results$hessian, fvec)
     ans$log.likelihood <-
         logLikUlt(results$estimate, y = y, acc = a, regr = regr, maxOffer =
                   maxOffer, offertol = offertol, offerOnly = offerOnly)
@@ -367,7 +368,7 @@ ultimatum <- function(formulas, data, subset, na.action,
         ans$boot.matrix <- bootMatrix
     ans$maxOffer <- maxOffer
 
-    class(ans) <- c("strat", "ultimatum")
+    class(ans) <- c("game", "ultimatum")
 
     return(ans)
 }

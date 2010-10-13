@@ -1,6 +1,6 @@
 ##' A package for estimating strategic statistical models.
 ##' 
-##' @name strat-package
+##' @name games-package
 ##' @docType package
 ##' @references
 ##' Curtis S. Signorino.  2003.  \dQuote{Structure and Uncertainty
@@ -29,7 +29,7 @@ NULL
 ##' \item{\code{peaceyrs}}{Years since last dispute in this dyad}
 ##' \item{\code{midnum}}{Dispute's number in the MID data set}
 ##' \item{\code{revis1}}{Whether the initiator had \dQuote{revisionist} aims}
-##' \item{code{revis2}}{Whether the respondent had \dQuote{revisionist} aims}
+##' \item{\code{revis2}}{Whether the respondent had \dQuote{revisionist} aims}
 ##' \item{\code{sq}}{Indicator for status quo outcome}
 ##' \item{\code{capit}}{Indicator for capitulation outcome}
 ##' \item{\code{war}}{Indicator for war outcome}
@@ -46,11 +46,11 @@ NULL
 ##' \dQuote{Militarized Interstate Disputes, 1816-1992: Rationale, Coding Rules,
 ##' and Empirical Patterns.} \emph{Conflict Management and Peace Science}
 ##' 15(2): 163--213.
-##' @seealso \code{\link{strat12}}
+##' @seealso \code{\link{egame12}}
 ##' @keywords data
 NULL
 
-##' Simulated data for illustrating \code{\link{strat122}}.
+##' Simulated data for illustrating \code{\link{egame122}}.
 ##'
 ##' The variables are: \describe{
 ##' \item{\code{f1}, \code{f2}}{Factors with levels \dQuote{a}, \dQuote{b},
@@ -61,11 +61,11 @@ NULL
 ##' \item{\code{a2}}{Indicator for Player 2's move (L or R)}
 ##' \item{\code{y}}{Factor containing outcome}
 ##' }
-##' @name sim122
-##' @usage data(sim122)
-##' @title Simulated strat122 data
+##' @name data_122
+##' @usage data(data_122)
+##' @title Simulated egame122 data
 ##' @docType data
-##' @seealso \code{\link{strat122}}
+##' @seealso \code{\link{egame122}}
 ##' @keywords data
 NULL
 
@@ -80,26 +80,26 @@ NULL
 ##' \item{\code{z1}--\code{z4}}{Variables entering Player 2's reservation value}
 ##' }
 ##' The maximum offer size is 15.
-##' @name simult
-##' @usage data(simult)
+##' @name data_ult
+##' @usage data(data_ult)
 ##' @title Simulated ultimatum data
 ##' @docType data
 ##' @seealso \code{\link{ultimatum}}
 ##' @keywords data
 NULL
 
-##' The default method for printing a \code{strat} object.
+##' The default method for printing a \code{game} object.
 ##'
 ##' Prints the call and coefficients of a fitted strategic model.
 ##' @title Print a strategic model object
-##' @param x a fitted model of class \code{strat}
+##' @param x a fitted model of class \code{game}
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly
-##' @method print strat
-##' @S3method print strat
+##' @method print game
+##' @S3method print game
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-print.strat <- function(x, ...)
+print.game <- function(x, ...)
 {
     oldx <- x
     cat("\nA fitted strategic model\n\nCALL:\n\n")
@@ -146,24 +146,24 @@ print.strat <- function(x, ...)
     invisible(oldx)
 }
 
-##' The default method for summarizing a \code{strat} object.
+##' The default method for summarizing a \code{game} object.
 ##'
 ##' Forms the standard regression results table from a fitted strategic model.
 ##' Normally used interactively, in conjunction with
-##' \code{\link{print.summary.strat}}.
+##' \code{\link{print.summary.game}}.
 ##' @title Summarize a strategic model object
-##' @method summary strat
-##' @S3method summary strat
-##' @param object a fitted model of class \code{strat}
+##' @method summary game
+##' @S3method summary game
+##' @param object a fitted model of class \code{game}
 ##' @param useboot logical: use bootstrap estimates (if present) to construct
 ##' standard error estimates?
 ##' @param ... other arguments, currently ignored
-##' @return an object of class \code{summary.strat}, containing the coefficient
+##' @return an object of class \code{summary.game}, containing the coefficient
 ##' matrix and other information needed for printing
-##' @seealso \code{\link{print.summary.strat}}
+##' @seealso \code{\link{print.summary.game}}
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-summary.strat <- function(object, useboot = TRUE, ...)
+summary.game <- function(object, useboot = TRUE, ...)
 {
     useboot <- useboot && !is.null(object$boot.matrix)
     if (useboot)
@@ -183,25 +183,25 @@ summary.strat <- function(object, useboot = TRUE, ...)
     ans$fixed.terms <- object$coefficients[object$fixed]
     ans$convergence <- object$convergence
     ans$useboot <- useboot
-    class(ans) <- "summary.strat"
+    class(ans) <- "summary.game"
 
     return(ans)
 }
 
-##' Print output from \code{summary.strat}
+##' Print output from \code{summary.game}
 ##'
 ##' Prints the standard regression results table from a fitted strategic model,
 ##' along with the log-likelihood, AIC, and number of observations.
 ##' @title Print strategic model summary
-##' @method print summary.strat
-##' @S3method print summary.strat
-##' @param x an object of class \code{summary.strat}, typically produced by
-##'running \code{summary} on a fitted model of class \code{strat}
+##' @method print summary.game
+##' @S3method print summary.game
+##' @param x an object of class \code{summary.game}, typically produced by
+##'running \code{summary} on a fitted model of class \code{game}
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly.
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-print.summary.strat <- function(x, ...)
+print.summary.game <- function(x, ...)
 {
     cat("\nCall:\n")
     print(x$call)
@@ -226,17 +226,17 @@ print.summary.strat <- function(x, ...)
     invisible(x)
 }
 
-coef.strat <- function(object, ...)
+coef.game <- function(object, ...)
 {
     object$coefficients
 }
 
-vcov.strat <- function(object, ...)
+vcov.game <- function(object, ...)
 {
     object$vcov
 }
 
-logLik.strat <- function(object, ...)
+logLik.game <- function(object, ...)
 {
     ans <- sum(object$log.likelihood)
     attr(ans, "df") <- length(object$coefficients) - sum(object$fixed)
@@ -245,7 +245,7 @@ logLik.strat <- function(object, ...)
     return(ans)
 }
 
-logLik.summary.strat <- function(object, ...)
+logLik.summary.game <- function(object, ...)
 {
     ans <- object$log.likelihood
     attr(ans, "df") <- nrow(object$coefficients)
@@ -263,28 +263,28 @@ logLik.summary.strat <- function(object, ...)
 ##' independent variable, the function \code{\link{predProbs}} will be more
 ##' convenient.
 ##' @title Predicted probabilities for strategic models
-##' @aliases predict.strat predict.strat12 predict.strat122 predict.ultimatum
+##' @aliases predict.game predict.egame12 predict.egame122 predict.ultimatum
 ##' @usage
-##' \method{predict}{strat}(object, ...)
+##' \method{predict}{game}(object, ...)
 ##'
-##' \method{predict}{strat12}(object, newdata, probs=c("outcome", "action"), ...)
-##' \method{predict}{strat122}(object, newdata, probs=c("outcome", "action"), ...)
+##' \method{predict}{egame12}(object, newdata, probs=c("outcome", "action"), ...)
+##' \method{predict}{egame122}(object, newdata, probs=c("outcome", "action"), ...)
 ##' \method{predict}{ultimatum}(object, newdata, ...)
-##' @param object a fitted model of class \code{strat}.
+##' @param object a fitted model of class \code{game}.
 ##' @param newdata data frame of values to make the predicted probabilities for.
 ##' If this is left empty, the original dataset is used.
 ##' @param probs whether to provide probabilities for outcomes (e.g., L, RL, or
-##' RR in \code{strat12}) or for actions (e.g., whether 2 moves L or R given
+##' RR in \code{egame12}) or for actions (e.g., whether 2 moves L or R given
 ##' that 1 moved R).
 ##' @param ... other arguments, currently ignored.
 ##' @return A data frame of predicted probabilities.
-##' @method predict strat
-##' @S3method predict strat
+##' @method predict game
+##' @S3method predict game
 ##' @export
 ##' @seealso \code{\link{predProbs}} provides a more full-featured and
 ##' user-friendly wrapper, including plots and confidence bands.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-predict.strat <- function(object, ...)
+predict.game <- function(object, ...)
 {
     NextMethod("predict", object, ...)
 }
@@ -313,17 +313,21 @@ latexEsc <- function(x)
 ##' \code{latexTable} prints LaTeX code for the presentation of results from a
 ##' strategic model.  Each row contains one regressor, and each column contains
 ##' one of the utility (or variance term) equations in the model.  For example,
-##' in a model fit with \code{\link{strat12}}, the four columns will be u11,
+##' in a model fit with \code{\link{egame12}}, the four columns will be u11,
 ##' u13, u14, and u24 respectively.  Each cell contains the estimated parameter,
 ##' atop its standard error in parentheses.  Cells that are empty because a
 ##' regressor is not included in a particular equation are filled with the
-##' string specified in the option \code{blankfill}.  Signorino and Tarar (2003,
+##' string specified in the option \code{blankfill}.  Signorino and Tarar (2006,
 ##' p. 593) contains a table of this variety.
+##'
+##' The table generated depends on the \pkg{multirow} package for LaTeX, so
+##' make sure to include \code{\\usepackage{multirow}} in the preamble of your
+##' document.
 ##' 
 ##' The \code{digits} option does not yet work seamlessly; you may have to
 ##' resort to trial and error.
 ##' @title LaTeX table for strategic models
-##' @param x a fitted model of class \code{strat}.
+##' @param x a fitted model of class \code{game}.
 ##' @param digits number of digits to print.
 ##' @param scientific logical or integer value to control use of scientific
 ##' notation.  See \code{\link{format}}.
@@ -336,7 +340,7 @@ latexEsc <- function(x)
 ##' @param floatplace where to place the table float; e.g., for
 ##' \code{\\begin\{table\}[htp]}, use \code{floatplace = "htp"}.
 ##' @param rowsep amount of space (in points) to put between rows.
-##' @param useboot logical: use bootstrap estimates (if available) to get
+##' @param useboot logical: use bootstrap estimates (if available) to calculate
 ##' standard errors?
 ##' @return \code{x}, invisibly.
 ##' @export
@@ -347,7 +351,7 @@ latexEsc <- function(x)
 ##' @examples
 ##' data(war1800)
 ##' f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | balanc + revis1 | balanc
-##' m1 <- strat12(f1, data = war1800)
+##' m1 <- egame12(f1, data = war1800)
 ##'
 ##' latexTable(m1)
 ##' latexTable(m1, digits = 8)
@@ -375,7 +379,7 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
                               x$equations %in% n[!x$fixed]]
 
     lcat("\n%% latex table generated in R ", as.character(getRversion()),
-         " by strat package\n")
+         " by games package\n")
     lcat("%% ", date(), "\n")
     lcat("%% remember to include \\usepackage{multirow} in your preamble\n\n")
     lcat("\\begin{table}[", floatplace, "]\n")
@@ -481,7 +485,7 @@ intersectAll <- function(...)
 }
 
 ##
-## Makes the names of the variables for strat12 and strat122 models.
+## Makes the names of the variables for egame12 and egame122 models.
 ## 
 makeVarNames <- function(varNames, prefixes, link, sdterms)
 {
@@ -540,11 +544,11 @@ prefixToString <- function(x)
 }
 
 ##
-## Gets the variance-covariance matrix from a fitted model, including a
+## Calculates the variance-covariance matrix for a fitted model, including a
 ## procedure for catching the error (and returning a matrix of NAs) in case the
 ## Hessian is non-invertible.
 ##
-getStratVcov <- function(hessian, fixed)
+getGameVcov <- function(hessian, fixed)
 {
     hes <- hessian[!fixed, !fixed, drop = FALSE]
     vv <- tryCatch(solve(-hes), error = function(e) e)
@@ -560,9 +564,9 @@ getStratVcov <- function(hessian, fixed)
 }
 
 ##
-## Gets bootstrap results for a strategic model.
+## Calculates bootstrap results for a strategic model.
 ## 
-stratBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
+gameBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
                       fixed, ...)
 {
     bootMatrix <- matrix(NA, nrow = boot, ncol = length(estimate))
@@ -580,7 +584,7 @@ stratBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
                                fixed, y = newy, acc = newa, regr = newregr, ...)
         if (bootResults$code) {
             warning("bootstrap iteration ", i,
-                      "failed to converge and will be removed")
+                    "failed to converge and will be removed")
             failedBoot[i] <- TRUE
         }
         bootMatrix[i, ] <- bootResults$estimate
@@ -595,7 +599,7 @@ stratBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
     return(bootMatrix)
 }
 
-##' Gets the modal value of a vector of any class.
+##' Finds the modal value of a vector of any class.
 ##'
 ##' Based on code from the R wiki:
 ##' \url{http://rwiki.sciviews.org/doku.php?id=tips:stats-basic:modalvalue}.
@@ -619,6 +623,8 @@ stratBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
 ##' ## behavior with ties
 ##' y <- c(3, 3, 1, 1, 2)
 ##' Mode(y)  ## 3
+##' z <- c(2, 1, 1, 3, 3)
+##' Mode(z)  ## 1
 Mode <- function(x, na.rm = FALSE)
 {
     x <- unlist(x);
@@ -713,8 +719,8 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
     for (i in seq_along(ans))
         ans[[i]] <- matrix(nrow = n, ncol = nrow(forDims))
 
-    ## Gets the predicted values for each observation using each bootstrapped
-    ## coefficient vector
+    ## Calculates the predicted values for each observation using each
+    ## bootstrapped coefficient vector
     if (report) {
         cat("\nCalculating confidence intervals...\n")
         pb <- txtProgressBar(min = 1, max = n)
@@ -777,11 +783,11 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
 ##' parameter estimates.  In this case, a warning is issued.
 ##'
 ##' For information on plotting the predicted probabilities, see
-##' \code{\link{plot.stratpp}}.  The plots are made with base graphics.  If you
+##' \code{\link{plot.predProbs}}.  The plots are made with base graphics.  If you
 ##' prefer to use an alternative graphics package, all the information necessary
 ##' to make the plots is included in the data frame returned.
 ##' @title User-friendly predicted probability analysis
-##' @param model a fitted model of class \code{strat}.
+##' @param model a fitted model of class \code{game}.
 ##' @param x character string giving the name of the variable to place
 ##' \dQuote{on the x-axis} while all others are held constant.  Partial matches
 ##' are accepted.
@@ -792,28 +798,28 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
 ##' @param ci numeric: width of the confidence interval to estimate around each
 ##' predicted probability.  Set to \code{0} to estimate no confidence intervals.
 ##' @param makePlots logical: whether to automatically make the default plot
-##' for the returned object.  See \code{\link{plot.stratpp}}.
+##' for the returned object.  See \code{\link{plot.predProbs}}.
 ##' @param report logical: whether to print a status bar while obtaining the
 ##' confidence intervals for the predicted probabilities.
 ##' @param ... used to set values for variables other than \code{x} in the
 ##' profile of observations.  See \dQuote{Details} and \dQuote{Examples}.
-##' @return An object of class \code{stratpp}.  This is a data frame containing
+##' @return An object of class \code{predProbs}.  This is a data frame containing
 ##' each hypothetical observation's predicted probability, the upper and lower
 ##' bounds of the confidence interval, and the value of each regressor.
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com}).  Code for
 ##' escaping special regex characters was taken from the \code{Hmisc} package's
 ##' function \code{escapeRegex}, written by Charles Dupont.
-##' @seealso \code{\link{predict.strat12}} for somewhat more flexible (but
-##' fussier) generation of predicted probabilities.
+##' @seealso \code{\link{predict.game}} for somewhat more flexible (but fussier)
+##' generation of predicted probabilities.
 ##' @examples
 ##' data(war1800)
 ##' f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | regime1 | balanc + regime2
-##' m1 <- strat12(f1, data = war1800, boot = 10)
+##' m1 <- egame12(f1, data = war1800, boot = 10)
 ##'
 ##' pp1 <- predProbs(m1, x = "s_wt_re1", n = 5)
 ##' print(pp1)  ## the hypothetical observations and their predicted probs
-##' plot(pp1, which = 2)  ## see ?plot.stratpp for more plot examples
+##' plot(pp1, which = 2)  ## see ?plot.predProbs for more plot examples
 ##'
 ##' ## changing the profile used
 ##' pp2 <- predProbs(m1, x = "s_wt_re1", n = 5, revis1 = 1, balanc = 0.7)
@@ -829,10 +835,10 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
 ##' 
 ##' ## predProbs (despite the name) also provides predictions for the optimal
 ##' ## offer in ultimatum models
-##' data(simult)
+##' data(data_ult)
 ##' f2 <- offer + accept ~ x1 + x2 + x3 + x4 + w1 + w2 | z1 + z2 + z3 + z4 + w1 + w2
-##' m2 <- ultimatum(f2, data = simult, maxOffer = 15, boot = 10)
-##' pp7 <- predProbs(m2, x = "w1", n = 15)
+##' m2 <- ultimatum(f2, data = data_ult, maxOffer = 15, boot = 10)
+##' pp7 <- predProbs(m2, x = "w1", n = 5)
 ##' print(pp7)
 ##'
 ##' op <- par(mfrow = c(2, 1))
@@ -919,7 +925,7 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
     attr(ans, "lowcols") <- lowcols
     attr(ans, "highcols") <- highcols
     attr(ans, "xcol") <- xcol
-    class(ans) <- c("stratpp", "data.frame")
+    class(ans) <- c("predProbs", "data.frame")
 
     if (makePlots)
         plot(ans)
@@ -936,19 +942,19 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ##' Plots predicted probabilities and associated confidence bands, using the
 ##' data returned from a call to \code{\link{predProbs}}.
 ##'
-##' Most \code{stratpp} objects will be associated with multiple plots: one for
+##' Most \code{predProbs} objects will be associated with multiple plots: one for
 ##' each outcome in the estimated model.  These are the three or four terminal
-##' nodes for a \code{\link{strat12}} or \code{\link{strat122}} model
+##' nodes for a \code{\link{egame12}} or \code{\link{egame122}} model
 ##' respectively; for an \code{\link{ultimatum}} model, these are the expected
-##' offer and the probability of acceptance.  By default, \code{plot.stratpp}
+##' offer and the probability of acceptance.  By default, \code{plot.predProbs}
 ##' produces plots for all of them, so only the last will be visible unless the
 ##' graphics device is set to have multiple figures (e.g., by setting
 ##' \code{par(mfrow = ...)}).  The argument \code{ask} displays a menu to select
 ##' among the possible plots for a given object, and \code{which} allows for
 ##' this to be done non-interactively.
 ##' @title Plot predicted probabilities
-##' @param x an object of class \code{stratpp} (i.e., a data frame returned by
-##' \code{\link{predProbs}}.
+##' @param x an object of class \code{predProbs} (i.e., a data frame returned by
+##' \code{\link{predProbs}}).
 ##' @param which optional integer specifying which plot (as numbered in the menu
 ##' displayed when \code{ask == TRUE}) to make.  If none is given, all available
 ##' plots are printed in succession.
@@ -957,16 +963,16 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ##' @param ... further arguments to pass to the plotting function.  See
 ##' \code{\link{plot.default}} (when the variable on the x-axis is continuous)
 ##' or \code{\link{bxp}} (when it is discrete).
-##' @return an object of class \code{preplot.stratpp}, invisibly.  This contains
+##' @return an object of class \code{preplot.predProbs}, invisibly.  This contains
 ##' the raw information used by lower-level plotting functions.
-##' @method plot stratpp
-##' @S3method plot stratpp
+##' @method plot predProbs
+##' @S3method plot predProbs
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 ##' @examples
 ##' data(war1800)
 ##' f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | regime1 | balanc + regime2
-##' m1 <- strat12(f1, data = war1800, boot = 10)
+##' m1 <- egame12(f1, data = war1800, boot = 10)
 ##' pp1 <- predProbs(m1, x = "balanc", n = 5)  ## continuous x
 ##' pp2 <- predProbs(m1, x = "regime1")  ## discrete x
 ##'
@@ -992,7 +998,7 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ##'
 ##' ## discrete x variables are plotted via R's boxplot functionality
 ##' plot(pp2, which = 3)
-plot.stratpp <- function(x, which = NULL, ask = FALSE, ...)
+plot.predProbs <- function(x, which = NULL, ask = FALSE, ...)
 {
     probs <- x[, attr(x, "probcols"), drop = FALSE]
     if (length(attr(x, "lowcols"))) {
@@ -1005,7 +1011,7 @@ plot.stratpp <- function(x, which = NULL, ask = FALSE, ...)
     probnames <- names(x)[attr(x, "probcols")]
 
     preplotObj <- vector("list", ncol(probs))
-    class(preplotObj) <- "preplot.stratpp"
+    class(preplotObj) <- "preplot.predProbs"
     for (i in 1:ncol(probs)) {
         preplotObj[[i]] <- list()
         preplotObj[[i]]$x <- xvar
@@ -1014,7 +1020,7 @@ plot.stratpp <- function(x, which = NULL, ask = FALSE, ...)
         preplotObj[[i]]$high <- highs[, i]
         preplotObj[[i]]$xlab <- names(x)[attr(x, "xcol")]
         preplotObj[[i]]$ylab <- probnames[i]
-        class(preplotObj[[i]]) <- "preplot.stratpp"
+        class(preplotObj[[i]]) <- "preplot.predProbs"
     }
 
     if (is.null(which) && ask) {
@@ -1024,25 +1030,25 @@ plot.stratpp <- function(x, which = NULL, ask = FALSE, ...)
             pick <- menu(tmenu, title =
                          "Make a plot selection (or 0 to exit):\n")
             if (pick > 0 && pick < length(tmenu)) {
-                plot.preplot.stratpp(preplotObj[[pick]], ...)
+                plot.preplot.predProbs(preplotObj[[pick]], ...)
             } else if (pick == length(tmenu)) {
-                plot.preplot.stratpp(preplotObj, ...)
+                plot.preplot.predProbs(preplotObj, ...)
             }
         }
     } else if (!is.null(which)) {
-        plot.preplot.stratpp(preplotObj[[which]], ...)
+        plot.preplot.predProbs(preplotObj[[which]], ...)
     } else {
-        plot.preplot.stratpp(preplotObj, ...)
+        plot.preplot.predProbs(preplotObj, ...)
     }
 
     invisible(preplotObj)
 }
 
-plot.preplot.stratpp <- function(x, xlab = x$xlab, ylab = x$ylab,
+plot.preplot.predProbs <- function(x, xlab = x$xlab, ylab = x$ylab,
                                  ylim = c(min(x$y, x$low), max(x$y, x$high)),
                                  type = "l", lty.ci = 2, ...)
 {
-    listof <- inherits(x[[1]], "preplot.stratpp")
+    listof <- inherits(x[[1]], "preplot.predProbs")
     cl <- match.call()
     
     if (listof) {
@@ -1079,7 +1085,8 @@ plot.preplot.stratpp <- function(x, xlab = x$xlab, ylab = x$ylab,
 
 ##' Solves for W in the equation \eqn{W e^W = x}{W * exp(W) = x}.
 ##'
-##' Based on the code given in Barry et al. (1995).
+##' The function is based on the code given in Barry et al. (1995).  It is used
+##' to calculate fitted values for the \code{\link{ultimatum}} model.
 ##'
 ##' If negative values of \code{x} are supplied, \code{NaN}s will likely be
 ##' returned.
@@ -1130,4 +1137,54 @@ LW <- function(x)
     W4 <- W3*(1+eW(x,W3))               # enough
 
     return(W4)
+}
+
+##
+## Individual log-likelihoods for a model of class "game", "glm", "vglm"
+## (multinomial logit via VGAM or Zelig), "polr" (ordered logit/probit via MASS
+## or Zelig)
+##
+## The "outcome" argument is for comparing a strategic model to a binary logit
+## or probit model where the response is one of the possible outcomes (see the
+## examples for the "vuong"/"clarke" functions)
+## 
+indivLogLiks <- function(model, outcome)
+{
+    ## need to deal with weights?
+
+    ## change how it works for the ultimatum model?  model$y == outcome will
+    ## give the wrong results.  OTOH if only outcome of interest is the offer,
+    ## that should specified -- perhaps ask curt?
+    
+    if (inherits(model, "game") && is.null(outcome)) {
+        ans <- model$log.likelihood
+    } else if (inherits(model, "game")) {
+        pp <- predict(model)[, outcome]
+        ans <- ifelse(as.numeric(model$y) == outcome, pp, 1 - pp)
+        ans <- log(ans)
+    } else if (inherits(model, "glm")) {
+        ans <- ifelse(model$y == 1, fitted.values(model),
+                      1 - fitted.values(model))
+        ans <- log(ans)
+    } else if (inherits(model, "vglm") && "multinomial" %in%
+               model@family@vfamily) {
+        y <- apply(model@y, 1, function(x) which(x == 1))
+        pp <- fitted.values(model)
+        pp <- pp[cbind(1:nrow(pp), y)]  # gets the y[i]'th entry from the i'th
+                                        # row of pp
+        ans <- log(pp)
+    } else if (inherits(model, "polr")) {
+        y <- as.numeric(model.response(model$model))
+        pp <- fitted.values(model)
+        pp <- pp[cbind(1:nrow(pp), y)]
+        ans <- log(pp)
+    } else {
+        stop("model is not of a supported class")
+    }
+
+    return(ans)
+}
+
+vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL)
+{
 }

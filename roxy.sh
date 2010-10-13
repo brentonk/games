@@ -1,18 +1,18 @@
 #!/bin/bash
 
-rm -rf ./strat.roxygen
+rm -rf ./games.roxygen
 
 /usr/bin/R --no-save <<EOF
 library(roxygen)
-roxygenize("strat", use.Rd2 = TRUE)
+roxygenize("games", use.Rd2 = TRUE)
 q()
 EOF
 
-rmdir strat.roxygen/inst/doc
-rmdir strat.roxygen/inst
+rmdir games.roxygen/inst/doc
+rmdir games.roxygen/inst
 
 # for including S3 method directives for undocumented methods
-cat ./strat/NAMESPACE >> ./strat.roxygen/NAMESPACE
+cat ./games/NAMESPACE >> ./games.roxygen/NAMESPACE
 
-R CMD check strat.roxygen
-R CMD build strat.roxygen
+R CMD check games.roxygen
+R CMD build games.roxygen

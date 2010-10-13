@@ -39,5 +39,6 @@ names(sim122) <- sim122names
 sim122$a1 <- a1
 sim122$a2 <- a2
 sim122$y <- y
+data_122 <- sim122
 
-save(sim122, file = "~/.strat/strat/data/sim122.rda")
+save(data_122, file = "~/.games/games/data/data_122.rda")
