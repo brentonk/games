@@ -3,21 +3,21 @@
 #+EMAIL: brenton.kenkel@gmail.com
 
 
-~strat~ is an R package for estimating the strategic statistical models
+~games~ is an R package for estimating the strategic statistical models
 developed by [[http://www.rochester.edu/college/psc/signorino/][Curt Signorino]].
 
 
 * DESCRIPTION file
 
 #+BEGIN_EXAMPLE
-Package: strat
-Title: Strategic Models
-Version: 0.1-0
-Date: 2010-09-12
+Package: games
+Title: Game-Theoretic Statistical Models
+Version: 0.5-0
+Date: 2010-10-12
 Author: Curtis S. Signorino and Brenton Kenkel
 Maintainer: Brenton Kenkel <brenton.kenkel@gmail.com>
 Description: Provides estimation and analysis functions for
-    discrete-choice strategic models.
+    strategic statistical models.
 License: GPL (>= 2)
 Depends: Formula (>= 0.2-0), maxLik (>= 0.7-0), MASS
 LazyLoad: yes
