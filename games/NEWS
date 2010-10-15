@@ -2,7 +2,7 @@
 ===== The 'games' package =====
 ===============================
 
-games 0.5.0 (2010-10-12)
+games 0.5-0 (2010-10-13)
 ------------------------
 
-* Initial submission to CRAN
+* Initial release of package

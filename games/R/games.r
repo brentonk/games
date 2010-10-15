@@ -920,12 +920,9 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
         lowcols <- highcols <- numeric(0)
     }
     xcol <- max(probcols, lowcols, highcols) + xc
-    ans <- cbind(ans, profData)
-    attr(ans, "probcols") <- probcols
-    attr(ans, "lowcols") <- lowcols
-    attr(ans, "highcols") <- highcols
-    attr(ans, "xcol") <- xcol
-    class(ans) <- c("predProbs", "data.frame")
+    ans <- structure(cbind(ans, profData), probcols = probcols, lowcols =
+                     lowcols, highcols = highcols, xcol = xcol, class =
+                     c("predProbs", "data.frame"))
 
     if (makePlots)
         plot(ans)
