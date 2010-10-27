@@ -131,3 +131,35 @@ makeVarNames <- function(varNames, prefixes, link, sdterms)
     ans <- list(varNames = varNames, hasColon = hasColon)
     return(ans)
 }
+
+##
+## Calculates utilities from the given list of regressors (regr) and vector of
+## coefficients (b); returns the regressors and the "remaining" coefficients
+## (those for scale parameters, if any) in a list.  nutils specifies which
+## elements of regr are for utilities rather than scale parameters; e.g., if
+## nutils = 4, then the first four matrices of regr are used to create utility
+## vectors, and the rest are used for scale terms.  unames, which must be of
+## length nutils, specifies names for the utility terms in the list returned.
+##
+makeUtils <- function(b, regr, nutils, unames)
+{
+    utils <- vector("list", nutils)
+    if (!missing(unames)) {
+        if (length(unames) != nutils)
+            stop("length(unames) must equal nutils")
+        names(utils) <- unames
+    }
+
+    rcols <- sapply(regr, ncol)
+    for (i in 1:nutils) {
+        if (rcols[i] > 0) {
+            utils[[i]] <- as.numeric(regr[[i]] %*% b[1:rcols[i]])
+            b <- b[-(1:rcols[i])]
+        } else {
+            utils[[i]] <- rep(0, nrow(regr[[i]]))
+        }
+    }
+
+    utils$b <- b
+    return(utils)
+}

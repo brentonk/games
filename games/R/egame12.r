@@ -70,25 +70,6 @@ sbi12 <- function(y, regr, link)
     return(ans)
 }
 
-makeUtils12 <- function(b, regr)
-{
-    utils <- vector("list", 4)
-    names(utils) <- c("u11", "u13", "u14", "u24")
-    
-    rcols <- sapply(regr, ncol)
-    for (i in 1:4) {
-        if (rcols[i] > 0) {
-            utils[[i]] <- as.numeric(regr[[i]] %*% b[1:rcols[i]])
-            b <- b[-(1:rcols[i])]
-        } else {
-            utils[[i]] <- rep(0, nrow(regr[[i]]))
-        }
-    }
-
-    utils$b <- b
-    return(utils)
-}
-
 makeSDs12 <- function(b, regr, type)
 {
     sds <- vector("list", 4)
@@ -114,7 +95,8 @@ makeSDs12 <- function(b, regr, type)
 
 makeProbs12 <- function(b, regr, link, type)
 {
-    utils <- makeUtils12(b, regr)
+    utils <- makeUtils(b, regr, nutils = 4,
+                       unames = c("u11", "u13", "u14", "u24"))
 
     ## length(utils$b) == 0 means no terms left for the variance components
     if (length(utils$b) == 0) {
@@ -164,7 +146,8 @@ logLik12 <- function(b, y, regr, link, type, ...)
 
 logLikGrad12 <- function(b, y, regr, link, type, ...)
 {
-    u <- makeUtils12(b, regr)
+    u <- makeUtils(b, regr, nutils = 4,
+                   unames = c("u11", "u13", "u14", "u24"))
     p <- makeProbs12(b, regr, link, type)
     rcols <- sapply(regr, ncol)
 

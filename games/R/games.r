@@ -356,81 +356,6 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
 }
 
 ##
-## Ensures that estimated probabilities aren't numerically equal to 1 or 0, in
-## order to ensure no -Infs or 0s in log-likelihoods.
-##
-finiteProbs <- function(x)
-{
-    x <- replace(x, x < .Machine$double.eps, .Machine$double.eps)
-    x <- replace(x, x > 1 - .Machine$double.neg.eps,
-                 1 - .Machine$double.neg.eps)
-    return(x)
-}
-
-finitize <- function(x)
-{
-    x <- ifelse(is.finite(x), x, sign(x) * .Machine$double.xmax)
-    return(x)
-}
-
-##
-## Used to ensure that the "formulas" argument of each fitting function contains
-## a valid type of object and coerces it to "Formula" class.  Returns an error
-## if the function isn't a formula, Formula, or list of formulas.
-##
-checkFormulas <- function(f, argname = "formulas")
-{
-    if (inherits(f, "list")) {
-        f <- do.call(as.Formula, f)
-    } else if (inherits(f, "formula")) {
-        f <- as.Formula(f)
-    } else {
-        stop(argname, " must be a list of formulas or a formula")
-    }
-
-    return(f)
-}
-
-##
-## Takes a list of vectors and finds their intersection
-##
-intersectAll <- function(...)
-{
-    x <- list(...)
-    ans <- x[[1]]
-    for (i in 1:length(x)) ans <- intersect(ans, x[[i]])
-
-    return(ans)
-}
-
-##
-## Makes the names of the variables for egame12 and egame122 models.
-## 
-makeVarNames <- function(varNames, prefixes, link, sdterms)
-{
-    vname <- if (link == "logit") "log(lambda" else "log(sigma"
-    if (sdterms == 1) {
-        prefixes <- c(prefixes, paste(vname, ")", sep = ""))
-    } else if (sdterms == 2) {
-        prefixes <- c(prefixes, paste(vname, 1:2, ")", sep = ""))
-    }
-
-    hasColon <- sapply(varNames, function(x) length(x) > 0 &&
-                       !all(x == "(Intercept)"))
-    names(hasColon) <- prefixes
-    for (i in seq_along(varNames)) {
-        if (hasColon[i]) {
-            varNames[[i]] <- paste(prefixes[i], varNames[[i]], sep = ":")
-        } else {
-            varNames[[i]] <- prefixes[i][length(varNames[[i]])]
-        }
-    }
-    varNames <- unlist(varNames)
-    ans <- list(varNames = varNames, hasColon = hasColon)
-    return(ans)
-}
-
-##
 ## Takes an equation prefix from a strategic model (e.g., "u1(war)") and
 ## translates it into plain English (e.g., "Player 1's utility for war").
 ##
@@ -460,26 +385,6 @@ prefixToString <- function(x)
     }
 
     return(x)
-}
-
-##
-## Calculates the variance-covariance matrix for a fitted model, including a
-## procedure for catching the error (and returning a matrix of NAs) in case the
-## Hessian is non-invertible.
-##
-getGameVcov <- function(hessian, fixed)
-{
-    hes <- hessian[!fixed, !fixed, drop = FALSE]
-    vv <- tryCatch(solve(-hes), error = function(e) e)
-    if (inherits(vv, "error")) {
-        warning("variance-covariance matrix could not be calculated: ",
-                vv$message)
-        vv <- matrix(NA, nrow(hes), nrow(hes))
-    }
-    ans <- hessian
-    ans[] <- NA
-    ans[!fixed, !fixed] <- vv
-    return(ans)
 }
 
 ##' Finds the modal value of a vector of any class.
