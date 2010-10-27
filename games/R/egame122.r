@@ -1,4 +1,5 @@
 ##' @include games.r
+##' @include helpers.r
 NULL
 
 predict.egame122 <- function(object, newdata, probs = c("outcome", "action"), ...)

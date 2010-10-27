@@ -1,4 +1,5 @@
 ##' @include games.r
+##' @include helpers.r
 NULL
 
 predict.ultimatum <- function(object, newdata, ...)
