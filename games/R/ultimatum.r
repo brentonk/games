@@ -310,7 +310,7 @@ ultimatum <- function(formulas, data, subset, na.action,
     ## numerically equal to 0/1 seem to occur often
     aa <- if (exists("a")) a else as.numeric(y >= mean(y))
     m2 <- suppressWarnings(glm.fit(regr$Z, aa, family = binomial(link = "logit"),
-                                   intercept = FALSE, offset = -y))
+                                   intercept = FALSE, offset = as.numeric(-y)))
     m1 <- lsfit(regr$X, maxOffer - y, intercept = FALSE)
     sval <- c(m1$coefficients, m2$coefficients, s1, s2)
 
