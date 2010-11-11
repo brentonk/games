@@ -2,6 +2,13 @@
 ===== The 'games' package =====
 ===============================
 
+games 0.5-1 (2010-11-XX)
+------------------------
+
+* Fix error with starting value generation in ultimatum model when offer
+  variable is of class "integer"
+
+
 games 0.5-0 (2010-10-13)
 ------------------------
 

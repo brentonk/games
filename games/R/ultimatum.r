@@ -100,14 +100,14 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
     g <- tail(b, ncol(regr$Z))
     b <- head(b, length(b) - ncol(regr$Z))
 
-    fit1 <- as.numeric(regr$X %*% b)
-    fit2 <- as.numeric(regr$Z %*% g)
+    fit1 <- finitize(as.numeric(regr$X %*% b))
+    fit2 <- finitize(as.numeric(regr$Z %*% g))
 
-    ey <- exp((y - fit2) / s2)
+    ey <- finitize(exp((y - fit2) / s2))
     ey1ey <- ey / (1 + ey)
-    Qy <- (-maxOffer + y + fit1 + s2 * (1 + ey)) / s1
-    Qy1Qy <- exp(Qy) / (1 + exp(Qy))
-    Qy2Qy <- exp(-Qy) / (1 + exp(-Qy))
+    Qy <- finitize((-maxOffer + y + fit1 + s2 * (1 + ey)) / s1)
+    Qy1Qy <- finitize(exp(Qy)) / finitize(1 + exp(Qy))
+    Qy2Qy <- finitize(exp(-Qy)) / finitize(1 + exp(-Qy))
 
     dfdb <- ((1 - 2 * Qy1Qy) / s1) * regr$X
     dFdb <- Qy2Qy * (regr$X / s1)
@@ -135,7 +135,8 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
     ans[isMax, ] <- d1mF[isMax, ]
 
     if (!offerOnly) {
-        ey2ey <- exp((fit2 - y) / s2) / (1 + exp((fit2 - y) / s2))
+        ey2ey <-
+            finitize(exp((fit2 - y) / s2)) / finitize(1 + exp((fit2 - y) / s2))
 
         dPdb <- matrix(0L, nrow = nrow(regr$X), ncol = ncol(regr$X))
         dPdg <- -ey2ey * (regr$Z / s2)
