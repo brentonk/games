@@ -2,6 +2,3 @@
 ##' @include helpers.r
 NULL
 
-makeUtils123 <- function(b, regr)
-{
-}

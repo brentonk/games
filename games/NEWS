@@ -2,7 +2,7 @@
 ===== The 'games' package =====
 ===============================
 
-games 0.5-1 (2010-11-XX)
+games 0.5-1 (2010-11-10)
 ------------------------
 
 * Fix error with starting value generation in ultimatum model when offer
