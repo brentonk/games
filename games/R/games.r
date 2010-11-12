@@ -973,3 +973,94 @@ indivLogLiks <- function(model, outcome)
 vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL)
 {
 }
+
+##' .. content for \description{} (no empty lines) ..
+##'
+##' .. content for \details{} ..
+##' @title likelihood profiling
+##' @param fitted a
+##' @param which b
+##' @param steps c
+##' @param dist c
+##' @param ... d
+##' @return bears
+##' @author Brenton Kenkel
+profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
+{
+    if (inherits(fitted, "ultimatum")) {
+        stop("need to do something different for ultimatum models since the parameters are different")
+    }
+
+    ## get the regressors from the original model
+    mf <- match(c("subset", "na.action"), names(fitted$call), 0L)
+    mf <- fitted$call[c(1L, mf)]
+    mf$formula <- fitted$formulas
+    mf$data <- fitted$model
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf <- eval(mf, parent.frame())
+    regr <- list()
+    for (i in seq_len(length(fitted$formulas)[2]))
+        regr[[i]] <- model.matrix(fitted$formulas, data = mf, rhs = i)
+
+    ## other info needed to refit the original model: coefficients (for starting
+    ## values), fixed parameters, outcome, link, and type.  also will retrieve
+    ## the standard errors to determine values to profile at
+    cf <- fitted$coefficients
+    p <- length(cf)
+    y <- as.numeric(fitted$y)           # use as.numeric() because y is stored
+                                        # as a factor in a game object
+    fixed <- fitted$fixed
+    link <- fitted$link
+    type <- fitted$type
+    se <- sqrt(diag(fitted$vcov))
+
+    ## retrieve the appropriate log-likelihood and gradient, based on the type
+    ## of model
+    logLik <- switch(fitted$class[2],
+                     egame12 = logLik12,
+                     egame122 = logLik122)
+    logLikGrad <- switch(fitted$class[2],
+                         egame12 = logLikGrad12,
+                         egame122 = logLikGrad122)
+    if (!fitted$convergence$gradient)
+        logLikGrad <- NULL
+
+    ## looping over each parameter value
+    ##
+    ## the code in the loop is loosely based on that of MASS:::profile.glm,
+    ## written by D.M. Bates and W.N. Venables, licensed under the GPL.  the
+    ## difference is that theirs uses a nice adaptive algorithm to go
+    ## approximately the right distance in the specified number of steps,
+    ## whereas mine is dumb and depends entirely on the supplied values of
+    ## "steps" and "dist"
+    ans <- list()
+    for (i in which) {
+        if (fixed[i])  # skip fixed parameters
+            next
+
+        ## calculate the new parameter values to maximize at
+        thisAns <- matrix(nrow = 2*steps + 1, ncol = length(cf) + 1)
+        thisAns <- data.frame(thisAns)
+        names(thisAns) <- c("logLik", names(cf))
+        cfvals <- seq(cf[i] - dist*se[i], cf[i] + dist*se[i], length.out =
+                      2*steps + 1)
+        fvec <- fixed
+        fvec[i] <- TRUE
+
+        ## inner loop: refitting while fixing parameter i at the j'th element of
+        ## cfvals
+        for (j in seq_along(cfvals)) {
+            sval <- cf
+            sval[i] <- cfvals[j]
+            results <- maxBFGS(fn = logLik, grad = logLikGrad, start = sval,
+                               fixed = fvec, y = y, regr = regr, link = link,
+                               type = type, ...)
+            thisAns[j, ] <- c(results$max, results$estimate)
+        }
+
+        ans[names(cf)[i]] <- thisAns
+    }
+
+    return(ans)
+}
