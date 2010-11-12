@@ -47,6 +47,9 @@ predict.egame122 <- function(object, newdata, probs = c("outcome", "action"), ..
 
 sbi122 <- function(y, regr, link)
 {
+    names(regr) <- character(length(regr))
+    names(regr)[1:6] <- c("X1", "X2", "X3", "X4", "Z2", "Z4")
+
     if (link == "probit") {
         fam <- binomial(link = "probit")
     } else {
@@ -145,6 +148,9 @@ actionsToOutcomes122 <- function(probs, log.p = TRUE)
 
 logLik122 <- function(b, y, regr, link, type, ...)
 {
+    names(regr) <- character(length(regr))
+    names(regr)[1:6] <- c("X1", "X2", "X3", "X4", "Z2", "Z4")
+
     probs <- makeProbs122(b, regr, link, type)
     logProbs <- actionsToOutcomes122(probs, log.p = TRUE)
     ans <- logProbs[cbind(1:nrow(logProbs), y)]
@@ -153,6 +159,9 @@ logLik122 <- function(b, y, regr, link, type, ...)
 
 logLikGrad122 <- function(b, y, regr, link, type, ...)
 {
+    names(regr) <- character(length(regr))
+    names(regr)[1:6] <- c("X1", "X2", "X3", "X4", "Z2", "Z4")
+
     u <- makeUtils(b, regr, nutils = 6,
                    unames = c("u11", "u12", "u13", "u14", "u22", "u24"))
     p <- makeProbs122(b, regr, link, type)
@@ -424,8 +433,6 @@ egame122 <- function(formulas, data, subset, na.action,
     regr <- list()
     for (i in seq_len(length(formulas)[2]))
         regr[[i]] <- model.matrix(formulas, data = mf, rhs = i)
-    names(regr) <- character(length(regr))
-    names(regr)[1:6] <- c("X1", "X2", "X3", "X4", "Z2", "Z4")
     rcols <- sapply(regr, ncol)
 
     ## starting values

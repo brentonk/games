@@ -48,6 +48,9 @@ predict.egame12 <- function(object, newdata, probs = c("outcome", "action"), ...
 
 sbi12 <- function(y, regr, link)
 {
+    names(regr) <- character(length(regr))
+    names(regr)[1:4] <- c("X1", "X3", "X4", "Z")
+    
     ## have to do this because binomial() issues warning if it's not directly
     ## passed a character string to its link argument
     if (link == "probit") {
@@ -138,6 +141,8 @@ actionsToOutcomes12 <- function(probs, log.p = TRUE)
 
 logLik12 <- function(b, y, regr, link, type, ...)
 {
+    names(regr) <- character(length(regr))
+    names(regr)[1:4] <- c("X1", "X3", "X4", "Z")
     probs <- makeProbs12(b, regr, link, type)
     logProbs <- actionsToOutcomes12(probs, log.p = TRUE)
     ans <- logProbs[cbind(1:nrow(logProbs), y)]
@@ -146,6 +151,8 @@ logLik12 <- function(b, y, regr, link, type, ...)
 
 logLikGrad12 <- function(b, y, regr, link, type, ...)
 {
+    names(regr) <- character(length(regr))
+    names(regr)[1:4] <- c("X1", "X3", "X4", "Z")
     u <- makeUtils(b, regr, nutils = 4,
                    unames = c("u11", "u13", "u14", "u24"))
     p <- makeProbs12(b, regr, link, type)
@@ -488,8 +495,6 @@ egame12 <- function(formulas, data, subset, na.action,
     regr <- list()
     for (i in seq_len(length(formulas)[2]))
         regr[[i]] <- model.matrix(formulas, data = mf, rhs = i)
-    names(regr) <- character(length(regr))
-    names(regr)[1:4] <- c("X1", "X3", "X4", "Z")
     rcols <- sapply(regr, ncol)
 
     ## makes starting values -- specify "unif" (a numeric vector of length two)
