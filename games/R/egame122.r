@@ -485,7 +485,8 @@ egame122 <- function(formulas, data, subset, na.action,
     ans$log.likelihood <-
         logLik122(results$estimate, y = y, regr = regr, link = link, type = type)
     ans$call <- cl
-    ans$convergence <- list(code = results$code, message = results$message)
+    ans$convergence <- list(code = results$code, message = results$message,
+                            gradient = !is.null(gr))
     ans$formulas <- formulas
     ans$link <- link
     ans$type <- type

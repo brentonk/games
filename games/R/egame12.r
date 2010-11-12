@@ -342,7 +342,8 @@ makeResponse12 <- function(yf)
 ##' unsummed for use with non-nested model tests).}
 ##' \item{\code{call}}{the call used to produce the model.}
 ##' \item{\code{convergence}}{a list containing the convergence code and message
-##' returned by \code{\link{maxBFGS}}.}
+##' returned by \code{\link{maxBFGS}}, and an indicator for whether the
+##' gradient was used in fitting.}
 ##' \item{\code{formulas}}{the final \code{Formula} object passed to
 ##' \code{model.frame} (including anything specified for the scale parameters).}
 ##' \item{\code{link}}{the specified link function.}
@@ -552,7 +553,8 @@ egame12 <- function(formulas, data, subset, na.action,
     ans$log.likelihood <- logLik12(results$estimate, y = y, regr = regr, link =
                                    link, type = type)
     ans$call <- cl
-    ans$convergence <- list(code = results$code, message = results$message)
+    ans$convergence <- list(code = results$code, message = results$message,
+                            gradient = !is.null(gr))
     ans$formulas <- formulas
     ans$link <- link
     ans$type <- type
