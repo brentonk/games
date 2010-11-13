@@ -830,8 +830,8 @@ plot.predProbs <- function(x, which = NULL, ask = FALSE, ...)
 }
 
 plot.preplot.predProbs <- function(x, xlab = x$xlab, ylab = x$ylab,
-                                 ylim = c(min(x$y, x$low), max(x$y, x$high)),
-                                 type = "l", lty.ci = 2, ...)
+                                   ylim = c(min(x$y, x$low), max(x$y, x$high)),
+                                   type = "l", lty.ci = 2, ...)
 {
     listof <- inherits(x[[1]], "preplot.predProbs")
     cl <- match.call()
@@ -974,9 +974,9 @@ vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL)
 {
 }
 
-##' .. content for \description{} (no empty lines) ..
+##' .. content for description (no empty lines) ..
 ##'
-##' .. content for \details{} ..
+##' .. content for details ..
 ##' @title likelihood profiling
 ##' @param fitted a
 ##' @param which b
@@ -984,6 +984,9 @@ vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL)
 ##' @param dist c
 ##' @param ... d
 ##' @return bears
+##' @method profile game
+##' @S3method profile game
+##' @export
 ##' @author Brenton Kenkel
 profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
 {
@@ -1017,10 +1020,10 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
 
     ## retrieve the appropriate log-likelihood and gradient, based on the type
     ## of model
-    logLik <- switch(fitted$class[2],
+    logLik <- switch(class(fitted)[2],
                      egame12 = logLik12,
                      egame122 = logLik122)
-    logLikGrad <- switch(fitted$class[2],
+    logLikGrad <- switch(class(fitted)[2],
                          egame12 = logLikGrad12,
                          egame122 = logLikGrad122)
     if (!fitted$convergence$gradient)
@@ -1059,8 +1062,53 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
             thisAns[j, ] <- c(results$max, results$estimate)
         }
 
-        ans[names(cf)[i]] <- thisAns
+        ans[[names(cf)[i]]] <- thisAns
     }
 
+    attr(ans, "orginal.fit") <- fitted
+    class(ans) <- c("profile.game", "profile")
     return(ans)
+}
+
+##' .. content for description (no empty lines) ..
+##'
+##' .. content for details ..
+##' @title plot profile
+##' @param x wef
+##' @param ... wef
+##' @return wef
+##' @method plot profile.game
+##' @S3method plot profile.game
+##' @export
+##' @author Brenton Kenkel
+plot.profile.game <- function(x, show.pts = FALSE, ...)
+{
+    ## this function is based largely on MASS:::plot.profile, written by
+    ## D.M. Bates and W.N. Venables, licensed under GPL
+
+    nm <- names(x)
+
+    ## saves the user's original graphical parameters (which are restored after
+    ## the new plot is made) and sets new ones to display all plots at once
+    nr <- ceiling(sqrt(length(nm)))
+    oldpar <- par(mfrow = c(nr, nr))
+    on.exit(par(oldpar))
+
+    for (nam in nm) {
+        xvals <- x[[nam]][, nam]
+        yvals <- x[[nam]][, "logLik"]
+        plot(xvals, yvals, xlab = nam, ylab = "log likelihood", type = "n")
+
+        ## plot a cross at the main model estimate
+        mval <- ceiling(nrow(x[[nam]]) / 2)
+        points(xvals[mval], yvals[mval], pch = 4)
+
+        ## plot other points (if desired)
+        if (show.pts)
+            points(xvals[-mval], yvals[-mval])
+
+        ## spline fit for the likelihood curve
+        splineVals <- spline(xvals, yvals)
+        lines(splineVals$x, splineVals$y)
+    }
 }
