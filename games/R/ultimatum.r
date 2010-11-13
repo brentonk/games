@@ -296,6 +296,7 @@ ultimatum <- function(formulas, data, subset, na.action,
                  " `outcome == \"both\"`; see `?ultimatum`")
         }
         y <- ya
+        a <- NULL
     }
     if (any(y > maxOffer))
         stop("observed offers greater than maxOffer")
@@ -343,10 +344,10 @@ ultimatum <- function(formulas, data, subset, na.action,
 
     if (boot > 0) {
         bootMatrix <- gameBoot(boot, report = bootreport, estimate =
-                                results$estimate, y = y, a = a, regr = regr, fn
-                                = logLikUlt, gr = logLikGradUlt , fixed = fvec,
-                                maxOffer = maxOffer, offerOnly = offerOnly,
-                                offertol = offertol, reltol = reltol, ...)
+                               results$estimate, y = y, a = a, regr = regr, fn
+                               = logLikUlt, gr = logLikGradUlt , fixed = fvec,
+                               maxOffer = maxOffer, offerOnly = offerOnly,
+                               offertol = offertol, reltol = reltol, ...)
     }
 
     ans <- list()
@@ -356,7 +357,8 @@ ultimatum <- function(formulas, data, subset, na.action,
         logLikUlt(results$estimate, y = y, acc = a, regr = regr, maxOffer =
                   maxOffer, offertol = offertol, offerOnly = offerOnly)
     ans$call <- cl
-    ans$convergence <- list(code = results$code, message = results$message)
+    ans$convergence <- list(code = results$code, message = results$message,
+                            gradient = TRUE)
     ans$formulas <- formulas
     ans$link <- "logit"
     ans$type <- "private"
@@ -368,7 +370,9 @@ ultimatum <- function(formulas, data, subset, na.action,
     ans$fixed <- fvec
     if (boot > 0)
         ans$boot.matrix <- bootMatrix
+    ans$outcome <- outcome
     ans$maxOffer <- maxOffer
+    ans$acc <- a
 
     class(ans) <- c("game", "ultimatum")
 
