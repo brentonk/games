@@ -310,7 +310,7 @@ ultimatum <- function(formulas, data, subset, na.action,
 
     ## suppressing warnings in the logit fitting because fitted probabilities
     ## numerically equal to 0/1 seem to occur often
-    aa <- if (exists("a")) a else as.numeric(y >= mean(y))
+    aa <- if (!is.null(a)) a else as.numeric(y >= mean(y))
     m2 <- suppressWarnings(glm.fit(regr$Z, aa, family = binomial(link = "logit"),
                                    intercept = FALSE, offset = as.numeric(-y)))
     m1 <- lsfit(regr$X, maxOffer - y, intercept = FALSE)
@@ -372,6 +372,7 @@ ultimatum <- function(formulas, data, subset, na.action,
         ans$boot.matrix <- bootMatrix
     ans$outcome <- outcome
     ans$maxOffer <- maxOffer
+    ans$offertol <- offertol
     ans$acc <- a
 
     class(ans) <- c("game", "ultimatum")
