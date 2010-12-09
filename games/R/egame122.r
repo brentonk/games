@@ -325,6 +325,9 @@ makeResponse122 <- function(yf)
 ##' one be estimated for each player?
 ##' @param boot integer: number of bootstrap iterations to perform (if any).
 ##' @param bootreport logical: whether to print status bar during bootstrapping.
+##' @param profile output from running \code{\link{profile.game}} on a previous
+##' fit of the model, used to generate starting values for refitting when an
+##' earlier fit converged to a non-global maximum.
 ##' @param ... other arguments to pass to the fitting function (see
 ##' \code{\link{maxBFGS}})
 ##' @return An object of class \code{c("game", "egame122")}.  See
@@ -372,6 +375,7 @@ egame122 <- function(formulas, data, subset, na.action,
                      sdByPlayer = FALSE,
                      boot = 0,
                      bootreport = TRUE,
+                     profile,
                      ...)
 {
     cl <- match.call()
@@ -436,15 +440,19 @@ egame122 <- function(formulas, data, subset, na.action,
     rcols <- sapply(regr, ncol)
 
     ## starting values
-    if (startvals == "zero") {
-        sval <- rep(0, sum(rcols))
-    } else if (startvals == "unif") {
-        if (!hasArg(unif))
-            unif <- c(-1, 1)
-        sval <- runif(sum(rcols), unif[1], unif[2])
+    if (missing(profile) || is.null(profile)) {
+        if (startvals == "zero") {
+            sval <- rep(0, sum(rcols))
+        } else if (startvals == "unif") {
+            if (!hasArg(unif))
+                unif <- c(-1, 1)
+            sval <- runif(sum(rcols), unif[1], unif[2])
+        } else {
+            sval <- sbi122(y, regr, link)
+            sval <- c(sval, rep(0, sum(rcols) - length(sval)))
+        }
     } else {
-        sval <- sbi122(y, regr, link)
-        sval <- c(sval, rep(0, sum(rcols) - length(sval)))
+        sval <- svalsFromProfile(profile)
     }
 
     ## identification check
