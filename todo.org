@@ -7,6 +7,8 @@
 
 - [ ] Non-nested model tests (Clarke and Vuong)
 
+- [X] Likelihood profiling a la ~profile.glm~ in ~MASS~
+
 
 * General coding issues
 
@@ -16,96 +18,41 @@
 - [ ] Make it so that NAs for unobserved cases in the dummy outcomes case don't
       cause hiccups; also, document this in na.action
 
-- [X] Look at what Zelig does for making and plotting predicted probabilities
-
-- [X] Change it so strat.r contains just the methods for strat objects, then add
-      strat12.r, strat122.r, and ultimatum.r for the model and predict functions
-
-- [X] Informative names for variance terms (or is this obviated by new
-      ~print.strat~ behavior?)
-
-- [X] Change ~print.strat~ to give slightly saner output: something like "player
-      1's utility for [name]:", followed by list of coefficients
-
-- [X] Fix ~latexTable~ and ~strat12~ documentation to use/mention new
-      ~equations~, ~convergence~, and ~fixed~ attributes
-
-- [X] Fix ~latexTable~ to deal properly with variance terms in ultimatum -- or to
-      deal with ~ultimatum~ objects at *all*
-
-    - For dealing with log(s2) and the like, the best thing might be to add a
-      "hasColon" attribute to the "equations" slot, then have latexTable (and
-      also possibly print.strat?) read that to know to put it at the bottom of
-      the table
-
-- [X] Fix ~summary.strat~ to deal properly with fixed variance terms and fixed
-      regressors --- this may require adding more stuff to the strat class
-
-- [X] Issue warnings for nonconvergence
-
 - [ ] Change ~strat12~ and ~strat122~ so that terms set to 0 have standard
       deviations of 0?  (maybe ask Curt about this)
-
-- [X] Need more examples!
 
 - [ ] Make sure the ~predict~ functions actually work with new data (especially
       watch out for weird environment issues in the model frame creation)
 
 - [ ] Check code for commented-out things and other extraneous crap
 
-- [X] Code for bootstrapping!
+- [ ] Use ~maxLik~ instead of ~maxBFGS~, and then use ~vcov.maxLik~ to calculate
+  variance-covariance matrices
 
-- [X] Add code to ~predict~ functions that deals properly with levels of factor
-      variables (which will be important in the predicted probability stuff) ---
-      may want to look into using the "dataClasses" attribute of terms object
-
-- [X] Fix LatexTable to have useboot option
-
-- [X] Include ~varformulas~ in application of ~predict~ methods?  Or is that
-      already done implicitly?
-
-- [X] Write a HISTORY file
+- [ ] Allow user-supplied starting values, particularly in conjunction with the
+  profiling function (maybe just allow a profile to be supplied and use the best
+  fit from that as the starting values)
 
 
-* strat12
-
-- [X] Fix the assignment of coefficients and calculation of vcov under
-      fixedUtils
-
-- [X] Check for length of fixedUtils
+* egame12
 
 - [ ] Add an example to the ~predict.strat12~ function, preferably one using
       predicted probabilities the way political scientists normally do
 
-- [X] The variance terms that only enter the equation together cannot be
-      individually identified (e.g., v1 and v2 in the case of agent errors), so
-      one of them needs to be fixed to 1 or the like for identification
-
 - [ ] Add something so that you can fix variance terms to something other than 1
       in ~strat12~?  This would be more consistent with behavior in ~ultimatum~
-
-- [X] Add convergence attribute to ~strat12~
 
 - [ ] Rewrite gradient function along lines of others
 
 
-* strat122
-
-- [X] Write a ~predict.strat122~ method
-
-- [X] Finish writing up the model fitting and output assignment in ~strat122~
+* egame122
 
 - [ ] Documentation!
-
-- [X] Suppress warnings for glm fitting in ~sbi4~
 
 - [ ] Add fixed utilities and bootstrapping
 
 
 * ultimatum
-
-- [X] Allow response to be one column when ~outcome~ isn't "both"; include
-      warning when two-column response is specified in that case
 
 - [ ] Try actually running the model with only one thing on the left-hand side
 
@@ -120,9 +67,6 @@
 - [ ] Add indicator (to be printed with results) for when the only outcome being
       considered is the offer (i.e., not acceptance)
 
-- [X] Deal with starting values (and the value of the variable "a") when
-      acceptance is not supplied
-
-- [X] Write a ~predict.ultimatum~ method
-
 - [ ] Check that ~ultimatum~ works with ~predProbs~
+
+- [ ] Allow for different ~maxOffer~ in each observation

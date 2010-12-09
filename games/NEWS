@@ -2,11 +2,38 @@
 ===== The 'games' package =====
 ===============================
 
+games 0.6-0 (2010-12-09)
+------------------------
+
+* Introduced functions "profile.game" and "plot.profile.game" for diagnosing
+  failure to converge to a global maximum
+
+* All fitting functions (egame12, egame122, ultimatum) now include an argument
+  "profile", for using profile output from a previous fit attempt to move closer
+  to the global maximum
+
+* New dataset "student_offers" for illustrating convergence failure in the
+  ultimatum model
+
+* Added indicator for whether gradient was used in fitting to the convergence
+  element of game objects
+
+* Fitted ultimatum objects now include the outcome of interest (offer or both),
+  the acceptance vector (if any), and the offer tolerance
+
+* Minor bug fixes:
+
+  - Fixed error with starting value generation in ultimatum model when
+    acceptance is not specified
+
+
 games 0.5-1 (2010-11-10)
 ------------------------
 
-* Fix error with starting value generation in ultimatum model when offer
+* Fixed error with starting value generation in ultimatum model when offer
   variable is of class "integer"
+
+* Fixed numerical issues in ultimatum model
 
 
 games 0.5-0 (2010-10-13)

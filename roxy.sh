@@ -10,6 +10,8 @@ EOF
 
 rmdir games.roxygen/inst/doc
 rmdir games.roxygen/inst
+rm -f games.roxygen/.Rhistory
+rm -f games.roxygen/.Rhistorynew
 
 # for including S3 method directives for undocumented methods
 cat ./games/NAMESPACE >> ./games.roxygen/NAMESPACE

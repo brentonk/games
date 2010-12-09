@@ -227,7 +227,8 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' @param bootreport logical: whether to print status bar when performing
 ##' bootstrap iterations.
 ##' @param profile output from running \code{\link{profile.game}} on a previous
-##' fit of the model, used to generate starting values.
+##' fit of the model, used to generate starting values for refitting when an
+##' earlier fit converged to a non-global maximum.
 ##' @param ... other arguments to pass to the fitting function (see
 ##' \code{\link{maxBFGS}}).
 ##' @param reltol numeric: relative convergence tolerance level (see
@@ -313,7 +314,7 @@ ultimatum <- function(formulas, data, subset, na.action,
 
     ## suppressing warnings in the logit fitting because fitted probabilities
     ## numerically equal to 0/1 seem to occur often
-    if (missing(profile)) {
+    if (missing(profile) || is.null(profile)) {
         aa <- if (!is.null(a)) a else as.numeric(y >= mean(y))
         m2 <- suppressWarnings(glm.fit(regr$Z, aa,
                                        family = binomial(link = "logit"),

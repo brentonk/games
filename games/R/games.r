@@ -940,6 +940,8 @@ indivLogLiks <- function(model, outcome)
     ## change how it works for the ultimatum model?  model$y == outcome will
     ## give the wrong results.  OTOH if only outcome of interest is the offer,
     ## that should specified -- perhaps ask curt?
+
+    ## add multinomial logit from package mlogit!
     
     if (inherits(model, "game") && is.null(outcome)) {
         ans <- model$log.likelihood
@@ -1028,6 +1030,14 @@ vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL)
 ##' 
 ##' p1 <- profile(m1)  ## issues warning
 ##' plot(p1)
+##'
+##' ## refit model with better starting values
+##' m2 <- ultimatum(f1, maxOffer = 100, data = student_offers, s2 = 1, profile = p1)
+##' p2 <- profile(m2)
+##' plot(p2)
+##'
+##' logLik(m1)
+##' logLik(m2)  ## improved
 profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
 {
     ## get the regressors from the original model
@@ -1121,7 +1131,7 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
     if (didNotConverge)
         warning("some profiled fits have higher log-likelihood than original fit; refit the model using \"profile\" option")
 
-    attr(ans, "orginal.fit") <- fitted
+    attr(ans, "original.fit") <- fitted
     class(ans) <- c("profile.game", "profile")
     return(ans)
 }
@@ -1169,8 +1179,11 @@ plot.profile.game <- function(x, show.pts = FALSE, ...)
         points(origcf[nam], origll, pch = 4)
 
         ## plot other points (if desired)
-        if (show.pts)
+        if (show.pts) {
+            mval <- ceiling(nrow(x[[nam]]) / 2)  # leaving out the one that is
+                                                 # already plotted with an x
             points(xvals[-mval], yvals[-mval])
+        }
 
         ## spline fit for the likelihood curve
         splineVals <- spline(xvals, yvals)
