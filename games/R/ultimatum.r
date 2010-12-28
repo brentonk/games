@@ -81,10 +81,15 @@ logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
     isMax <- abs(y - maxOffer) < offertol
     isMin <- abs(y) < offertol
 
-    ans <- ifelse(isMax, highball, ifelse(isMin, lowball, interior))
-    ans <- replace(ans, ans < .Machine$double.eps, .Machine$double.eps)
-    if (!offerOnly)
-        ans <- ans * finiteProbs(ifelse(acc == 1, prAccept, 1 - prAccept))
+    ans1 <- ifelse(isMax, highball, ifelse(isMin, lowball, interior))
+    ans1 <- replace(ans1, ans1 < .Machine$double.eps, .Machine$double.eps)
+    ans <- ans1
+    attr(ans, "offer") <- ans1
+    if (!offerOnly) {
+        ans2 <- finiteProbs(ifelse(acc == 1, prAccept, 1 - prAccept))
+        ans <- ans * ans2
+        attr(ans, "accept") <- ans2
+    }
     ans <- log(ans)
     return(ans)
 }
