@@ -2,6 +2,62 @@
 ##' @include helpers.r
 NULL
 
+##' Solves for W in the equation \eqn{W e^W = x}{W * exp(W) = x}.
+##'
+##' The function is based on the code given in Barry et al. (1995).  It is used
+##' to calculate fitted values for the \code{\link{ultimatum}} model.
+##'
+##' If negative values of \code{x} are supplied, \code{NaN}s will likely be
+##' returned.
+##' @title Lambert's W
+##' @param x vector of values to solve for.
+##' @return Solutions to Lambert's W for each value in \code{x}.
+##' @export
+##' @references D.A. Barry, P.J. Culligan-Hensley, and S.J. Barry.  1995.
+##' \dQuote{Real Values of the W-Function.}  \emph{ACM Transactions on
+##' Mathematical Software} 21(2):161--171.
+##' @author Curt Signorino (\email{curt.signorino@@rochester.edu})
+##' @examples
+##' x <- rexp(10)
+##' w <- LW(x)
+##' all.equal(x, w * exp(w))
+LW <- function(x)
+{
+    ## Note: there is a Lambert's W package, but it depends on the gsl (GNU
+    ## Scientific Library) package, which is hellish for Windows users to
+    ## install, hence our hand-rolled Lambert's W.
+    
+    eW <- function(x, W)
+    {
+        zn <- log(x/W)-W
+        first <- zn/(1+W)
+        common <- 2*(1+W)*(1+W+2*zn/3)
+        first*(common-zn)/(common-2*zn)
+    }
+    
+    lx <- log(x)
+    wlt <- (x*(1+4/3*x))/(1+x*(7/3+5/6*x))
+    wgt <- lx-(24*(lx*(lx+2)-3))/(lx*(7*lx+58)+127)
+    W1 <- ifelse(x < 0.7385, wlt, wgt)
+    
+    xge20 <- x >= 20
+    i <- seq_along(x)
+    ixge20 <- i[xge20]
+    a1 <- 1.124491989777808
+    b1 <- .4225028202459761
+    xg <- x[ixge20]
+    h <- exp(-a1/(b1+log(xg)))
+    Wp2 <- log(xg/log(xg/(log(xg))^h))  # for x>20
+    W1[ixge20] <- Wp2;                   
+
+    ## iteration for improved accuracy
+    W2 <- W1*(1+eW(x,W1))
+    W3 <- W2*(1+eW(x,W2))
+    W4 <- W3*(1+eW(x,W3))               # enough
+
+    return(W4)
+}
+
 predict.ultimatum <- function(object, newdata, ...)
 {
     if (missing(newdata))
@@ -262,6 +318,7 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' ## estimating offer size only
 ##' f2 <- update(Formula(f1), offer ~ .)
 ##' m2 <- ultimatum(f2, data = data_ult, maxOffer = 15, outcome = "offer")
+##' summary(m2)
 ##'
 ##' ## fixing scale terms
 ##' m3 <- ultimatum(f1, data = data_ult, maxOffer = 15, s1 = 5, s2 = 1)

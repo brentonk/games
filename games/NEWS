@@ -2,6 +2,14 @@
 ===== The 'games' package =====
 ===============================
 
+games 0.X-X (20XX-XX-XX)
+------------------------
+
+* Log-likelihood component of fitted ultimatum objects where outcome == "both"
+  now includes attributes with individual log-likelihood contributions from
+  offers and from acceptance
+
+
 games 0.6-0 (2010-12-09)
 ------------------------
 
