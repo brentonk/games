@@ -111,10 +111,10 @@ intersectAll <- function(...)
 makeVarNames <- function(varNames, prefixes, link, sdterms)
 {
     vname <- if (link == "logit") "log(lambda" else "log(sigma"
-    if (sdterms == 1) {
+    if (sdterms == 1L) {
         prefixes <- c(prefixes, paste(vname, ")", sep = ""))
-    } else if (sdterms == 2) {
-        prefixes <- c(prefixes, paste(vname, 1:2, ")", sep = ""))
+    } else if (sdterms > 1L) {
+        prefixes <- c(prefixes, paste(vname, 1:sdterms, ")", sep = ""))
     }
 
     hasColon <- sapply(varNames, function(x) length(x) > 0 &&
