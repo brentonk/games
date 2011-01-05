@@ -2,6 +2,41 @@
 ##' @include helpers.r
 NULL
 
+sbi123 <- function(y, regr, link)
+{
+    names(regr) <- character(length(regr))
+    names(regr)[1:8] <- c("X1", "X3", "X5", "X6", "Z3", "Z5", "Z6", "W6")
+
+    if (link == "probit") {
+        fam <- binomial(link = "probit")
+        linkfcn <- pnorm
+    } else {
+        fam <- binomial(link = "logit")
+        linkfcn <- plogis
+    }
+
+    reg3 <- regr$W6[y == 3 | y == 4, , drop = FALSE]
+    y3 <- as.numeric(y == 4)[y == 3 | y == 4]
+    m3 <- suppressWarnings(glm.fit(reg3, y3, family = fam))
+    p6 <- as.numeric(regr$W6 %*% coef(m3))
+    p6 <- linkfcn(p6)
+
+    reg2 <- cbind(-regr$Z3, (1-p6) * regr$Z5, p6 * regr$Z6)
+    reg22 <- reg2[y != 1, , drop = FALSE]
+    y22 <- as.numeric(y != 2)[y != 1]
+    m22 <- suppressWarnings(glm.fit(reg22, y22, family = fam))
+    p4 <- as.numeric(reg2 %*% coef(m22))
+    p4 <- linkfcn(p4)
+
+    reg1 <- cbind(-regr$X1, (1-p4) * regr$X3, p4 * (1-p6) * regr$X5,
+                  p4 * p6 * regr$X6)
+    y1 <- as.numeric(y != 1)
+    m1 <- glm.fit(reg1, y1, family = fam)
+
+    ans <- sqrt(2) * c(coef(m1), coef(m22), coef(m3))
+    return(ans)
+}
+
 makeSDs123 <- function(b, regr, type)
 {
     sds <- vector("list", if (type == "private") 8L else 6L)
