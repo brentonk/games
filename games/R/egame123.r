@@ -130,6 +130,40 @@ logLik123 <- function(b, y, regr, link, type, ...)
     return(ans)
 }
 
+makeResponse123 <- function(yf)
+{
+    if (length(dim(yf))) {  ## yf is a matrix of dummies
+        if (ncol(yf) == 2) {
+            stop("response must be specified as a single vector or three dummy variables")
+        } else if (ncol(yf) > 3) {
+            warning("only first three columns of response will be used")
+            yf <- yf[, 1:3]
+        }
+
+        if (!(all(unlist(yf) %in% c(0L, 1L))))
+            stop("dummy responses must be dummy variables")
+
+        ylevs <- c(paste("~", names(yf)[1], sep = ""),
+                   paste(names(yf)[1], ",~", names(yf)[2], sep = ""),
+                   paste(names(yf)[1], ",", names(yf)[2], ",~", names(yf)[3],
+                         sep = ""),
+                   paste(names(yf)[1], names(yf)[2], names(yf)[3], sep = ","))
+
+        y <- integer(nrow(yf))
+        y[yf[, 1] == 0] <- 1L
+        y[yf[, 1] == 1 & yf[, 2] == 0] <- 2L
+        y[yf[, 1] == 1 & yf[, 2] == 1 & yf[, 3] == 0] <- 3L
+        y[yf[, 1] == 1 & yf[, 2] == 1 & yf[, 3] == 1] <- 4L
+        yf <- as.factor(y)
+        levels(yf) <- ylevs
+    } else {                ## yf is a vector
+        yf <- as.factor(yf)
+        if (nlevels(yf) != 4) stop("dependent variable must have four values")
+    }
+
+    return(yf)
+}
+
 ##' \preformatted{
 ##' .     1
 ##' .     /\
