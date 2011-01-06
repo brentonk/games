@@ -2,30 +2,25 @@
 ##' @include helpers.r
 NULL
 
-predict.egame12 <- function(object, newdata, probs = c("outcome", "action"), ...)
+predict.egame12 <- function(object, newdata, probs = c("outcome", "action"),
+                            na.action = na.pass, ...)
 {
     probs <- match.arg(probs)
     
-    if (missing(newdata))
-        newdata <- object$model
+    if (missing(newdata)) {
+        mf <- object$model
+    } else {
+        ## get rid of left-hand variables in the formula, since they're not
+        ## needed for fitting
+        formulas <- Formula(delete.response(terms(formula(object$formulas))))
 
-    mf <- match(c("subset", "na.action"), names(object$call), 0L)
-    mf <- object$call[c(1L, mf)]
-    mf$formula <- object$formulas
-    mf$data <- newdata
-    mf$drop.unused.levels <- TRUE
-    mf[[1]] <- as.name("model.frame")
-    mf <- eval(mf, parent.frame())
+        mf <- model.frame(formulas, data = newdata, na.action = na.action,
+                          xlev = object$xlevels)
 
-    ## This is to prevent goofy things from happening with factor variables --
-    ## it ensures that the levels of factor variables in "newdata" are the same
-    ## as those in the model frame used in the original fitting
-    for (i in 1:ncol(mf)) {
-        if (is.factor(mf[, i])) {
-            iname <- names(mf)[i]
-            if (iname %in% names(object$model))
-                levels(mf[, i]) <- levels(object$model[, iname])
-        }
+        ## check that variables are of the right classes
+        Terms <- attr(object$model, "terms")
+        if (!is.null(cl <- attr(Terms, "dataClasses")))
+            .checkMFClasses(cl, mf)
     }
 
     regr <- list()
@@ -358,7 +353,9 @@ makeResponse12 <- function(yf)
 ##' \code{model.frame} (including anything specified for the scale parameters).}
 ##' \item{\code{link}}{the specified link function.}
 ##' \item{\code{type}}{the specified stochastic structure.}
-##' \item{\code{model}}{the model frame containing all variables used in fitting.}
+##' \item{\code{model}}{the model frame containing all variables used in
+##' fitting.}
+##' \item{\code{xlevels}}{a record of the levels of any factor regressors.}
 ##' \item{\code{y}}{the dependent variable, represented as a factor.}
 ##' \item{\code{equations}}{names of each separate equation (e.g.,
 ##' \dQuote{u1(sq)}, \dQuote{u1(cap)}, etc.).}
@@ -572,6 +569,7 @@ egame12 <- function(formulas, data, subset, na.action,
     ans$link <- link
     ans$type <- type
     ans$model <- mf
+    ans$xlevels <- .getXlevels(attr(mf, "terms"), mf)
     ans$y <- yf
     ans$equations <- names(hasColon)
     attr(ans$equations, "hasColon") <- hasColon
