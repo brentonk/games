@@ -501,6 +501,7 @@ egame122 <- function(formulas, data, subset, na.action,
     ans$link <- link
     ans$type <- type
     ans$model <- mf
+    ans$xlevels <- .getXlevels(attr(mf, "terms"), mf)
     ans$y <- yf
     ans$equations <- names(hasColon)
     attr(ans$equations, "hasColon") <- hasColon
