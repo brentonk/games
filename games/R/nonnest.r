@@ -279,7 +279,7 @@ vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
 }
 
 clarke <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
-                   level = 0.05)
+                   level = 0.05, digits = 2)
 {
     x <- nonnest(model1, model2, outcome1, outcome2)
 
