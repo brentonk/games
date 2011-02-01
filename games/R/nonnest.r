@@ -2,16 +2,7 @@
 ##' @include helpers.r
 NULL
 
-##' .. content for description (no empty lines) ..
-##'
-##' .. content for details ..
-##' @title print
-##' @param x wef
-##' @param digits qed
-##' @param ... qewd
-##' @return qdw
-##' @author Brenton Kenkel
-print.nonnest.test <- function(x, digits = 2, ...)
+print.nonnest.test <- function(x, digits = x$digits, ...)
 {
     if (x$test == "vuong") {
         p <- 2 * pnorm(-abs(x$stat))
@@ -49,9 +40,7 @@ print.nonnest.test <- function(x, digits = 2, ...)
 }
 
 ##
-## Individual log-likelihoods for a model of class "game", "lm", "glm", "vglm"
-## (multinomial logit via VGAM or Zelig), "polr" (ordered logit/probit via MASS
-## or Zelig)
+## Individual log-likelihoods for a model of class "game", "lm", or "glm"
 ##
 ## The "outcome" argument is for comparing a strategic model to a binary logit
 ## or probit model where the response is one of the possible outcomes (see the
@@ -59,9 +48,9 @@ print.nonnest.test <- function(x, digits = 2, ...)
 ## 
 indivLogLiks <- function(model, outcome = NULL)
 {
-    ## add multinomial logit from package mlogit!
-
-    ## allow outcomes to be specified in other models?
+    ## get weights (only relevant for lm and glm models)
+    if (is.null(wt <- weights(model)))
+        wt <- rep(1L, nobs(model))
     
     if (inherits(model, "game") && is.null(outcome)) {
         ans <- model$log.likelihood
@@ -80,26 +69,12 @@ indivLogLiks <- function(model, outcome = NULL)
                model$family$family == "binomial") {
         ans <- ifelse(model$y == 1, fitted.values(model),
                       1 - fitted.values(model))
-        ans <- log(ans)
+        ans <- wt * log(ans)
     } else if (inherits(model, "lm") && !inherits(model, "glm")) {
         msum <- summary(model)
-        ans <- dnorm(msum$residuals, sd = msum$sigma, log = TRUE)
-    } else if (inherits(model, "vglm") &&
-               "multinomial" %in% model@family@vfamily) {
-        if (!all(model@y %in% c(0, 1)))
-            stop("multinomial model must be specified in terms of separate observations, not counts")
-        y <- apply(model@y, 1, function(x) which(x == 1))
-        pp <- fitted.values(model)
-        pp <- pp[cbind(1:nrow(pp), y)]  # gets the y[i]'th entry from the i'th
-                                        # row of pp
-        ans <- log(pp)
-    } else if (inherits(model, "polr")) {
-        y <- as.numeric(model.response(model$model))
-        if (length(y) != model$nobs)
-            stop("polr model must be specified in terms of separate observations, not counts")
-        pp <- fitted.values(model)
-        pp <- pp[cbind(1:nrow(pp), y)]
-        ans <- log(pp)
+        res <- msum$residuals
+        sigma <- msum$sigma
+        ans <- log(sqrt(wt) * dnorm(res, sd = sigma))
     } else {
         stop("model is not of a supported class")
     }
@@ -109,14 +84,8 @@ indivLogLiks <- function(model, outcome = NULL)
 
 nparams <- function(model)
 {
-    ## need to check for the alternative models listed!
-
     if (inherits(model, "game")) {
         ans <- sum(!model$fixed)
-    } else if (inherits(model, "polr")) {
-        ans <- model$edf
-    } else if (inherits(model, "vglm")) {
-        
     } else if (inherits(model, "glm")) {
         ans <- attr(logLik(model), "df")
     } else if (inherits(model, "lm")) {
@@ -128,14 +97,32 @@ nparams <- function(model)
 
 nobs <- function(model)
 {
-    ## need to write methods for the alternative models!
-
     if (inherits(model, "game")) {
         ans <- nrow(model$model)
-    } else if (inherits(model, c("lm", "glm"))) {
+    } else {
         ans <- length(model$residuals)
-    } else if (inherits(model, "polr")) {
-        ans <- model$n
+    }
+
+    return(ans)
+}
+
+gety <- function(model, outcome)
+{
+    if (inherits(model, "ultimatum")) {
+        if (!is.null(outcome)) {
+            outcome <- c(offer = 1, accept = 2)[outcome]
+            ans <- model$y[, outcome]
+        } else {
+            ans <- model$y
+        }
+    } else if (inherits(model, "game")) {
+        if (!is.null(outcome)) {
+            ans <- as.numeric(as.numeric(model$y) == outcome)
+        } else {
+            ans <- as.numeric(model$y)
+        }
+    } else if (inherits(model, c("lm", "glm"))) {
+        ans <- model$y
     }
 
     return(ans)
@@ -153,7 +140,32 @@ nonnest <- function(model1, model2, outcome1, outcome2)
 
     n <- nobs(model1)
     if (nobs(model2) != n)
-        stop("model1 and model2 must have same number of observations")
+        stop("model1 and model2 have different numbers of observations")
+    
+    y1 <- gety(model1, outcome1)
+    y2 <- gety(model2, outcome2)
+
+    ## check for equality of dependent variables
+    if (length(dim(y1))) {  ## ultimatum model with offer and accept
+        if (!length(dim(y2))) {
+            stop("models do not have same dependent variable")
+        } else {
+            if (!isTRUE(all.equal(y1[, 1], y2[, 1])))
+                stop("models do not have same dependent variable")
+            if (!isTRUE(all.equal(y1[, 2], y2[, 2])))
+                stop("models do not have same dependent variable")
+        }
+    } else {
+        if (!isTRUE(all.equal(y1, y2)))
+            stop("models do not have same dependent variable")
+    }
+
+    if (is.null(w1 <- weights(model1)))
+        w1 <- rep(1L, n)
+    if (is.null(w2 <- weights(model2)))
+        w2 <- rep(1L, n)
+    if (!isTRUE(all.equal(w1, w2)))
+        stop("model1 and model2 have different weights")
     
     loglik1 <- indivLogLiks(model1, outcome1)
     loglik2 <- indivLogLiks(model2, outcome2)
@@ -163,29 +175,74 @@ nonnest <- function(model1, model2, outcome1, outcome2)
     return(list(n = n, loglik1 = loglik1, loglik2 = loglik2, p1 = p1, p2 = p2))
 }
 
-##' .. content for description (no empty lines) ..
+##' Perform Vuong's (1989) or Clarke's (2007) test for non-nested model
+##' selection.
 ##'
-##' .. content for details ..
+##' These tests are for comparing two statistical models that have the same
+##' dependent variable, where neither model can be expressed as a special case
+##' of the other (i.e., they are non-nested).  The null hypothesis is that the
+##' estimated models are the same Kullback-Leibler distance from the true
+##' model.  To adjust for potential differences in the dimensionality of the
+##' models, the test statistic for both \code{vuong} and \code{clarke} is
+##' corrected using the Bayesian information criterion (see Clarke 2007 for
+##' details).
+##'
+##' It is crucial that the dependent variable be exactly the same between the
+##' two models being tested, including the order the observations are placed
+##' in.  Weights, if any are used, must also be the same between models.  The
+##' \code{vuong} and \code{clarke} functions check for such discrepancies, and
+##' stop with an error if any is found.
+##'
+##' When comparing a strategic model to a (generalized) linear model, you must
+##' take care to ensure that the dependent variable is truly the same between
+##' models.  This is where the \code{outcome} arguments come into play.  For
+##' example, in an \code{\link{ultimatum}} model where acceptance is observed,
+##' the dependent variable for each observation is the vector consisting of the
+##' offer size and an indicator for whether it was accepted.  This is not the
+##' same as the dependent variable in a least-squares regression of offer size,
+##' which is a scalar for each observation.  Therefore, for a proper comparison
+##' of \code{model1} of class {"ultimatum"} and \code{model2} of class
+##' \code{"lm"}, it is necessary to specify \code{outcome1 = "offer"}.
+##' Similarly, consider an \code{\link{egame12}} model on the
+##' \code{\link{war1800}} data, where player 1 chooses whether to escalate the
+##' crisis and player 2 chooses whether to go to war.  The dependent variable
+##' for each observation in this model is the vector of each player's choice.
+##' By contrast, in a logistic regression where the dependent variable is
+##' whether war occurs, the dependent variable for each observation is a
+##' scalar.  To compare these models, it is necessary to specify \code{outcome1
+##' = 3}.
 ##' @title Non-nested model tests
 ##' @aliases vuong clarke
-##' @param model1 A fitted statistical model (see "Details" for the types of
-##' models available)
-##' @param model2 A fitted statistical model
+##' @usage vuong(model1, model2, outcome1, outcome2, level=0.05, digits=2)
+##' clarke(model1, model2, outcome1, outcome2, level=0.05, digits=2)
+##' @param model1 A fitted statistical model of class \code{"game"},
+##' \code{"lm"}, or \code{"glm"}
+##' @param model2 A fitted statistical model of class \code{"game"},
+##' \code{"lm"}, or \code{"glm"} whose dependent variable is the same as that of
+##' \code{model1}
 ##' @param outcome1 Optional: if \code{model1} is of class \code{"game"},
 ##' specify an integer to restrict attention to a particular binary outcome (the
-##' corresponding column of \code{predict(model1)}).  See "Details" below for
-##' more information on when to specify an outcome.  If \code{model1} is not of
-##' class \code{"game"} and \code{outcome1} is non-\code{NULL}, it will be
-##' ignored and a warning will be issued.
+##' corresponding column of \code{predict(model1)}).  For
+##' \code{\link{ultimatum}} models, "offer" or "accept" may also be used.  See
+##' "Details" below for more information on when to specify an outcome.  If
+##' \code{model1} is not of class \code{"game"} and \code{outcome1} is
+##' non-\code{NULL}, it will be ignored and a warning will be issued.
 ##' @param outcome2 Optional: same as \code{outcome1}, but corresponding to
 ##' \code{model2}.
 ##' @param level Numeric: significance level for the test.
-##' @references (cite vuong and kevin!)
-##' @return An object of class \code{"nonnest.test"}, which is a list
-##' containing: \describe{
+##' @param digits Integer: number of digits to print
+##' @references Quang H. Vuong.  1989.  "Likelihood Ratio Tests for Model
+##' Selection and Non-Nested Hypotheses."  \emph{Econometrica} 57(2): 307--333.
+##'
+##' Kevin Clarke.  2007.  "A Simple Distribution-Free Test for Nonnested
+##' Hypotheses."  \emph{Political Analysis} 15(3): 347--363.
+##' @return Typical use will be to run the function interactively and examine
+##' the printed output.  The functions return an object of class
+##' \code{"nonnest.test"}, which is a list containing: \describe{
 ##' \item{\code{stat}}{The test statistic}
 ##' \item{\code{test}}{The type of test (\code{"vuong"} or \code{"clarke"})}
 ##' \item{\code{level}}{Significance level for the test}
+##' \item{\code{digits}}{Number of digits to print}
 ##' \item{\code{loglik1}}{Vector of observationwise log-likelihoods for
 ##' \code{model1}}
 ##' \item{\code{loglik2}}{Vector of observationwise log-likelihoods for
@@ -194,11 +251,10 @@ nonnest <- function(model1, model2, outcome1, outcome2)
 ##' fitted in \code{model1} and \code{model2} respectively}
 ##' \item{\code{nobs}}{Number of observations of the dependent variable being
 ##' modeled}}
-##' @seealso \code{\link{print.nonnest.test}}
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
-                  level = 0.05)
+                  level = 0.05, digits = 2)
 {
     x <- nonnest(model1, model2, outcome1, outcome2)
 
@@ -207,11 +263,12 @@ vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
     denom <- sd(x$loglik1 - x$loglik2) *
         sqrt(x$n / (x$n-1))  # correcting for R's use of n-1 denominator in sd
                              # calculation
-    stat <- num / (sqrt(x*n) * denom)
+    stat <- num / (sqrt(x$n) * denom)
 
     ans <- list(stat = stat,
                 test = "vuong",
                 level = level,
+                digits = digits,
                 loglik1 = x$loglik1,
                 loglik2 = x$loglik2,
                 nparams = c(x$p1, x$p2),
