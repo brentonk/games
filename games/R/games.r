@@ -118,6 +118,7 @@ summary.game <- function(object, useboot = TRUE, ...)
 ##'running \code{summary} on a fitted model of class \code{game}
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly.
+##' @seealso \code{\link{summary.game}}
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 print.summary.game <- function(x, ...)
@@ -186,15 +187,18 @@ logLik.summary.game <- function(object, ...)
 ##' @usage
 ##' \method{predict}{game}(object, ...)
 ##'
-##' \method{predict}{egame12}(object, newdata, probs=c("outcome", "action"), ...)
-##' \method{predict}{egame122}(object, newdata, probs=c("outcome", "action"), ...)
-##' \method{predict}{ultimatum}(object, newdata, ...)
+##' \method{predict}{egame12}(object, newdata, probs=c("outcome", "action"),
+##' na.action = na.pass, ...)
+##' \method{predict}{egame122}(object, newdata, probs=c("outcome", "action"),
+##' na.action = na.pass, ...)
+##' \method{predict}{ultimatum}(object, newdata, na.action = na.pass, ...)
 ##' @param object a fitted model of class \code{game}.
 ##' @param newdata data frame of values to make the predicted probabilities for.
 ##' If this is left empty, the original dataset is used.
 ##' @param probs whether to provide probabilities for outcomes (e.g., L, RL, or
 ##' RR in \code{egame12}) or for actions (e.g., whether 2 moves L or R given
 ##' that 1 moved R).
+##' @param na.action how to deal with \code{NA}s in \code{newdata}
 ##' @param ... other arguments, currently ignored.
 ##' @return A data frame of predicted probabilities.
 ##' @method predict game
