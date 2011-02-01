@@ -83,8 +83,14 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
     ## the standard errors to determine values to profile at
     cf <- fitted$coefficients
     p <- length(cf)
-    y <- as.numeric(fitted$y)           # use as.numeric() because y is stored
-                                        # as a factor in a game object
+    if (length(dim(fitted$y))) {  ## for ultimatum objects (if offer and accept
+                                  ## both included)
+        y <- fitted$y[, 1]
+    } else {
+        y <- as.numeric(fitted$y)  ## use as.numeric() because y is stored as a
+                                   ## factor in a game object
+    }
+    
     fixed <- fitted$fixed
     link <- fitted$link
     type <- fitted$type
@@ -93,7 +99,7 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
     ## special stuff for ultimatum models
     if (inherits(fitted, "ultimatum")) {
         maxOffer <- fitted$maxOffer
-        acc <- fitted$acc
+        acc <- if (length(dim(fitted$y))) fitted$y[, 2] else NULL
         offerOnly <- fitted$outcome == "offer"
         offertol <- fitted$offertol
         names(regr) <- c("X", "Z")
@@ -106,10 +112,12 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
     logLik <- switch(class(fitted)[2],
                      egame12 = logLik12,
                      egame122 = logLik122,
+                     egame123 = logLik123,
                      ultimatum = logLikUlt)
     logLikGrad <- switch(class(fitted)[2],
                          egame12 = logLikGrad12,
                          egame122 = logLikGrad122,
+                         egame123 = logLikGrad123,
                          ultimatum = logLikGradUlt)
     if (!fitted$convergence$gradient)
         logLikGrad <- NULL
