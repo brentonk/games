@@ -431,7 +431,7 @@ ultimatum <- function(formulas, data, subset, na.action,
     ans$type <- "private"
     ans$model <- mf
     ans$xlevels <- .getXlevels(attr(mf, "terms"), mf)
-    ans$y <- y
+    ans$y <- ya
     ans$equations <- c("R1", "R2", "log(s1)", "log(s2)")
     attr(ans$equations, "hasColon") <- c(TRUE, TRUE, FALSE, FALSE)
     names(attr(ans$equations, "hasColon")) <- ans$equations
