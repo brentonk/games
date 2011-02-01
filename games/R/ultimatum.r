@@ -58,7 +58,7 @@ LW <- function(x)
     return(W4)
 }
 
-predict.ultimatum <- function(object, newdata, ...)
+predict.ultimatum <- function(object, newdata, na.action = na.pass, ...)
 {
     if (missing(newdata)) {
         mf <- object$model
