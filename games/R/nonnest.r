@@ -213,8 +213,8 @@ nonnest <- function(model1, model2, outcome1, outcome2)
 ##' = 3}.
 ##' @title Non-nested model tests
 ##' @aliases vuong clarke
-##' @usage vuong(model1, model2, outcome1, outcome2, level=0.05, digits=2)
-##' clarke(model1, model2, outcome1, outcome2, level=0.05, digits=2)
+##' @usage vuong(model1, model2, outcome1=NULL, outcome2=NULL, level=0.05, digits=2)
+##' clarke(model1, model2, outcome1=NULL, outcome2=NULL, level=0.05, digits=2)
 ##' @param model1 A fitted statistical model of class \code{"game"},
 ##' \code{"lm"}, or \code{"glm"}
 ##' @param model2 A fitted statistical model of class \code{"game"},
@@ -253,6 +253,18 @@ nonnest <- function(model1, model2, outcome1, outcome2)
 ##' modeled}}
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @examples
+##' data(war1800)
+##'
+##' ## balance of power model
+##' f1 <- esc + war ~ revis1 + s_wt_re1 | 0 | balanc | revis2 + balanc
+##' m1 <- egame12(f1, data = war1800, subset = !is.na(regime1) & !is.na(regime2))
+##'
+##' ## regime type model
+##' f2 <- esc + war ~ regime1 + s_wt_re1 | 0 | 1 | regime2
+##' m2 <- egame12(f2, data = war1800)
+##'
+##' 
 vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
                   level = 0.05, digits = 2)
 {
@@ -289,6 +301,7 @@ clarke <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
     ans <- list(stat = stat,
                 test = "clarke",
                 level = level,
+                digits = digits,
                 loglik1 = x$loglik1,
                 loglik2 = x$loglik2,
                 nparams = c(x$p1, x$p2),
