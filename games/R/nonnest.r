@@ -146,25 +146,14 @@ nonnest <- function(model1, model2, outcome1, outcome2)
     y2 <- gety(model2, outcome2)
 
     ## check for equality of dependent variables
-    if (length(dim(y1))) {  ## ultimatum model with offer and accept
-        if (!length(dim(y2))) {
-            stop("models do not have same dependent variable")
-        } else {
-            if (!isTRUE(all.equal(y1[, 1], y2[, 1])))
-                stop("models do not have same dependent variable")
-            if (!isTRUE(all.equal(y1[, 2], y2[, 2])))
-                stop("models do not have same dependent variable")
-        }
-    } else {
-        if (!isTRUE(all.equal(y1, y2)))
-            stop("models do not have same dependent variable")
-    }
+    if (!isTRUE(all.equal(y1, y2, check.attributes = FALSE)))
+        stop("models do not have same dependent variable")
 
     if (is.null(w1 <- weights(model1)))
         w1 <- rep(1L, n)
     if (is.null(w2 <- weights(model2)))
         w2 <- rep(1L, n)
-    if (!isTRUE(all.equal(w1, w2)))
+    if (!isTRUE(all.equal(w1, w2, check.attributes = FALSE)))
         stop("model1 and model2 have different weights")
     
     loglik1 <- indivLogLiks(model1, outcome1)
@@ -264,6 +253,12 @@ nonnest <- function(model1, model2, outcome1, outcome2)
 ##' f2 <- esc + war ~ regime1 + s_wt_re1 | 0 | 1 | regime2
 ##' m2 <- egame12(f2, data = war1800)
 ##'
+##' ## comparing two strategic models
+##' vuong(model1 = m1, model2 = m2)
+##' clarke(model1 = m1, model2 = m2)
+##'
+##' ## comparing strategic model to logit
+##' logit1 <- glm(war ~ regime1 + regime2 + s_wt_re1, data = war1800, family=binomial)
 ##' 
 vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
                   level = 0.05, digits = 2)
