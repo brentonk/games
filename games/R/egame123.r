@@ -2,6 +2,44 @@
 ##' @include helpers.r
 NULL
 
+predict.egame123 <- function(object, newdata, probs = c("outcome", "action"),
+                             na.action = na.pass, ...)
+{
+    probs <- match.arg(probs)
+
+    if (missing(newdata)) {
+        mf <- object$model
+    } else {
+        ## get rid of left-hand variables in the formula, since they're not
+        ## needed for fitting
+        formulas <- Formula(delete.response(terms(formula(object$formulas))))
+
+        mf <- model.frame(formulas, data = newdata, na.action = na.action,
+                          xlev = object$xlevels)
+
+        ## check that variables are of the right classes
+        Terms <- attr(object$model, "terms")
+        if (!is.null(cl <- attr(Terms, "dataClasses")))
+            .checkMFClasses(cl, mf)
+    }
+
+    regr <- list()
+    for (i in seq_len(length(object$formulas)[2]))
+        regr[[i]] <- model.matrix(object$formulas, data = mf, rhs = i)
+
+    ans <- makeProbs123(object$coefficients, regr = regr, link = object$link,
+                        type = object$type)
+
+    if (probs == "outcome") {
+        ans <- data.frame(actionsToOutcomes123(ans, log.p = FALSE))
+        names(ans) <- paste("Pr(", levels(object$y), ")", sep="")
+    }
+
+    ans <- do.call(cbind, ans)
+    ans <- as.data.frame(ans)
+    return(ans)
+}
+
 sbi123 <- function(y, regr, link)
 {
     names(regr) <- character(length(regr))
