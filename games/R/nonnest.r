@@ -27,8 +27,11 @@ print.nonnest.test <- function(x, digits = x$digits, ...)
     cat("\n")
 
     fp <- format.pval(p, digits = digits)
-    if (substr(fp, 1L, 1L) != "<")
+    if (substr(fp, 1L, 1L) != "<") {
         fp <- paste("=", fp)
+    } else if (substr(fp, 2L, 2L) != " ") {
+        fp <- paste(substr(fp, 1L, 1L), substr(fp, 2L, nchar(fp)))
+    }
     if (p < x$level) {
         cat("\nModel ", pref, " is preferred (p ", fp, ")\n\n", sep = "")
     } else {
@@ -106,7 +109,7 @@ nobs <- function(model)
     return(ans)
 }
 
-gety <- function(model, outcome)
+gety <- function(model, outcome = NULL)
 {
     if (inherits(model, "ultimatum")) {
         if (!is.null(outcome)) {
@@ -121,8 +124,10 @@ gety <- function(model, outcome)
         } else {
             ans <- as.numeric(model$y)
         }
-    } else if (inherits(model, c("lm", "glm"))) {
+    } else if (inherits(model, "glm")) {
         ans <- model$y
+    } else if (inherits(model, "lm")) {
+        ans <- model$fitted + model$residuals
     }
 
     return(ans)
@@ -246,20 +251,33 @@ nonnest <- function(model1, model2, outcome1, outcome2)
 ##' data(war1800)
 ##'
 ##' ## balance of power model
-##' f1 <- esc + war ~ revis1 + s_wt_re1 | 0 | balanc | revis2 + balanc
+##' f1 <- esc + war ~ balanc + s_wt_re1 | 0 | balanc | balanc + s_wt_re1
 ##' m1 <- egame12(f1, data = war1800, subset = !is.na(regime1) & !is.na(regime2))
 ##'
 ##' ## regime type model
-##' f2 <- esc + war ~ regime1 + s_wt_re1 | 0 | 1 | regime2
+##' f2 <- esc + war ~ regime1 | 0 | regime1 + regime2 | regime1 + regime2
 ##' m2 <- egame12(f2, data = war1800)
 ##'
 ##' ## comparing two strategic models
 ##' vuong(model1 = m1, model2 = m2)
 ##' clarke(model1 = m1, model2 = m2)
 ##'
-##' ## comparing strategic model to logit
-##' logit1 <- glm(war ~ regime1 + regime2 + s_wt_re1, data = war1800, family=binomial)
-##' 
+##' ## comparing strategic model to logit, must specify outcome1 appropriately
+##' logit1 <- glm(war ~ balanc + s_wt_re1, data = m1$model, family=binomial)
+##' vuong(model1 = m1, outcome1 = 3, model2 = logit1)
+##' clarke(model1 = m1, outcome1 = 3, model2 = logit1)
+##'
+##' logit2 <- glm(sq ~ regime1 + regime2, data = war1800, family=binomial)
+##' vuong(model1 = m2, outcome1 = 1, model2 = logit2)
+##' clarke(model1 = m2, outcome1 = 1, model2 = logit2)
+##'
+##' ## ultimatum model
+##' data(data_ult)
+##' f3 <- offer + accept ~ w1 + w2 + x1 + x2 | w1 + w2 + z1 + z2
+##' m3 <- ultimatum(f3, maxOffer = 15, data = data_ult)
+##' ols1 <- lm(offer ~ w1 + w2 + x1 + x2 + z1 + z2, data = data_ult)
+##' vuong(model1 = m3, outcome1 = "offer", model2 = ols1)
+##' clarke(model1 = m3, outcome1 = "offer", model2 = ols1)
 vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
                   level = 0.05, digits = 2)
 {
