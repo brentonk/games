@@ -183,13 +183,16 @@ logLik.summary.game <- function(object, ...)
 ##' independent variable, the function \code{\link{predProbs}} will be more
 ##' convenient.
 ##' @title Predicted probabilities for strategic models
-##' @aliases predict.game predict.egame12 predict.egame122 predict.ultimatum
+##' @aliases predict.game predict.egame12 predict.egame122 predict.egame123
+##' predict.ultimatum
 ##' @usage
 ##' \method{predict}{game}(object, ...)
 ##'
 ##' \method{predict}{egame12}(object, newdata, probs=c("outcome", "action"),
 ##' na.action = na.pass, ...)
 ##' \method{predict}{egame122}(object, newdata, probs=c("outcome", "action"),
+##' na.action = na.pass, ...)
+##' \method{predict}{egame123}(object, newdata, probs=c("outcome", "action"),
 ##' na.action = na.pass, ...)
 ##' \method{predict}{ultimatum}(object, newdata, na.action = na.pass, ...)
 ##' @param object a fitted model of class \code{game}.
