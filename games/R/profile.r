@@ -36,6 +36,8 @@ NULL
 ##' value for each parameter to be profiled.
 ##' @param dist number of standard errors the last step should be from the
 ##' original parameter value.
+##' @param report logical: whether to print status bar (for complex models,
+##' profiling can be lengthy)
 ##' @param ... other arguments to be passed to the fitting function (see
 ##' \code{\link{maxBFGS}}).
 ##' @return A list of data frames, each containing the estimated coefficients
@@ -64,7 +66,8 @@ NULL
 ##'
 ##' logLik(m1)
 ##' logLik(m2)  ## improved
-profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
+profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
+                         TRUE, ...)
 {
     ## get the regressors from the original model
     mf <- match(c("subset", "na.action"), names(fitted$call), 0L)
@@ -132,6 +135,11 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
     ## "steps" and "dist"
     didNotConverge <- FALSE
     ans <- list()
+    k <- 0
+    if (report) {
+        cat("\nEstimating likelihood profiles...\n")
+        pb <- txtProgressBar(min = 1, max = length(which) * (2*steps + 1))
+    }
     for (i in which) {
         if (fixed[i])  # skip fixed parameters
             next
@@ -155,11 +163,15 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, ...)
                                type = type, acc = acc, maxOffer = maxOffer,
                                offerOnly = offerOnly, offertol = offertol, ...)
             thisAns[j, ] <- c(results$max, results$estimate)
+            
+            k <- k + 1
+            setTxtProgressBar(pb, k)
         }
 
         if (any(thisAns[, 1] > sum(fitted$log.likelihood)))
             didNotConverge <- TRUE
         ans[[names(cf)[i]]] <- thisAns
+
     }
 
     if (didNotConverge)
