@@ -31,7 +31,7 @@ sbi123 <- function(y, regr, link)
     reg1 <- cbind(-regr$X1, (1-p4) * regr$X3, p4 * (1-p6) * regr$X5,
                   p4 * p6 * regr$X6)
     y1 <- as.numeric(y != 1)
-    m1 <- glm.fit(reg1, y1, family = fam)
+    m1 <- suppressWarnings(glm.fit(reg1, y1, family = fam))
 
     ans <- sqrt(2) * c(coef(m1), coef(m22), coef(m3))
     return(ans)
@@ -130,6 +130,74 @@ logLik123 <- function(b, y, regr, link, type, ...)
     return(ans)
 }
 
+logLikGrad123 <- function(b, y, regr, link, type, ...)
+{
+    names(regr) <- character(length(regr))
+    names(regr)[1:8] <- c("X1", "X3", "X5", "X6", "Z3", "Z5", "Z6", "W6")
+
+    u <- makeUtils(b, regr, nutils = 8,
+                   unames = c("u11", "u13", "u15", "u16", "u23", "u25",
+                   "u26", "u36"))
+    p <- makeProbs123(b, regr, link, type)
+    eu24 <- p$p5 * u$u25 + p$p6 * u$u26 - u$u23
+    eu12 <- p$p3 * u$u13 + p$p4*(p$p5*u$u15 + p$p6*u$u16) - u$u11
+    eu14c2 <- p$p5*u$u15 + p$p6*u$u16 - u$u13
+    rcols <- sapply(regr, ncol)
+    n <- nrow(regr$X1)
+
+    if (link == "probit" && type == "private") {
+    } else if (type == "agent") {
+        dlink <- switch(link,
+                        logit = dlogis,
+                        probit = dnorm)
+
+        phi12 <- dlink(eu12 / sqrt(2))
+        phi24 <- dlink(eu24 / sqrt(2))
+        phi36 <- dlink(u$u36 / sqrt(2))
+
+        dp6db <- matrix(0L, nrow = n, ncol = sum(rcols[1:4]))
+        dp6dg <- matrix(0L, nrow = n, ncol = sum(rcols[5:7]))
+        dp6du <- phi36 * regr$W6 / sqrt(2)
+        dp6 <- cbind(dp6db, dp6dg, dp6du)
+        dp5 <- -dp6
+
+        dp4db <- matrix(0L, nrow = n, ncol = sum(rcols[1:4]))
+        dp4dg3 <- -phi24 * regr$Z3 / sqrt(2)
+        dp4dg5 <- p$p5 * phi24 * regr$Z5 / sqrt(2)
+        dp4dg6 <- p$p6 * phi24 * regr$Z6 / sqrt(2)
+        dp4du <- phi24 * phi36 * (u$u26 - u$u25) * regr$W6 / 2
+        dp4 <- cbind(dp4db, dp4dg3, dp4dg5, dp4dg6, dp4du)
+        dp3 <- -dp4
+
+        dp2db1 <- -phi12 * regr$X1 / sqrt(2)
+        dp2db3 <- p$p3 * phi12 * regr$X3 / sqrt(2)
+        dp2db5 <- p$p4 * p$p5 * phi12 * regr$X5 / sqrt(2)
+        dp2db6 <- p$p4 * p$p6 * phi12 * regr$X6 / sqrt(2)
+        dp2dg3 <- -eu14c2 * phi12 * phi24 * regr$Z3 / 2
+        dp2dg5 <- p$p5 * eu14c2 * phi12 * phi24 * regr$Z5 / 2
+        dp2dg6 <- p$p6 * eu14c2 * phi12 * phi24 * regr$Z6 / 2
+        dp2du <- -phi12 * phi36 *
+            (p$p4*(u$u15-u$u16)*sqrt(2) + eu14c2*(u$u25-u$u26)*phi24) *
+                regr$W6 / (2*sqrt(2))
+        dp2 <- cbind(dp2db1, dp2db3, dp2db5, dp2db6, dp2dg3, dp2dg5, dp2dg6,
+                     dp2du)
+        dp1 <- -dp2
+    }
+
+    dL1 <- (1 / p$p1) * dp1
+    dL2 <- (1 / p$p2) * dp2 + (1 / p$p3) * dp3
+    dL3 <- (1 / p$p2) * dp2 + (1 / p$p4) * dp4 + (1 / p$p5) * dp5
+    dL4 <- (1 / p$p2) * dp2 + (1 / p$p4) * dp4 + (1 / p$p6) * dp6
+
+    ans <- matrix(NA, nrow = n, ncol = sum(rcols[1:8]))
+    ans[y == 1, ] <- dL1[y == 1, ]
+    ans[y == 2, ] <- dL2[y == 2, ]
+    ans[y == 3, ] <- dL3[y == 3, ]
+    ans[y == 4, ] <- dL4[y == 4, ]
+
+    return(ans)
+}
+
 makeResponse123 <- function(yf)
 {
     if (length(dim(yf))) {  ## yf is a matrix of dummies
@@ -179,3 +247,164 @@ makeResponse123 <- function(yf)
 ##' .         u15   u16
 ##' .         u25   u26
 ##' .         0     u36}
+
+egame123 <- function(formulas, data, subset, na.action,
+                     link = c("probit", "logit"),
+                     type = c("agent", "private"),
+                     startvals = c("sbi", "unif", "zero"),
+                     fixedUtils = NULL,
+                     sdformula = NULL,
+                     sdByPlayer = FALSE,
+                     boot = 0,
+                     bootreport = TRUE,
+                     profile, usegrad = TRUE, ...)
+{
+    cl <- match.call()
+
+    link <- match.arg(link)
+    type <- match.arg(type)
+    startvals <- match.arg(startvals)
+
+    formulas <- checkFormulas(formulas)
+
+    if (!is.null(fixedUtils)) {  ## error checking for fixed utilities
+        if (length(fixedUtils) < 8)
+            stop("fixedUtils must have 8 elements (u11, u13, u15, u16, u23, u25, u26, u36)")
+        if (length(fixedUtils) > 8) {
+            warning("only the first 8 elements of fixedUtils will be used")
+            fixedUtils <- fixedUtils[1:8]
+        }
+
+        formulas <- update(formulas, . ~ 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1)
+
+        if (startvals == "sbi")
+            startvals <- "zero"
+
+        if (is.null(sdformula))
+            sdformula <- if (sdByPlayer) Formula(~ 1 | 1 | 1) else Formula(~ 1)
+    }
+
+    if (!is.null(sdformula)) {  ## error checking for parameterized variance
+        sdformula <- checkFormulas(sdformula, argname = "sdformula")
+        if (sdByPlayer && length(sdformula)[2] != 3)
+            stop("'sdformula' should have three components (one for each player) on the right-hand side when sdByPlayer == TRUE")
+        if (!sdByPlayer && length(sdformula)[2] != 1)
+            stop("'sdformula' should have exactly one component on the right-hand side")
+
+        ## make one big Formula object with all utility and variance equations
+        ## on the right-hand side
+        formulas <- as.Formula(formula(formulas), formula(sdformula))
+    }
+
+    if (sdByPlayer && is.null(sdformula)) {
+        warning("to estimate SDs by player, you must specify `sdformula` or `fixedUtils`")
+        sdByPlayer <- FALSE
+    }
+
+    if (link == "logit" && type == "private") {
+        warning("logit link cannot be used with private information model; changing to probit link")
+        link <- "probit"
+    }
+
+    ## make the model frame
+    mf <- match(c("data", "subset", "na.action"), names(cl), 0L)
+    mf <- cl[c(1L, mf)]
+    mf$formula <- formulas
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf <- eval(mf, parent.frame())
+
+    yf <- model.part(formulas, mf, lhs = 1, drop = TRUE)
+    yf <- makeResponse123(yf)
+    y <- as.numeric(yf)
+
+    regr <- list()
+    for (i in seq_len(length(formulas)[2]))
+        regr[[i]] <- model.matrix(formulas, data = mf, rhs = i)
+    rcols <- sapply(regr, ncol)
+
+    ## calculate starting values
+    if (missing(profile) || is.null(profile)) {
+        if (startvals == "zero") {
+            sval <- rep(0, sum(rcols))
+        } else if (startvals == "unif") {
+            if (!hasArg(unif))
+                unif <- c(-1, 1)
+            sval <- runif(sum(rcols), unif[1], unif[2])
+        } else {
+            sval <- sbi122(y, regr, link)
+            sval <- c(sval, rep(0, sum(rcols) - length(sval)))
+        }
+    } else {
+        sval <- svalsFromProfile(profile)
+    }
+
+    ## identification check
+    varNames <- lapply(regr, colnames)
+    idCheck <- do.call(intersectAll, varNames[1:4])
+    idCheck2 <- do.call(intersectAll, varNames[5:7])
+    if (is.null(fixedUtils) && (length(idCheck) > 0)) {
+        stop("Identification problem: the following variables appear in all four of player 1's utility equations: ",
+             paste(idCheck, collapse =", "))
+    } else if (is.null(fixedUtils) && length(idCheck2 > 0)) {
+        stop("Identification problem: the following variables appear in all three of player 2's utility equations: ",
+             paste(idCheck2, collapse =", "))
+    }
+
+    ## variable naming
+    prefixes <- paste(c(rep("u1(", 4), rep("u2(", 3), "u3("),
+                      c(levels(yf), levels(yf)[2:4], levels(yf)[4]), ")",
+                      sep = "")
+    sdterms <- if (!is.null(sdformula)) { if (sdByPlayer) 3L else 1L } else 0L
+    varNames <- makeVarNames(varNames, prefixes, link, sdterms)
+    hasColon <- varNames$hasColon
+    names(sval) <- varNames$varNames
+
+    ## use gradient only if variance isn't parameterized
+    gr <- if (is.null(sdformula) && usegrad) logLikGrad123 else NULL
+
+    fvec <- rep(FALSE, length(sval))
+    names(fvec) <- names(sval)
+    if (!is.null(fixedUtils)) {
+        sval[1:8] <- fixedUtils
+        fvec[1:8] <- TRUE
+    }
+
+    results <- maxBFGS(fn = logLik123, grad = gr, start = sval, fixed = fvec, y
+                       = y, regr = regr, link = link, type = type, ...)
+
+    ## check for convergence (results$code == 0 if converged)
+    if (results$code)
+        warning("Model fitting did not converge\nMessage: ", results$message)
+
+    if (boot > 0) {
+        bootMatrix <- gameBoot(boot, report = bootreport, estimate =
+                               results$estimate, y = y, regr = regr, fn =
+                               logLik123, gr = gr, fixed = fvec, link = link,
+                               type = type, ...)
+    }
+
+    ans <- list()
+    ans$coefficients <- results$estimate
+    ans$vcov <- getGameVcov(results$hessian, fvec)
+    ans$log.likelihood <-
+        logLik123(results$estimate, y = y, regr = regr, link = link, type =
+                  type)
+    ans$call <- cl
+    ans$convergence <- list(code = results$code, message = results$message,
+                            gradient = !is.null(gr))
+    ans$formulas <- formulas
+    ans$link <- link
+    ans$type <- type
+    ans$model <- mf
+    ans$xlevels <- .getXlevels(attr(mf, "terms"), mf)
+    ans$y <- yf
+    ans$equations <- structure(names(hasColon), hasColon = hasColon)
+    ans$fixed <- fvec
+    if (boot > 0)
+        ans$boot.matrix <- bootMatrix
+
+    class(ans) <- c("game", "egame123")
+
+    return(ans)
+}
