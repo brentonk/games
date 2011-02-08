@@ -80,8 +80,7 @@ makeProfile <- function(x, ...)
         }
     }
 
-    if ("..." %in% names(cl)) {
-        
+    if ("..." %in% names(cl)) {        
         ## Evaluates the expressions fed to "...", evaluates them within the
         ## supplied data frame, and returns them as a vector.  So if the call is
         ## makeProfile(x, foo = median(foo), bar = quantile(bar, .25)), this
@@ -166,7 +165,7 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
 ##' its observed range (or one specified by the user in \code{xlim}) while
 ##' holding all other independent variables in the model fixed.  The profile
 ##' created by default is as follows (the same defaults as in the \code{sim}
-##' function in the \code{Zelig} package):
+##' function in the \pkg{Zelig} package):
 ##' \itemize{
 ##' \item numeric, non-binary variables are fixed at their means
 ##' \item \code{\link{ordered}} variables are fixed at their medians
