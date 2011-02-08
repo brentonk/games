@@ -36,8 +36,8 @@ NULL
 ##' value for each parameter to be profiled.
 ##' @param dist number of standard errors the last step should be from the
 ##' original parameter value.
-##' @param report logical: whether to print status bar (for complex models,
-##' profiling can be lengthy)
+##' @param report logical: whether to print status bar (for complex models or
+##' those with many parameters, profiling can be lengthy)
 ##' @param ... other arguments to be passed to the fitting function (see
 ##' \code{\link{maxBFGS}}).
 ##' @return A list of data frames, each containing the estimated coefficients
