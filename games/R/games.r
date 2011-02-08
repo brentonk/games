@@ -3,8 +3,8 @@
 ##' @name games-package
 ##' @docType package
 ##' @references
-##' Curtis S. Signorino.  2003.  \dQuote{Structure and Uncertainty
-##' in Discrete Choice Models.}  \emph{Political Analysis} 11:316--344.
+##' Curtis S. Signorino.  2003.  "Structure and Uncertainty
+##' in Discrete Choice Models."  \emph{Political Analysis} 11:316--344.
 NULL
 
 ##' The default method for printing a \code{game} object.

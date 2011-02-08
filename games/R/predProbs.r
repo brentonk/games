@@ -190,9 +190,8 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
 ##' to make the plots is included in the data frame returned.
 ##' @title User-friendly predicted probability analysis
 ##' @param model a fitted model of class \code{game}.
-##' @param x character string giving the name of the variable to place
-##' \dQuote{on the x-axis} while all others are held constant.  Partial matches
-##' are accepted.
+##' @param x character string giving the name of the variable to place "on the
+##' x-axis" while all others are held constant.  Partial matches are accepted.
 ##' @param xlim numeric, length 2: the range that \code{x} should be varied over
 ##' (if \code{x} is continuous).  Defaults to the observed range of \code{x}.
 ##' @param n integer: the number of observations to generate (if \code{x} is
@@ -204,7 +203,7 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
 ##' @param report logical: whether to print a status bar while obtaining the
 ##' confidence intervals for the predicted probabilities.
 ##' @param ... used to set values for variables other than \code{x} in the
-##' profile of observations.  See \dQuote{Details} and \dQuote{Examples}.
+##' profile of observations.  See "Details" and "Examples".
 ##' @return An object of class \code{predProbs}.  This is a data frame containing
 ##' each hypothetical observation's predicted probability, the upper and lower
 ##' bounds of the confidence interval, and the value of each regressor.

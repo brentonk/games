@@ -294,7 +294,7 @@ makeResponse122 <- function(yf)
 ##' \code{formulas} must have six components (rather than four) in this case.
 ##' @title Strategic model with 2 players, 4 terminal nodes
 ##' @param formulas a list of six formulas, or a \code{Formula} object with six
-##' right-hand sides.  See \dQuote{Details} and \dQuote{Examples}.
+##' right-hand sides.  See "Details" and "Examples".
 ##' @param data a data frame.
 ##' @param subset an optional logical vector specifying which observations from
 ##' \code{data} to use in fitting.
@@ -302,12 +302,11 @@ makeResponse122 <- function(yf)
 ##' the \code{na.action} setting of \code{\link{options}}.  See
 ##' \code{\link{na.omit}}
 ##' @param link whether to use a probit (default) or logit link structure,
-##' @param type whether to use an agent-error (\dQuote{agent}, default) or
-##' private-information (\dQuote{private}) stochastic structure.
+##' @param type whether to use an agent-error ("agent", default) or
+##' private-information ("private") stochastic structure.
 ##' @param startvals whether to calculate starting values for the optimization
-##' from statistical backwards induction (\dQuote{sbi}, default), draw them from
-##' a uniform distribution (\dQuote{unif}), or to set them all to 0
-##' (\dQuote{zero})
+##' from statistical backwards induction ("sbi", default), draw them from
+##' a uniform distribution ("unif"), or to set them all to 0 ("zero")
 ##' @param fixedUtils numeric vector of values to fix for u11, u12, u13, u14,
 ##' u22, and u24.  \code{NULL} (the default) indicates that these should be
 ##' estimated with regressors, not fixed.

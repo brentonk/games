@@ -270,6 +270,10 @@ makeResponse123 <- function(yf)
     return(yf)
 }
 
+##' Fits a strategic model with three players and four terminal nodes, as in the
+##' game illustrated below in "Details".
+##'
+##' The model corresponds to the following extensive-form game:
 ##' \preformatted{
 ##' .     1
 ##' .     /\
@@ -285,7 +289,28 @@ makeResponse123 <- function(yf)
 ##' .         u15   u16
 ##' .         u25   u26
 ##' .         0     u36}
-
+##'
+##' For additional details on any of the function arguments or options, see
+##' \code{\link{egame12}}.  The only difference is that the right-hand side of
+##' \code{formulas} must have eight components (rather than four) in this case.
+##' @title Strategic model with 3 players, 4 terminal nodes
+##' @param formulas 
+##' @param data 
+##' @param subset 
+##' @param na.action 
+##' @param link 
+##' @param type 
+##' @param startvals 
+##' @param fixedUtils 
+##' @param sdformula 
+##' @param sdByPlayer 
+##' @param boot 
+##' @param bootreport 
+##' @param profile 
+##' @param usegrad 
+##' @param ... 
+##' @return 
+##' @author Brenton Kenkel
 egame123 <- function(formulas, data, subset, na.action,
                      link = c("probit", "logit"),
                      type = c("agent", "private"),

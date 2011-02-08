@@ -302,7 +302,7 @@ makeResponse12 <- function(yf)
 ##' specified, the gradient is not used.
 ##' @title Strategic model with 2 players, 3 terminal nodes
 ##' @param formulas a list of four formulas, or a \code{\link{Formula}} object
-##' with four right-hand sides.  See \dQuote{Details} and the examples below.
+##' with four right-hand sides.  See "Details" and the examples below.
 ##' @param data a data frame containing the variables in the model.
 ##' @param subset optional logical expression specifying which observations from
 ##' \code{data} to use in fitting.
@@ -310,12 +310,11 @@ makeResponse12 <- function(yf)
 ##' the \code{na.action} setting of \code{\link{options}}.  See
 ##' \code{\link{na.omit}}.
 ##' @param link whether to use a probit (default) or logit link structure,
-##' @param type whether to use an agent-error (\dQuote{agent}, default) or
-##' private-information (\dQuote{private}) stochastic structure.
+##' @param type whether to use an agent-error ("agent", default) or
+##' private-information ("private") stochastic structure.
 ##' @param startvals whether to calculate starting values for the optimization
-##' using statistical backwards induction (\dQuote{sbi}, default), draw them
-##' from a uniform distribution (\dQuote{unif}), or to set them all to 0
-##' (\dQuote{zero})
+##' using statistical backwards induction ("sbi", default), draw them from a
+##' uniform distribution ("unif"), or to set them all to 0 ("zero")
 ##' @param fixedUtils numeric vector of values to fix for u11, u13, u14, and u24
 ##' respectively.  \code{NULL} (the default) indicates that these should be
 ##' estimated with regressors rather than fixed.
@@ -358,7 +357,7 @@ makeResponse12 <- function(yf)
 ##' \item{\code{xlevels}}{a record of the levels of any factor regressors.}
 ##' \item{\code{y}}{the dependent variable, represented as a factor.}
 ##' \item{\code{equations}}{names of each separate equation (e.g.,
-##' \dQuote{u1(sq)}, \dQuote{u1(cap)}, etc.).}
+##' "u1(sq)", "u1(cap)", etc.).}
 ##' \item{\code{fixed}}{logical vector specifying which parameter values, if
 ##' any, were fixed in the estimation procedure.}
 ##' \item{\code{boot.matrix}}{if \code{boot} was non-zero, a matrix of bootstrap
@@ -369,12 +368,12 @@ makeResponse12 <- function(yf)
 ##' @seealso \code{\link{summary.game}} and \code{\link{predProbs}} for
 ##' postestimation analysis; \code{\link{Formula}} for formula specification.
 ##' @export
-##' @references Jeffrey B. Lewis and Kenneth A Schultz.  2003.
-##' \dQuote{Revealing Preferences: Empirical Estimation of a Crisis Bargaining
-##' Game with Incomplete Information.}  \emph{Political Analysis} 11:345--367.
+##' @references Jeffrey B. Lewis and Kenneth A Schultz.  2003.  "Revealing
+##' Preferences: Empirical Estimation of a Crisis Bargaining Game with
+##' Incomplete Information."  \emph{Political Analysis} 11:345--367.
 ##'
-##' Curtis S. Signorino.  2003.  \dQuote{Structure and Uncertainty
-##' in Discrete Choice Models.}  \emph{Political Analysis} 11:316--344.
+##' Curtis S. Signorino.  2003.  "Structure and Uncertainty in Discrete Choice
+##' Models."  \emph{Political Analysis} 11:316--344.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com}) and Curtis
 ##' S. Signorino
 ##' @examples

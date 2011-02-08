@@ -13,9 +13,9 @@ NULL
 ##' @param x vector of values to solve for.
 ##' @return Solutions to Lambert's W for each value in \code{x}.
 ##' @export
-##' @references D.A. Barry, P.J. Culligan-Hensley, and S.J. Barry.  1995.
-##' \dQuote{Real Values of the W-Function.}  \emph{ACM Transactions on
-##' Mathematical Software} 21(2):161--171.
+##' @references D.A. Barry, P.J. Culligan-Hensley, and S.J. Barry.  1995.  "Real
+##' Values of the W-Function."  \emph{ACM Transactions on Mathematical Software}
+##' 21(2):161--171.
 ##' @author Curt Signorino (\email{curt.signorino@@rochester.edu})
 ##' @examples
 ##' x <- rexp(10)
@@ -216,7 +216,7 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 }
 
 ##' Estimates the statistical ultimatum game described in Ramsay and Signorino
-##' (2009), illustrated below in \dQuote{Details}.
+##' (2009), illustrated below in "Details".
 ##'
 ##' The model corresponds to the following extensive-form game, described in
 ##' Ramsay and Signorino (2009):
@@ -240,26 +240,24 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' should take the form \code{offer + acceptance}, where \code{outcome}
 ##' contains the numeric value of the offer made and \code{acceptance} is an
 ##' indicator for whether it was accepted.  (If \code{outcome} is set to
-##' \dQuote{offer}, the acceptance indicator can be omitted.  See below for
-##' more.)
+##' "offer", the acceptance indicator can be omitted.  See below for more.)
 ##'
 ##' The \code{outcome} argument refers to whether the outcome of interest is
 ##' just the level of the offer made, or both the level of the offer and whether
 ##' it was accepted.  If acceptance was unobserved, then \code{outcome} should
-##' be set to \dQuote{offer}.  If so, the estimates for Player 2's reservation
-##' value should be interpreted as Player 1's expectations about these
-##' parameters.  It may also be useful to set \code{outcome} to \dQuote{offer}
-##' even if acceptance data are available, for the purpose of comparing the
-##' strategic model to other models of offer levels (as in Ramsay and Signorino
-##' 2009).  If an acceptance variable is specified but \code{outcome} is set to
-##' \dQuote{offer}, the acceptance data will be used for starting values but not
-##' in the actual fitting.
+##' be set to "offer".  If so, the estimates for Player 2's reservation value
+##' should be interpreted as Player 1's expectations about these parameters.  It
+##' may also be useful to set \code{outcome} to "offer" even if acceptance data
+##' are available, for the purpose of comparing the strategic model to other
+##' models of offer levels (as in Ramsay and Signorino 2009).  If an acceptance
+##' variable is specified but \code{outcome} is set to "offer", the acceptance
+##' data will be used for starting values but not in the actual fitting.
 ##'
 ##' Numerical instability is not uncommon in the statistical ultimatum game,
 ##' especially when the scale parameters are being estimated.
 ##' @title Statistical ultimatum game
 ##' @param formulas a list of two formulas, or a \code{\link{Formula}} object
-##' with two right-hand sides.  See \dQuote{Details} and the examples below.
+##' with two right-hand sides.  See "Details" and the examples below.
 ##' @param data data frame containing the variables in the model.
 ##' @param subset optional logical expression specifying which observations from
 ##' \code{data} to use in fitting.
@@ -276,8 +274,8 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' @param s2 numeric: scale parameter for Player 2.  If \code{NULL} (the
 ##' default), the parameter will be estimated.
 ##' @param outcome the outcome of interest: just Player 1's offer
-##' (\dQuote{offer}) or both the offer and its acceptance (\dQuote{both}).  See
-##' \dQuote{Details}.
+##' ("offer") or both the offer and its acceptance ("both").  See
+##' "Details".
 ##' @param boot integer: number of bootstrap iterations to perform (if any).
 ##' @param bootreport logical: whether to print status bar when performing
 ##' bootstrap iterations.
@@ -293,8 +291,8 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' class is just for use in the generation of predicted values (see
 ##' \code{\link{predProbs}}) and profiling (see \code{\link{profile.game}}).
 ##' @export
-##' @references Kristopher W. Ramsay and Curtis S. Signorino.  2009.  \dQuote{A
-##' Statistical Model of the Ultimatum Game.}  Available online at
+##' @references Kristopher W. Ramsay and Curtis S. Signorino.  2009.  "A
+##' Statistical Model of the Ultimatum Game."  Available online at
 ##' \url{http://www.rochester.edu/college/psc/signorino/research/RamsaySignorino_Ultimatum.pdf}.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com}) and Curtis
 ##' S. Signorino

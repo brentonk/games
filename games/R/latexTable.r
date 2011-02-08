@@ -57,9 +57,9 @@ latexEsc <- function(x)
 ##' standard errors?
 ##' @return \code{x}, invisibly.
 ##' @export
-##' @references Curtis S. Signorino and Ahmer Tarar.  2006.  \dQuote{A Unified
-##' Theory and Test of Extended Immediate Deterrence.}  \emph{American Journal
-##' of Political Science} 50(3):586--605.
+##' @references Curtis S. Signorino and Ahmer Tarar.  2006.  "A Unified Theory
+##' and Test of Extended Immediate Deterrence."  \emph{American Journal of
+##' Political Science} 50(3):586--605.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 ##' @examples
 ##' data(war1800)
