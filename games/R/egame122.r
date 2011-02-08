@@ -274,8 +274,8 @@ makeResponse122 <- function(yf)
     return(yf)
 }
 
-##' Fits a strategic model with four terminal nodes, as in the game illustrated
-##' below in \dQuote{Details}.
+##' Fits a strategic model with two players and four terminal nodes, as in the
+##' game illustrated below in "Details".
 ##'
 ##' The model corresponds to the following extensive-form game:
 ##' \preformatted{
@@ -292,7 +292,7 @@ makeResponse122 <- function(yf)
 ##' For additional details on any of the function arguments or options, see
 ##' \code{\link{egame12}}.  The only difference is that the right-hand side of
 ##' \code{formulas} must have six components (rather than four) in this case.
-##' @title Strategic model with 4 terminal nodes
+##' @title Strategic model with 2 players, 4 terminal nodes
 ##' @param formulas a list of six formulas, or a \code{Formula} object with six
 ##' right-hand sides.  See \dQuote{Details} and \dQuote{Examples}.
 ##' @param data a data frame.

@@ -224,8 +224,8 @@ makeResponse12 <- function(yf)
     return(yf)
 }
 
-##' Fits a strategic model with three terminal nodes, as in the game illustrated
-##' below in \dQuote{Details}.
+##' Fits a strategic model with two players and three terminal nodes, as in the
+##' game illustrated below in "Details".
 ##'
 ##' The model corresponds to the following extensive-form game, described in
 ##' Signorino (2003):
@@ -300,7 +300,7 @@ makeResponse12 <- function(yf)
 ##' and stability, the fitting procedure typically uses the gradient of the
 ##' log-likelihood.  However, if \code{fixedUtils} or \code{sdformula} is
 ##' specified, the gradient is not used.
-##' @title Strategic model with 3 terminal nodes
+##' @title Strategic model with 2 players, 3 terminal nodes
 ##' @param formulas a list of four formulas, or a \code{\link{Formula}} object
 ##' with four right-hand sides.  See \dQuote{Details} and the examples below.
 ##' @param data a data frame containing the variables in the model.
