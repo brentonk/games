@@ -291,7 +291,7 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' @return An object of class \code{c("game", "ultimatum")}.  For details on
 ##' the \code{game} class, see \code{\link{egame12}}.  The \code{ultimatum}
 ##' class is just for use in the generation of predicted values (see
-##' \code{\link{predProbs}}).
+##' \code{\link{predProbs}}) and profiling (see \code{\link{profile.game}}).
 ##' @export
 ##' @references Kristopher W. Ramsay and Curtis S. Signorino.  2009.  \dQuote{A
 ##' Statistical Model of the Ultimatum Game.}  Available online at
@@ -441,7 +441,6 @@ ultimatum <- function(formulas, data, subset, na.action,
     ans$outcome <- outcome
     ans$maxOffer <- maxOffer
     ans$offertol <- offertol
-    ans$acc <- a
 
     class(ans) <- c("game", "ultimatum")
 
