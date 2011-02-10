@@ -5,7 +5,7 @@ NULL
 ## Calculates bootstrap results for a strategic model.
 ## 
 gameBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
-                      fixed, ...)
+                     fixed, method, ...)
 {
     bootMatrix <- matrix(NA, nrow = boot, ncol = length(estimate))
     failedBoot <- logical(boot)
@@ -18,11 +18,13 @@ gameBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
         newy <- y[bootSamp]
         newa <- a[bootSamp]  ## for the ultimatum model
         newregr <- lapply(regr, function(x) x[bootSamp, , drop = FALSE])
-        bootResults <- maxBFGS(fn = fn, grad = gr, start = estimate, fixed =
-                               fixed, y = newy, acc = newa, regr = newregr, ...)
-        if (bootResults$code) {
+        bootResults <- maxLik(fn = fn, grad = gr, start = estimate, fixed =
+                              fixed, method = method, y = newy, acc = newa, regr
+                              = newregr, ...)
+        cc <- convergenceCriterion(method)
+        if (!(bootResults$code %in% cc)) {
             warning("bootstrap iteration ", i,
-                    "failed to converge and will be removed")
+                    " failed to converge and will be removed")
             failedBoot[i] <- TRUE
         }
         bootMatrix[i, ] <- bootResults$estimate
