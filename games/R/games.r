@@ -56,7 +56,8 @@ print.game <- function(x, ...)
         }
     }
 
-    if (x$convergence$code) {
+    cc <- convergenceCriterion(x$convergence$method)
+    if (!(x$convergence$code %in% cc)) {
         cat("\nWarning: Model fitting did not converge\nMessage:",
             x$convergence$message)
     }
@@ -139,7 +140,8 @@ print.summary.game <- function(x, ...)
     cat("\nLog-likelihood:", x$log.likelihood)
     cat("\nAIC:", AIC(x))
     cat("\nNo. observations:", x$nobs, "\n\n")
-    if (x$convergence$code) {
+    cc <- convergenceCriterion(x$convergence$method)
+    if (!(x$convergence$code %in% cc)) {
         cat("\nWarning: Model fitting did not converge\nMessage:",
             x$convergence$message, "\n")
     }
