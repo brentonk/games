@@ -273,17 +273,18 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' default), the parameter will be estimated.
 ##' @param s2 numeric: scale parameter for Player 2.  If \code{NULL} (the
 ##' default), the parameter will be estimated.
-##' @param outcome the outcome of interest: just Player 1's offer
-##' ("offer") or both the offer and its acceptance ("both").  See
-##' "Details".
+##' @param outcome the outcome of interest: just Player 1's offer ("offer") or
+##' both the offer and its acceptance ("both").  See "Details".
 ##' @param boot integer: number of bootstrap iterations to perform (if any).
 ##' @param bootreport logical: whether to print status bar when performing
 ##' bootstrap iterations.
 ##' @param profile output from running \code{\link{profile.game}} on a previous
 ##' fit of the model, used to generate starting values for refitting when an
 ##' earlier fit converged to a non-global maximum.
+##' @param method character string specifying which optimization routine to use
+##' (see \code{\link{maxLik}})
 ##' @param ... other arguments to pass to the fitting function (see
-##' \code{\link{maxBFGS}}).
+##' \code{\link{maxLik}}).
 ##' @param reltol numeric: relative convergence tolerance level (see
 ##' \code{\link{optim}}).  Use of values higher than the default is discouraged.
 ##' @return An object of class \code{c("game", "ultimatum")}.  For details on
@@ -322,6 +323,7 @@ ultimatum <- function(formulas, data, subset, na.action,
                       boot = 0,
                       bootreport = TRUE,
                       profile,
+                      method = "BFGS",
                       ...,
                       reltol = 1e-12)
 {
@@ -398,21 +400,21 @@ ultimatum <- function(formulas, data, subset, na.action,
     if (!s2null) fvec[length(fvec)] <- TRUE
     names(fvec) <- names(sval)
 
-    results <- maxBFGS(fn = logLikUlt, grad = logLikGradUlt, start = sval, fixed
-                       = fvec, y = y, acc = a, regr = regr, maxOffer =
-                       maxOffer, offerOnly = offerOnly, offertol = offertol,
-                       reltol = reltol, ...)
-    if (results$code) {
-        warning("Model fitting did not converge\nMessage: ",
-                results$message)
-    }
+    results <- maxLik(fn = logLikUlt, grad = logLikGradUlt, start = sval, fixed
+                      = fvec, method = method, y = y, acc = a, regr = regr,
+                      maxOffer = maxOffer, offerOnly = offerOnly, offertol =
+                      offertol, reltol = reltol, ...)
+    cc <- convergenceCriterion(method)
+    if (!(results$code %in% cc))
+        warning("Model fitting did not converge\nMessage: ", results$message)
 
     if (boot > 0) {
-        bootMatrix <- gameBoot(boot, report = bootreport, estimate =
-                               results$estimate, y = y, a = a, regr = regr, fn
-                               = logLikUlt, gr = logLikGradUlt , fixed = fvec,
-                               maxOffer = maxOffer, offerOnly = offerOnly,
-                               offertol = offertol, reltol = reltol, ...)
+        bootMatrix <-
+            gameBoot(boot, report = bootreport, estimate = results$estimate, y =
+                     y, a = a, regr = regr, fn = logLikUlt, gr = logLikGradUlt ,
+                     fixed = fvec, method = method, maxOffer = maxOffer,
+                     offerOnly = offerOnly, offertol = offertol, reltol =
+                     reltol, ...)
     }
 
     ans <- list()
@@ -422,8 +424,9 @@ ultimatum <- function(formulas, data, subset, na.action,
         logLikUlt(results$estimate, y = y, acc = a, regr = regr, maxOffer =
                   maxOffer, offertol = offertol, offerOnly = offerOnly)
     ans$call <- cl
-    ans$convergence <- list(code = results$code, message = results$message,
-                            gradient = TRUE)
+    ans$convergence <- list(method = method, iter = nIter(results), code =
+                            results$code, message = results$message, gradient =
+                            TRUE)
     ans$formulas <- formulas
     ans$link <- "logit"
     ans$type <- "private"

@@ -305,8 +305,8 @@ makeResponse122 <- function(yf)
 ##' @param type whether to use an agent-error ("agent", default) or
 ##' private-information ("private") stochastic structure.
 ##' @param startvals whether to calculate starting values for the optimization
-##' from statistical backwards induction ("sbi", default), draw them from
-##' a uniform distribution ("unif"), or to set them all to 0 ("zero")
+##' from statistical backwards induction ("sbi", default), draw them from a
+##' uniform distribution ("unif"), or to set them all to 0 ("zero")
 ##' @param fixedUtils numeric vector of values to fix for u11, u12, u13, u14,
 ##' u22, and u24.  \code{NULL} (the default) indicates that these should be
 ##' estimated with regressors, not fixed.
@@ -322,8 +322,10 @@ makeResponse122 <- function(yf)
 ##' @param profile output from running \code{\link{profile.game}} on a previous
 ##' fit of the model, used to generate starting values for refitting when an
 ##' earlier fit converged to a non-global maximum.
+##' @param method character string specifying which optimization routine to use
+##' (see \code{\link{maxLik}})
 ##' @param ... other arguments to pass to the fitting function (see
-##' \code{\link{maxBFGS}})
+##' \code{\link{maxLik}}).
 ##' @return An object of class \code{c("game", "egame122")}.  See
 ##' \code{\link{egame12}} for a description of the \code{game} class.
 ##' @export
@@ -370,6 +372,7 @@ egame122 <- function(formulas, data, subset, na.action,
                      boot = 0,
                      bootreport = TRUE,
                      profile,
+                     method = "BFGS",
                      ...)
 {
     cl <- match.call()
@@ -474,18 +477,18 @@ egame122 <- function(formulas, data, subset, na.action,
         fvec[1:6] <- TRUE
     }
 
-    results <- maxBFGS(fn = logLik122, grad = gr, start = sval, fixed = fvec,
-                       y = y, regr = regr, link = link, type = type, ...)
-    if (results$code) {
-        warning("Model fitting did not converge\nMessage: ",
-                results$message)
-    }
+    results <- maxLik(fn = logLik122, grad = gr, start = sval, fixed = fvec,
+                      method = method, y = y, regr = regr, link = link, type =
+                      type, ...)
+    cc <- convergenceCriterion(method)
+    if (!(results$code %in% cc))
+        warning("Model fitting did not converge\nMessage: ", results$message)
 
     if (boot > 0) {
-        bootMatrix <- gameBoot(boot, report = bootreport, estimate =
-                                results$estimate, y = y, regr = regr, fn =
-                                logLik122, gr = gr, fixed = fvec, link = link,
-                                type = type, ...)
+        bootMatrix <-
+            gameBoot(boot, report = bootreport, estimate = results$estimate, y =
+                     y, regr = regr, fn = logLik122, gr = gr, fixed = fvec,
+                     method = method, link = link, type = type, ...)
     }
 
     ans <- list()
@@ -494,8 +497,9 @@ egame122 <- function(formulas, data, subset, na.action,
     ans$log.likelihood <-
         logLik122(results$estimate, y = y, regr = regr, link = link, type = type)
     ans$call <- cl
-    ans$convergence <- list(code = results$code, message = results$message,
-                            gradient = !is.null(gr))
+    ans$convergence <- list(method = method, iter = nIter(results), code =
+                            results$code, message = results$message, gradient =
+                            !is.null(gr))
     ans$formulas <- formulas
     ans$link <- link
     ans$type <- type

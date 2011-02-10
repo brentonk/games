@@ -334,8 +334,10 @@ makeResponse12 <- function(yf)
 ##' @param profile output from running \code{\link{profile.game}} on a previous
 ##' fit of the model, used to generate starting values for refitting when an
 ##' earlier fit converged to a non-global maximum.
+##' @param method character string specifying which optimization routine to use
+##' (see \code{\link{maxLik}})
 ##' @param ... other arguments to pass to the fitting function (see
-##' \code{\link{maxBFGS}}).
+##' \code{\link{maxLik}}).
 ##' @return An object of class \code{c("game", "egame12")}. A
 ##' \code{game} object is a list containing: \describe{
 ##' \item{\code{coefficients}}{estimated parameters of the model.}
@@ -429,6 +431,7 @@ egame12 <- function(formulas, data, subset, na.action,
                     boot = 0,
                     bootreport = TRUE,
                     profile,
+                    method = "BFGS",
                     ...)
 {
     cl <- match.call()
@@ -542,18 +545,18 @@ egame12 <- function(formulas, data, subset, na.action,
         fvec[1:4] <- TRUE
     }
 
-    results <- maxBFGS(fn = logLik12, grad = gr, start = sval, fixed = fvec, y =
-                       y, regr = regr, link = link, type = type, ...)
-    if (results$code) {
-        warning("Model fitting did not converge\nMessage: ",
-                results$message)
-    }
+    results <- maxLik(logLik = logLik12, grad = gr, start = sval, fixed = fvec,
+                      method = method, y = y, regr = regr, link = link, type =
+                      type, ...)
+    cc <- convergenceCriterion(method)
+    if (!(results$code %in% cc))
+        warning("Model fitting did not converge\nMessage: ", results$message)
 
     if (boot > 0) {
-        bootMatrix <- gameBoot(boot, report = bootreport, estimate =
-                                results$estimate, y = y, regr = regr, fn =
-                                logLik12, gr = gr, fixed = fvec, link = link,
-                                type = type, ...)
+        bootMatrix <-
+            gameBoot(boot, report = bootreport, estimate = results$estimate, y =
+                     y, regr = regr, fn = logLik12, gr = gr, fixed = fvec,
+                     method = method, link = link, type = type, ...)
     }
 
     ans <- list()
@@ -562,8 +565,9 @@ egame12 <- function(formulas, data, subset, na.action,
     ans$log.likelihood <- logLik12(results$estimate, y = y, regr = regr, link =
                                    link, type = type)
     ans$call <- cl
-    ans$convergence <- list(code = results$code, message = results$message,
-                            gradient = !is.null(gr))
+    ans$convergence <- list(method = method, iter = nIter(results), code =
+                            results$code, message = results$message, gradient =
+                            !is.null(gr))
     ans$formulas <- formulas
     ans$link <- link
     ans$type <- type
@@ -573,7 +577,6 @@ egame12 <- function(formulas, data, subset, na.action,
     ans$equations <- names(hasColon)
     attr(ans$equations, "hasColon") <- hasColon
     ans$fixed <- fvec
-
     if (boot > 0)
         ans$boot.matrix <- bootMatrix
     
