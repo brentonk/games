@@ -25,9 +25,15 @@ print.game <- function(x, ...)
     print(x$call)
     cat("\nCOEFFICIENTS:\n")
 
+    ## print a table of coefficients for each utility (or variance) equation
     for (i in seq_along(x$equations)) {
         eq <- x$equations[i]
         hc <- attr(x$equations, "hasColon")[i]
+
+        ## finds which coefficients contain the name of the relevant equation.
+        ## this is a hack; in the future, fitted models should contain a matrix
+        ## where each row is a regressor name and each column is an equation
+        ## name in order to avoid this
         cf <- grep(eq, names(x$coefficients), fixed = TRUE)
 
         cat("\n  ", prefixToString(eq), "\n", sep = "")
@@ -88,6 +94,8 @@ summary.game <- function(object, useboot = TRUE, ...)
     useboot <- useboot && !is.null(object$boot.matrix)
     if (useboot)
         object$vcov <- var(object$boot.matrix)
+
+    ## makes the standard "regressor table" (as in summary.lm)
     cf <- object$coefficients[!object$fixed]
     se <- sqrt(diag(object$vcov[!object$fixed, !object$fixed, drop = FALSE]))
     zval <- cf / se
@@ -176,7 +184,7 @@ logLik.summary.game <- function(object, ...)
     return(ans)
 }
 
-##' Makes predicted probabilities from a strategic model .
+##' Makes predicted probabilities from a strategic model.
 ##'
 ##' This method uses a fitted strategic model to make predictions for a new
 ##' set of data.  Useful for cross-validating or for graphical analysis.
@@ -218,30 +226,42 @@ predict.game <- function(object, ...)
 }
 
 ##
-## Takes an equation prefix from a strategic model (e.g., "u1(war)") and
-## translates it into plain English (e.g., "Player 1's utility for war").
+## INPUT:
+## x: character string
 ##
+## RETURN:
+## plain English version of 'x' (e.g., "u1(war)" becomes "Player 1's utility for
+## war")
+## 
 prefixToString <- function(x)
 {
-    first <- substr(x, 1, 1)
+    first <- substr(x, 1, 1)  # first character
     
-    if (first == "u") {
+    if (first == "u") {  # utility equation
+        ## this is for the unlikely event of a 10+ player model, i.e., to ensure
+        ## that "u10(war)" isn't translated into "Player 1's utility for (war"
         n <- 3
         while (substr(x, n, n) != "(") n <- n + 1
 
-        player <- substr(x, 2, n - 1)
-        outcome <- substr(x, n + 1, nchar(x) - 1)
+        player <- substr(x, 2, n - 1)  # player number
+        outcome <- substr(x, n + 1, nchar(x) - 1)  # outcome name
 
         x <- paste("Player ", player, "'s utility for ", outcome, ":", sep = "")
-    } else if (first == "l") {
+    } else if (first == "l") {  # variance equation
+        ## this one is not yet safe in case of a 10+ player model, just takes
+        ## the second-last character (e.g., "1" in "log(sigma1)") and checks
+        ## whether it's numeric.  if so, this is taken to be the player number;
+        ## if not, the scale parameter must be common to all players
         player <- substr(x, nchar(x) - 1, nchar(x) - 1)
-        if (player == "1" || player == "2") {
+        player <- tryCatch(as.numeric(player), warning = identity)
+        if (!inherits(player, "warning")) {
             x <- paste("Logged scale parameter for player ", player, ":", sep
                        = "")
-        } else {
+        } else {  # a warning means the second-last character couldn't be
+                  # coerced to numeric, so it's not a number
             x <- "Logged scale parameter:"
         }
-    } else if (first == "R") {
+    } else if (first == "R") {  # reservation value in ultimatum model
         x <- paste("Player ", substr(x, 2, nchar(x)), "'s reservation value:",
                    sep = "")
     }
