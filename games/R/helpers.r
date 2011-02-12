@@ -2,7 +2,20 @@
 NULL
 
 ##
-## Calculates bootstrap results for a strategic model.
+## INPUT:
+## boot: number of bootstrap iterations
+## report: whether to print status bar
+## estimate: original fit coefficients
+## y: dependent variable
+## a: acceptance vector (for ultimatum only)
+## regr: list of regressor matrices
+## fn: log-likelihood function
+## gr: gradient function (if any)
+## fixed: logical vector indicating which parameters are held fixed
+## method: optimization routine to use
+##
+## RETURN:
+## matrix of bootstrap results, each row an iteration
 ## 
 gameBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
                      fixed, method, ...)
@@ -18,7 +31,7 @@ gameBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
         newy <- y[bootSamp]
         newa <- a[bootSamp]  ## for the ultimatum model
         newregr <- lapply(regr, function(x) x[bootSamp, , drop = FALSE])
-        bootResults <- maxLik(fn = fn, grad = gr, start = estimate, fixed =
+        bootResults <- maxLik(logLik = fn, grad = gr, start = estimate, fixed =
                               fixed, method = method, y = newy, acc = newa, regr
                               = newregr, ...)
         cc <- convergenceCriterion(method)
@@ -39,6 +52,7 @@ gameBoot <- function(boot, report = TRUE, estimate, y, a = NULL, regr, fn, gr,
     return(bootMatrix)
 }
 
+## TODO: get rid of this function
 ##
 ## Calculates the variance-covariance matrix for a fitted model, including a
 ## procedure for catching the error (and returning a matrix of NAs) in case the
@@ -60,8 +74,11 @@ getGameVcov <- function(hessian, fixed)
 }
 
 ##
-## Ensures that estimated probabilities aren't numerically equal to 1 or 0, in
-## order to ensure no -Infs or 0s in log-likelihoods.
+## INPUT:
+## x: numeric vector of values in [0, 1]
+##
+## RETURN:
+## numeric vector, ensuring all values of x are numerically inside (0, 1)
 ##
 finiteProbs <- function(x)
 {
@@ -71,6 +88,13 @@ finiteProbs <- function(x)
     return(x)
 }
 
+##
+## INPUT:
+## x: numeric vector
+##
+## RETURN:
+## numeric vector, replacing Inf with largest representable values
+##
 finitize <- function(x)
 {
     x <- ifelse(is.finite(x), x, sign(x) * .Machine$double.xmax)
@@ -78,9 +102,15 @@ finitize <- function(x)
 }
 
 ##
-## Used to ensure that the "formulas" argument of each fitting function contains
-## a valid type of object and coerces it to "Formula" class.  Returns an error
-## if the function isn't a formula, Formula, or list of formulas.
+## INPUT:
+## f: object inheriting from class "formula", or a list of such objects
+## argname: character string specifying the name of the argument being checked
+## in the original function (in order to give an informative error message in
+## case of failure)
+##
+## RETURN:
+## object of class "Formula", combining supplied formulas (if 'f' is a list)
+## into a big one with multiple right-hand sides
 ##
 checkFormulas <- function(f, argname = "formulas")
 {
@@ -96,7 +126,11 @@ checkFormulas <- function(f, argname = "formulas")
 }
 
 ##
-## Takes a list of vectors and finds their intersection
+## INPUT:
+## ...: vectors of any standard class
+##
+## RETURN:
+## vector of elements contained in all vectors in '...'
 ##
 intersectAll <- function(...)
 {
@@ -108,7 +142,18 @@ intersectAll <- function(...)
 }
 
 ##
-## Makes the names of the variables for egame12 and egame122 models.
+## INPUT:
+## varNames: list of character vectors, each containing the variable names for
+## one utility or variance equation
+## prefixes: character vector containing names of utility equations (but not
+## variance terms)
+## link: "logit" or "probit"
+## sdterms: number of variance equations
+##
+## RETURN:
+## varNames: character vector of variable names
+## hasColon: logical vector indicating which utility/variance equations are not
+## fixed to 0 or contain only a constant
 ## 
 makeVarNames <- function(varNames, prefixes, link, sdterms)
 {
@@ -135,17 +180,18 @@ makeVarNames <- function(varNames, prefixes, link, sdterms)
 }
 
 ##
-## Calculates utilities from the given list of regressors (regr) and vector of
-## coefficients (b); returns the regressors and the "remaining" coefficients
-## (those for scale parameters, if any) in a list.
+## INPUT:
+## b: parameter vector
+## regr: list of regressor matrices
+## nutils: number of utility equations
+## unames: names of utility equations
+## finit: whether to coerce utilities not to contain any Infs
 ##
-## nutils specifies which elements of regr are for utilities rather than scale
-## parameters; e.g., if nutils = 4, then the first four matrices of regr are
-## used to create utility vectors, and the rest are used for scale terms.
-##
-## unames, which must be of length nutils, specifies names for the utility terms
-## in the list returned.
-##
+## RETURN:
+## list of numeric vectors (named according to 'unames') of fitted utilities,
+## along with element 'b' containing unused parameters (those pertaining to
+## variance terms)
+## 
 makeUtils <- function(b, regr, nutils, unames, finit = TRUE)
 {
     utils <- vector("list", nutils)
@@ -172,7 +218,11 @@ makeUtils <- function(b, regr, nutils, unames, finit = TRUE)
 }
 
 ##
-## Retrieves the "best" starting values from profile.game output
+## INPUT:
+## x: output from profile.game
+##
+## RETURN:
+## vector of parameters giving the highest profiled log-likelihood
 ##
 svalsFromProfile <- function(x)
 {
