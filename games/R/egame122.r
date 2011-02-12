@@ -477,7 +477,7 @@ egame122 <- function(formulas, data, subset, na.action,
         fvec[1:6] <- TRUE
     }
 
-    results <- maxLik(fn = logLik122, grad = gr, start = sval, fixed = fvec,
+    results <- maxLik(logLik = logLik122, grad = gr, start = sval, fixed = fvec,
                       method = method, y = y, regr = regr, link = link, type =
                       type, ...)
     cc <- convergenceCriterion(method)

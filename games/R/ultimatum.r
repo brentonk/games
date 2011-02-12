@@ -400,10 +400,10 @@ ultimatum <- function(formulas, data, subset, na.action,
     if (!s2null) fvec[length(fvec)] <- TRUE
     names(fvec) <- names(sval)
 
-    results <- maxLik(fn = logLikUlt, grad = logLikGradUlt, start = sval, fixed
-                      = fvec, method = method, y = y, acc = a, regr = regr,
-                      maxOffer = maxOffer, offerOnly = offerOnly, offertol =
-                      offertol, reltol = reltol, ...)
+    results <- maxLik(logLik = logLikUlt, grad = logLikGradUlt, start = sval,
+                      fixed = fvec, method = method, y = y, acc = a, regr =
+                      regr, maxOffer = maxOffer, offerOnly = offerOnly, offertol
+                      = offertol, reltol = reltol, ...)
     cc <- convergenceCriterion(method)
     if (!(results$code %in% cc))
         warning("Model fitting did not converge\nMessage: ", results$message)
