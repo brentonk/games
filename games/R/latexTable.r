@@ -3,9 +3,12 @@
 NULL
 
 ##
-## Converts a character vector for use in LaTeX by inserting escape sequences
-## where appropriate.  Not comprehensive, but should catch most common
-## problems.
+## INPUT:
+## x: character vector
+##
+## RETURN:
+## x, with common special characters in LaTeX converted to their escape
+## sequences
 ## 
 latexEsc <- function(x)
 {
@@ -76,21 +79,33 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
                        NA, blankfill = "", math.style.negative = TRUE, file =
                        "", floatplace = "htbp", rowsep = 2, useboot = TRUE)
 {
+    ## this whole function should be rewritten using writeLines; this is my hack
+    ## until then
     lcat <- function(...) cat(..., file = file, sep = "", append = TRUE)
 
+    ## get coefficient names, values, and standard errors
     n <- names(coef(x))
     cf <- summary(x, useboot = useboot)$coefficients[, 1:2]
     cf <- rbind(cf, c(sum(x$log.likelihood), 0))
+
+    ## convert coefficients and standard errors to character strings with the
+    ## proper number of digits and the correct negative sign
     cf <- format(cf, digits = digits, trim = TRUE, scientific = scientific)
     if (math.style.negative)
         cf <- gsub("-", "$-$", cf)
 
-    eqNames <- x$equations[attr(x$equations, "hasColon")]
+    ## retrieve equation names and the variable names associated with each.
+    ## this is currently done using some character-string hacks; see
+    ## 'print.game' comments (in games.r) for an idea on how to do this better.
+    ##
+    ## TODO: force "(Intercept)" to be first
+    eqnames <- x$equations[attr(x$equations, "hasColon")]
     varNames <- sapply(sapply(strsplit(n, ":"), '[', -1), paste, collapse = ":")
     varNames <- unique(varNames[nchar(varNames) > 0])
     otherNames <- x$equations[!attr(x$equations, "hasColon") &
                               x$equations %in% n[!x$fixed]]
 
+    ## top matter
     lcat("\n%% latex table generated in R ", as.character(getRversion()),
          " by games package\n")
     lcat("%% ", date(), "\n")
@@ -103,8 +118,11 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
     lcat(paste(c("", latexEsc(eqNames)), collapse = " & "), " \\\\\n")
     lcat("\\hline\n")
 
+    ## each row of the table: a variable name
     for (i in varNames) {
         lcat("\\multirow{2}{*}{", latexEsc(i), "} & ")
+        ## each column: an equation
+        ## first inner loop: coefficient values
         for (J in 1:length(eqNames)) {
             j <- eqNames[J]
             ji <- paste(j, i, sep = ":")
@@ -117,6 +135,7 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
                 lcat(" & ")
         }
         lcat(" \\\\\n & ")
+        ## second inner loop: standard errors
         for (J in 1:length(eqNames)) {
             j <- eqNames[J]
             ji <- paste(j, i, sep = ":")
@@ -129,6 +148,9 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
 
     }
 
+    ## 'otherNames' are the equations estimated only with an intercept, and the
+    ## variance terms in the ultimatum model.  it may be good to make it
+    ## optional to treat these equations differently
     if (length(otherNames) > 0) {
         lcat("\\hline\n")
         for (i in otherNames) {
@@ -137,6 +159,7 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
         }
     }
 
+    ## bottom matter
     lcat("\\hline \\hline\n")
     lcat("Log-likelihood & ", cf[nrow(cf), 1], " \\\\\n $N$ & ",
          nrow(x$model), "\\\\\n")
