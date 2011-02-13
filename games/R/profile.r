@@ -39,7 +39,7 @@ NULL
 ##' @param report logical: whether to print status bar (for complex models or
 ##' those with many parameters, profiling can be lengthy)
 ##' @param ... other arguments to be passed to the fitting function (see
-##' \code{\link{maxBFGS}}).
+##' \code{\link{maxLik}}).
 ##' @return A list of data frames, each containing the estimated coefficients
 ##' across the profiled values for a particular parameter.  The first column of
 ##' each data frame is the log-likelihood for the given fits.  The returned
@@ -97,6 +97,7 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
     fixed <- fitted$fixed
     link <- fitted$link
     type <- fitted$type
+    method <- fitted$convergence$method
     se <- sqrt(diag(fitted$vcov))
 
     ## special stuff for ultimatum models
@@ -111,7 +112,10 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
     }
 
     ## retrieve the appropriate log-likelihood and gradient, based on the type
-    ## of model
+    ## of model.  this relies on the class attribute of the object being ordered
+    ## correctly, which will generally be the case if users don't mess with the
+    ## objects created, but in the future it might be better to use something
+    ## like the "family" attribute of glm objects
     logLik <- switch(class(fitted)[2],
                      egame12 = logLik12,
                      egame122 = logLik122,
@@ -132,7 +136,7 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
     ## difference is that theirs uses a nice adaptive algorithm to go
     ## approximately the right distance in the specified number of steps,
     ## whereas mine is dumb and depends entirely on the supplied values of
-    ## "steps" and "dist"
+    ## 'steps' and 'dist'
     didNotConverge <- FALSE
     ans <- list()
     k <- 0
@@ -154,20 +158,23 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
         fvec[i] <- TRUE
 
         ## inner loop: refitting while fixing parameter i at the j'th element of
-        ## cfvals
+        ## 'cfvals'
         for (j in seq_along(cfvals)) {
             sval <- cf
             sval[i] <- cfvals[j]
-            results <- maxBFGS(fn = logLik, grad = logLikGrad, start = sval,
-                               fixed = fvec, y = y, regr = regr, link = link,
-                               type = type, acc = acc, maxOffer = maxOffer,
-                               offerOnly = offerOnly, offertol = offertol, ...)
+            results <-
+                maxLik(logLik = logLik, grad = logLikGrad, start = sval, fixed =
+                       fvec, method = method, y = y, regr = regr, link = link,
+                       type = type, acc = acc, maxOffer = maxOffer, offerOnly =
+                       offerOnly, offertol = offertol, ...)
             thisAns[j, ] <- c(results$max, results$estimate)
             
             k <- k + 1
             setTxtProgressBar(pb, k)
         }
 
+        ## check if any of the profiled fits yield a log-likelihood higher than
+        ## that of the the original fitted model
         if (any(thisAns[, 1] > sum(fitted$log.likelihood)))
             didNotConverge <- TRUE
         ans[[names(cf)[i]]] <- thisAns
