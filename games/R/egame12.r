@@ -8,6 +8,7 @@ predict.egame12 <- function(object, newdata, probs = c("outcome", "action"),
     probs <- match.arg(probs)
     
     if (missing(newdata)) {
+        ## use original data if 'newdata' not supplied
         mf <- object$model
     } else {
         ## get rid of left-hand variables in the formula, since they're not
@@ -27,6 +28,7 @@ predict.egame12 <- function(object, newdata, probs = c("outcome", "action"),
     for (i in seq_len(length(object$formulas)[2]))
         regr[[i]] <- model.matrix(object$formulas, data = mf, rhs = i)
 
+    ## get action probabilities, as given by fitted model parameters
     ans <- makeProbs12(object$coefficients, regr = regr, link = object$link, type
                       = object$type)
     ans <- do.call(cbind, ans)
@@ -53,17 +55,21 @@ sbi12 <- function(y, regr, link)
     } else {
         fam <- binomial(link = "logit")
     }
-    
-    Z2 <- regr$Z[y != 1, ]
+
+    ## regression for player 2's choice
+    z2 <- regr$Z[y != 1, ]
     y2 <- as.numeric(y == 3)[y != 1]
     m2 <- glm.fit(Z2, y2, family = fam)
     p4 <- as.numeric(regr$Z %*% coef(m2))
     p4 <- if (link == "probit") pnorm(p4) else plogis(p4)
 
+    ## regression for player 1's choice
     X1 <- cbind(-regr$X1, (1 - p4) * regr$X3, p4 * regr$X4)
     y1 <- as.numeric(y != 1)
     m1 <- glm.fit(X1, y1, family = fam)
 
+    ## need to multiply by sqrt(2) because the standard glm assumes dispersion
+    ## parameter 1, but agent error implies dispersion parameter sqrt(2)
     ans <- sqrt(2) * c(coef(m1), coef(m2))
     return(ans)
 }
@@ -153,6 +159,10 @@ logLikGrad12 <- function(b, y, regr, link, type, ...)
     p <- makeProbs12(b, regr, link, type)
     rcols <- sapply(regr, ncol)
 
+    ## unfortunately these are not as consistent in the notation as the
+    ## gradients in egame122, egame123, and ultimatum -- I intend to fix this
+    ## for the sake of future maintainers' sanity, but the ugliness here doesn't
+    ## cause any user-visible problems
     if (link == "probit" && type == "private") {
         dp4 <- dnorm(u$u24)
         dgp4 <- dp4 * regr$Z
@@ -295,11 +305,10 @@ makeResponse12 <- function(yf)
 ##' between the agent error and private information models, see Signorino
 ##' (2003).
 ##'
-##' The model is fit with the BFGS method, using the function
-##' \code{\link{maxBFGS}} from the \pkg{maxLik} package.  For the sake of speed
-##' and stability, the fitting procedure typically uses the gradient of the
-##' log-likelihood.  However, if \code{fixedUtils} or \code{sdformula} is
-##' specified, the gradient is not used.
+##' The model is fit using \code{\link{maxLik}}, using the BFGS optimization
+##' method by default (see \code{link{maxBFGS}}).  Use the \code{method}
+##' argument to specify an alternative from among those supplied by
+##' \code{maxLik}.
 ##' @title Strategic model with 2 players, 3 terminal nodes
 ##' @param formulas a list of four formulas, or a \code{\link{Formula}} object
 ##' with four right-hand sides.  See "Details" and the examples below.
@@ -347,13 +356,15 @@ makeResponse12 <- function(yf)
 ##' \item{\code{log.likelihood}}{vector of individual log likelihoods (left
 ##' unsummed for use with non-nested model tests).}
 ##' \item{\code{call}}{the call used to produce the model.}
-##' \item{\code{convergence}}{a list containing the convergence code and message
-##' returned by \code{\link{maxBFGS}}, and an indicator for whether the
-##' gradient was used in fitting.}
+##' \item{\code{convergence}}{a list containing the optimization method used
+##' (see argument \code{method}), the number of iterations to convergence, the
+##' convergence code and message returned by \code{\link{maxLik}}, and an
+##' indicator for whether the (analytic) gradient was used in fitting.}
 ##' \item{\code{formulas}}{the final \code{Formula} object passed to
 ##' \code{model.frame} (including anything specified for the scale parameters).}
 ##' \item{\code{link}}{the specified link function.}
-##' \item{\code{type}}{the specified stochastic structure.}
+##' \item{\code{type}}{the specified stochastic structure (i.e., agent error or
+##' private information).}
 ##' \item{\code{model}}{the model frame containing all variables used in
 ##' fitting.}
 ##' \item{\code{xlevels}}{a record of the levels of any factor regressors.}
@@ -443,7 +454,7 @@ egame12 <- function(formulas, data, subset, na.action,
     ## various sanity checks
     formulas <- checkFormulas(formulas)
     if (is.null(fixedUtils) && length(formulas)[2] != 4)
-        stop("`formulas` should have four components on the right-hand side")
+        stop("'formulas' should have four components on the right-hand side")
 
     if (!is.null(fixedUtils)) {
         if (length(fixedUtils) < 4)
@@ -465,14 +476,14 @@ egame12 <- function(formulas, data, subset, na.action,
     if (!is.null(sdformula)) {
         sdformula <- checkFormulas(sdformula, argname = "sdformula")
         if (sdByPlayer && length(sdformula)[2] != 2)
-            stop("`sdformula` should have two components (one for each player) on the right-hand side when sdByPlayer == TRUE")
+            stop("'sdformula' should have two components (one for each player) on the right-hand side when sdByPlayer == TRUE")
         if (!sdByPlayer && length(sdformula)[2] != 1)
-            stop("`sdformula` should have exactly one component on the right-hand side")
+            stop("'sdformula' should have exactly one component on the right-hand side")
         formulas <- as.Formula(formula(formulas), formula(sdformula))
     }
 
     if (sdByPlayer && is.null(sdformula)) {
-        warning("to estimate SDs by player, you must specify `sdformula` or `fixedUtils`")
+        warning("to estimate SDs by player, you must specify 'sdformula' or 'fixedUtils'")
         sdByPlayer <- FALSE
     }
 
@@ -489,12 +500,13 @@ egame12 <- function(formulas, data, subset, na.action,
     mf[[1]] <- as.name("model.frame")
     mf <- eval(mf, parent.frame())
 
+    ## get the response and store it as factor (yf) and numeric (y)
     yf <- model.part(formulas, mf, lhs = 1, drop = TRUE)
     yf <- makeResponse12(yf)
     y <- as.numeric(yf)
 
-    ## makes a list of the 4 (or 8, if variance formulas specified) matrices of
-    ## regressors to be passed to estimation functions
+    ## makes a list of the 4 (or more, if variance formulas specified) matrices
+    ## of regressors to be passed to estimation functions
     regr <- list()
     for (i in seq_len(length(formulas)[2]))
         regr[[i]] <- model.matrix(formulas, data = mf, rhs = i)
@@ -526,7 +538,7 @@ egame12 <- function(formulas, data, subset, na.action,
              paste(varNames[[1]][idCheck], collapse = ", "))
     }
 
-    ## gives names to starting values
+    ## give names to starting values
     prefixes <- paste(c(rep("u1(", 3), "u2("), c(levels(yf), levels(yf)[3]),
                        ")", sep = "")
     sdterms <- if (!is.null(sdformula)) { if (sdByPlayer) 2L else 1L } else 0L
@@ -537,7 +549,7 @@ egame12 <- function(formulas, data, subset, na.action,
     ## use the gradient iff no regressors in variance
     gr <- if (is.null(sdformula)) logLikGrad12 else NULL
 
-    ## deals with fixed utilities
+    ## deal with fixed utilities
     fvec <- rep(FALSE, length(sval))
     names(fvec) <- names(sval)
     if (!is.null(fixedUtils)) {
@@ -548,6 +560,10 @@ egame12 <- function(formulas, data, subset, na.action,
     results <- maxLik(logLik = logLik12, grad = gr, start = sval, fixed = fvec,
                       method = method, y = y, regr = regr, link = link, type =
                       type, ...)
+
+    ## some optimization routines in maxLik have different convergence codes for
+    ## success, so we need to retrieve the proper code(s) for the supplied
+    ## method and check against it/them
     cc <- convergenceCriterion(method)
     if (!(results$code %in% cc))
         warning("Model fitting did not converge\nMessage: ", results$message)
@@ -559,6 +575,7 @@ egame12 <- function(formulas, data, subset, na.action,
                      method = method, link = link, type = type, ...)
     }
 
+    ## create a 'game' object to store output
     ans <- list()
     ans$coefficients <- results$estimate
     ans$vcov <- getGameVcov(results$hessian, fvec)
