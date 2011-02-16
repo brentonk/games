@@ -4,6 +4,7 @@ NULL
 
 print.nonnest.test <- function(x, digits = x$digits, ...)
 {
+    ## calculate p-value from test statistic
     if (x$test == "vuong") {
         p <- 2 * pnorm(-abs(x$stat))
         pref <- if (x$stat > 0) 1 else 2
@@ -26,7 +27,7 @@ print.nonnest.test <- function(x, digits = x$digits, ...)
         cat(" (", round(100* x$stat / x$nobs), "%)", sep = "")
     cat("\n")
 
-    fp <- format.pval(p, digits = digits)
+    fp <- format.pval(p, digits = digits)  # turns very low p into "<2e-12"
     if (substr(fp, 1L, 1L) != "<") {
         fp <- paste("=", fp)
     } else if (substr(fp, 2L, 2L) != " ") {
@@ -43,11 +44,13 @@ print.nonnest.test <- function(x, digits = x$digits, ...)
 }
 
 ##
-## Individual log-likelihoods for a model of class "game", "lm", or "glm"
+## INPUT:
+## model: fitted statistical model of class "game", "lm", or "glm"
+## outcome: optional, column of predict(model) to focus on, only when 'model' is
+## of class "game"
 ##
-## The "outcome" argument is for comparing a strategic model to a binary logit
-## or probit model where the response is one of the possible outcomes (see the
-## examples for the "vuong"/"clarke" functions)
+## RETURN:
+## vector of observationwise log-likelihoods from 'model'
 ## 
 indivLogLiks <- function(model, outcome = NULL)
 {
@@ -85,6 +88,13 @@ indivLogLiks <- function(model, outcome = NULL)
     return(ans)
 }
 
+##
+## INPUT:
+## model: fitted statistical model of class "game", "lm", or "glm"
+##
+## RETURN:
+## number of parameters estimated in 'model'
+## 
 nparams <- function(model)
 {
     if (inherits(model, "game")) {
@@ -92,12 +102,19 @@ nparams <- function(model)
     } else if (inherits(model, "glm")) {
         ans <- attr(logLik(model), "df")
     } else if (inherits(model, "lm")) {
-        ans <- length(coef(model))
+        ans <- length(coef(model)) + 1
     }
 
     return(ans)
 }
 
+##
+## INPUT:
+## model: fitted statistical model of class "game", "lm", or "glm"
+##
+## RETURN:
+## number of observations used to fit 'model'
+## 
 nobs <- function(model)
 {
     if (inherits(model, "game")) {
@@ -109,6 +126,15 @@ nobs <- function(model)
     return(ans)
 }
 
+##
+## INPUT:
+## model: fitted statistical model of class "game", "lm", or "glm"
+## outcome: optional, column of predict(model) to focus on, only when 'model' is
+## of class "game"
+##
+## RETURN:
+## dependent variable of 'model' (with respect to 'outcome' if specified)
+## 
 gety <- function(model, outcome = NULL)
 {
     if (inherits(model, "ultimatum")) {
@@ -134,7 +160,15 @@ gety <- function(model, outcome = NULL)
 }
 
 ##
-## setup and error checking for clarke and vuong
+## INPUT:
+## see 'vuong' documentation below
+##
+## RETURN:
+## n: number of observations
+## loglik1: individual log-likelihoods for 'model1'
+## loglik2: individual log-likelihoods for 'model2'
+## p1: number of parameters estimated in 'model1'
+## p2: numer of parameters estimated in 'model2'
 ## 
 nonnest <- function(model1, model2, outcome1, outcome2)
 {
@@ -283,6 +317,8 @@ vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
 {
     x <- nonnest(model1, model2, outcome1, outcome2)
 
+    ## BIC-based correction for number of parameters (otherwise the model with
+    ## the higher log-likelihood would always "win")
     correction <- (x$p1 - x$p2) * (log(x$n) / 2)
     num <- sum(x$loglik1) - sum(x$loglik2) - correction
     denom <- sd(x$loglik1 - x$loglik2) *
@@ -308,6 +344,7 @@ clarke <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
 {
     x <- nonnest(model1, model2, outcome1, outcome2)
 
+    ## BIC correction
     correction <- (x$p1 - x$p2) * (log(x$n) / (2*x$n))
     stat <- sum(x$loglik1 - x$loglik2 > correction)
 
