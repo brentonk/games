@@ -97,11 +97,11 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
     ## retrieve equation names and the variable names associated with each.
     ## this is currently done using some character-string hacks; see
     ## 'print.game' comments (in games.r) for an idea on how to do this better.
-    ##
-    ## TODO: force "(Intercept)" to be first
     eqnames <- x$equations[attr(x$equations, "hasColon")]
     varNames <- sapply(sapply(strsplit(n, ":"), '[', -1), paste, collapse = ":")
     varNames <- unique(varNames[nchar(varNames) > 0])
+    if ("(Intercept)" %in% varNames)  # force intercept to be first
+        varNames <- c("(Intercept)", varNames[varNames != "(Intercept)"])
     otherNames <- x$equations[!attr(x$equations, "hasColon") &
                               x$equations %in% n[!x$fixed]]
 
