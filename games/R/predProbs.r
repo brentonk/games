@@ -15,19 +15,19 @@ NULL
 ##' @author R Wiki contributors
 ##' @examples
 ##' x <- c(1, 3, 3, 4)
-##' Mode(x)  ## 3
+##' Mode(x)  # 3
 ##' x.char <- letters[x]
-##' Mode(x.char)  ## "c"
+##' Mode(x.char)  # "c"
 ##' x.factor <- as.factor(x.char)
-##' Mode(x.factor)  ## "c", with levels "a", "c", "d"
+##' Mode(x.factor)  # "c", with levels "a", "c", "d"
 ##' x.logical <- x > 3
-##' Mode(x.logical)  ## FALSE
+##' Mode(x.logical)  # FALSE
 ##'
 ##' ## behavior with ties
 ##' y <- c(3, 3, 1, 1, 2)
-##' Mode(y)  ## 3
+##' Mode(y)  # 3
 ##' z <- c(2, 1, 1, 3, 3)
-##' Mode(z)  ## 1
+##' Mode(z)  # 1
 Mode <- function(x, na.rm = FALSE)
 {
     x <- unlist(x);
@@ -61,20 +61,23 @@ makeProfile <- function(x, ...)
 {
     cl <- match.call(expand.dots = FALSE)
 
+    ## get the first row of the data frame (and continue to store as data frame
+    ## to allow for different data types, preserve factor levels, etc)
     ans <- x[1, ]
+
+    ## loop over each variable in the data frame
     for (i in seq_len(ncol(x))) {
         xvar <- x[, i]
+
+        ## use mean for numeric variables, median for ordered or dummy
+        ## variables, mode for categorical variables
         isDummy <- all(unique(xvar) %in% c(0, 1))
         if (is.numeric(xvar) && !isDummy) {
             ans[, i] <- mean(xvar)
         } else if (is.ordered(xvar)) {
             ans[, i] <- median(xvar)
         } else if (isDummy) {
-            if (sum(xvar == 0) == sum(xvar == 1)) {
-                warning(names(x)[i],
-                        " has equal number of 0s and 1s; defaulting to 1")
-                ans[, i] <- 1
-            }
+            ans[, i] <- median(xvar)
         } else {
             ans[, i] <- Mode(xvar)
         }
