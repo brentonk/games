@@ -180,6 +180,8 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
         ans[[names(cf)[i]]] <- thisAns
 
     }
+    if (report)
+        cat("\n")
 
     if (didNotConverge)
         warning("some profiled fits have higher log-likelihood than original fit; refit the model using \"profile\" option")
