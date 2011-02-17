@@ -8,6 +8,7 @@ predict.egame122 <- function(object, newdata, probs = c("outcome", "action"),
     probs <- match.arg(probs)
 
     if (missing(newdata)) {
+        ## use original data if 'newdata' not supplied
         mf <- object$model
     } else {
         ## get rid of left-hand variables in the formula, since they're not
@@ -27,6 +28,7 @@ predict.egame122 <- function(object, newdata, probs = c("outcome", "action"),
     for (i in seq_len(length(object$formulas)[2]))
         regr[[i]] <- model.matrix(object$formulas, data = mf, rhs = i)
 
+    ## get action probabilities, as given by fitted model parameters
     ans <- makeProbs122(object$coefficients, regr = regr, link = object$link, type
                         = object$type)
 
@@ -51,23 +53,27 @@ sbi122 <- function(y, regr, link)
         fam <- binomial(link = "logit")
     }
 
+    ## regression for player 2's choice after 1 moves "left"
     ZL <- regr$Z2[y == 1 | y == 2, , drop = FALSE]
     yL <- as.numeric(y == 2)[y == 1 | y == 2]
     mL <- suppressWarnings(glm.fit(ZL, yL, family = fam))
     p2 <- as.numeric(regr$Z2 %*% coef(mL))
     p2 <- if (link == "probit") pnorm(p2) else plogis(p2)
 
+    ## regression for player 2's choice after 1 moves "right"
     ZR <- regr$Z4[y == 3 | y == 4, , drop = FALSE]
     yR <- as.numeric(y == 4)[y == 3 | y == 4]
     mR <- suppressWarnings(glm.fit(ZR, yR, family = fam))
     p4 <- as.numeric(regr$Z4 %*% coef(mR))
     p4 <- if (link == "probit") pnorm(p4) else plogis(p4)
 
+    ## regression for player 1's choice
     X1 <- cbind(-(1-p2) * regr$X1, -p2 * regr$X2, (1 - p4) * regr$X3, p4 *
                 regr$X4)
     y1 <- as.numeric(y == 3 | y == 4)
     m1 <- glm.fit(X1, y1, family = fam)
 
+    ## need to multiply by sqrt(2), see comments on 'sbi12' in 'egame12.r'
     ans <- sqrt(2) * c(coef(m1), coef(mL), coef(mR))
     return(ans)
 }
@@ -102,6 +108,8 @@ makeProbs122 <- function(b, regr, link, type)
     utils <- makeUtils(b, regr, nutils = 6,
                        unames = c("u11", "u12", "u13", "u14", "u22", "u24"))
 
+    ## length(utils$b) == 0 means no terms left for the variance components, so
+    ## set these to 1
     if (length(utils$b) == 0) {
         sds <- as.list(rep(1, 6))
     } else {
@@ -246,12 +254,16 @@ makeResponse122 <- function(yf)
             stop("dummy responses must be dummy variables")
 
         if (ncol(Y) == 3) {
+            ## this is for the case where y is specified as
+            ##   (1's move) + (2's move if 1 moves L) + (2's move if 1 moves R)
             Y[, 2] <- ifelse(Y[, 1] == 1, Y[, 3], Y[, 2])
             ylevs <- c(paste("~", names(Y)[2], sep = ""),
                        names(Y)[2],
                        paste("~", names(Y)[3], sep = ""),
                        names(Y)[3])
         } else {
+            ## this is for the case where y is specified as
+            ##   (1's move) + (2's move)
             ylevs <- c(paste("~", names(Y)[1], ",~", names(Y)[2], sep = ""),
                        paste("~", names(Y)[1], ",", names(Y)[2], sep = ""),
                        paste(names(Y)[1], ",~", names(Y)[2], sep = ""),
@@ -383,6 +395,7 @@ egame122 <- function(formulas, data, subset, na.action,
 
     formulas <- checkFormulas(formulas)
 
+    ## sanity checks
     if (!is.null(fixedUtils)) {
         if (length(fixedUtils) < 6)
             stop("fixedUtils must have 6 elements (u11, u12, u13, u14, u22, u24)")
@@ -427,10 +440,12 @@ egame122 <- function(formulas, data, subset, na.action,
     mf[[1]] <- as.name("model.frame")
     mf <- eval(mf, parent.frame())
 
+    ## make response variables (yf factor, y numeric)
     yf <- model.part(formulas, mf, lhs = 1, drop = TRUE)
     yf <- makeResponse122(yf)
     y <- as.numeric(yf)
 
+    ## make list of regressor matrices
     regr <- list()
     for (i in seq_len(length(formulas)[2]))
         regr[[i]] <- model.matrix(formulas, data = mf, rhs = i)
@@ -460,6 +475,7 @@ egame122 <- function(formulas, data, subset, na.action,
              paste(idCheck, collapse = ", "))
     }
 
+    ## make variable names
     prefixes <- paste(c(rep("u1(", 4), rep("u2(", 2)),
                       c(levels(yf), levels(yf)[2], levels(yf)[4]), ")",
                       sep = "")
@@ -468,8 +484,10 @@ egame122 <- function(formulas, data, subset, na.action,
     hasColon <- varNames$hasColon
     names(sval) <- varNames$varNames
 
+    ## use gradient iff no scale parameters being estimated
     gr <- if (is.null(sdformula)) logLikGrad122 else NULL
 
+    ## deal with fixed utilities
     fvec <- rep(FALSE, length(sval))
     names(fvec) <- names(sval)
     if (!is.null(fixedUtils)) {
@@ -491,6 +509,7 @@ egame122 <- function(formulas, data, subset, na.action,
                      method = method, link = link, type = type, ...)
     }
 
+    ## store output
     ans <- list()
     ans$coefficients <- results$estimate
     ans$vcov <- getGameVcov(results$hessian, fvec)
