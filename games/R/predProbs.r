@@ -47,16 +47,27 @@ Mode <- function(x, na.rm = FALSE)
 }
 
 ##
-## Takes a data frame and returns a one-row data frame with the same variables,
-## containing a "typical observation" profile from x.  The default is to take
-## the means of numeric (non-binary) variables, the medians of ordered
-## variables, and the modes of all other types of variables.  These can be
-## overridden for individual variables via arguments to "..."; e.g., to set
-## variable "z" to its median in the profile, use makeProfile(x, z = median(z)).
+## INPUT:
+## x: a data frame
+## ...: expressions (see below)
 ##
-## This function isn't meant to be called directly by users -- it should just be
-## used within the predProbs function.
-## 
+## RETURN:
+## a one-row data frame
+##
+## The function takes a data frame 'x' and returns a one-row data frame with the
+## same variables, containing a "typical observation" profile from x.  The
+## default is to take the mean of numeric variables, the median of ordered
+## and binary variables, and the mode of categorical variables.
+##
+## These defaults can be overridden by passing expressions to "...".  For
+## example, to set a variable 'z' to its 25th percentile, use:
+##     makeProfile(x, z = quantile(z, 0.25))
+## To set 'z' to equal 0.3 and 'w' to equal its maximum, use:
+##     makeProfile(x, z = 0.3, w = max(w))
+##
+## This function is used in 'predProbs' and is not meant to be called by users.
+## It is analogous to the 'setx' function in the Zelig package.
+##
 makeProfile <- function(x, ...)
 {
     cl <- match.call(expand.dots = FALSE)
@@ -84,14 +95,18 @@ makeProfile <- function(x, ...)
     }
 
     if ("..." %in% names(cl)) {        
-        ## Evaluates the expressions fed to "...", evaluates them within the
-        ## supplied data frame, and returns them as a vector.  So if the call is
-        ## makeProfile(x, foo = median(foo), bar = quantile(bar, .25)), this
-        ## will return a vector with named elements "foo" and "bar".  The
-        ## eval(substitute()) business is to ensure that these aren't evaluated
-        ## in the global environment rather than "x", which would (most likely)
-        ## throw an error when "foo" and "bar" weren't found in the workspace,
-        ## or (possibly) obtain the wrong values for these.
+        ## takes the expressions fed to "...", evaluates them within the
+        ## supplied data frame, and returns them as a vector.
+        ##
+        ## e.g., if the call is makeProfile(x, foo = median(foo), bar =
+        ## quantile(bar, .25)), this will return a vector with named elements
+        ## "foo" and "bar".
+        ##
+        ## the eval(substitute()) business is to ensure that these aren't
+        ## evaluated in the global environment rather than the data frame "x",
+        ## which would most likely throw an error when "foo" and "bar" weren't
+        ## found in the workspace, or possibly obtain the wrong values for
+        ## these.
         dots <- eval(substitute(list(...)), x)
         dots <- unlist(lapply(dots, unname))
 
@@ -99,7 +114,7 @@ makeProfile <- function(x, ...)
         ans[toReplace] <- dots[toReplace != 0L]
     }
 
-    ## Ensures that choices in "..." expressed as characters (e.g., foo = "a"
+    ## ensures that choices in "..." expressed as characters (e.g., foo = "a"
     ## for a factor foo with levels a, b, c) don't wind up turning factor
     ## variables into characters
     fvars <- sapply(x, inherits, what = "factor")
@@ -113,18 +128,28 @@ makeProfile <- function(x, ...)
 }
 
 ##
-## Makes bootstrap confidence intervals for predicted probabilities from a
-## fitted strategic model.
+## INPUT:
+## x: fitted model of class "game" containing element 'boot.matrix'
+## newdata: data frame to get predicted probabilities for
+## ci: width of confidence bands
+## report: whether to print status bar
+##
+## RETURN:
+## list of bootstrapped lower and upper confidence bands ('lows' and 'highs'
+## resp.) for the predicted probabilities
 ## 
-CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
+CIfromBoot <- function(x, newdata, ci = .95, report = TRUE)
 {
+    ## the dimensions of the predicted-probability matrix varies with the type
+    ## of model (3 for egame12, 4 for egame122, 2 for ultimatum, etc), so this
+    ## is just to figure out the correct number
     n <- nrow(x$boot.matrix)
     forDims <- predict(x, newdata = newdata)
     ans <- vector("list", ncol(forDims))
     for (i in seq_along(ans))
         ans[[i]] <- matrix(nrow = n, ncol = nrow(forDims))
 
-    ## Calculates the predicted values for each observation using each
+    ## calculate the predicted values for each observation using each
     ## bootstrapped coefficient vector
     if (report) {
         cat("\nCalculating confidence intervals...\n")
@@ -141,6 +166,7 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
     if (report)
         cat("\n")
 
+    ## calculate quantiles of the predicted probabilities
     q <- .5 - (ci / 2)
     lows <- lapply(ans, function(x) apply(x, 2, quantile, probs = q))
     lows <- do.call(cbind, lows)
@@ -251,6 +277,8 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE, ...)
 predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
                       makePlots = FALSE, report = TRUE, ...)
 {
+    ## find the variable corresponding to the named 'x' and stop if it matches
+    ## none or more than one
     xc <- charmatch(x, names(model$model))
     if (is.na(xc)) {
         stop(dQuote(x),
@@ -270,32 +298,36 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
         x <- model$model[, xc]
     }
 
+    ## construct the set of values of 'x' to evaluate at
     if (all(unique(x) %in% c(0, 1))) {
-        ## If x is binary, just use 0 and 1
+        ## If 'x' is binary, just use 0 and 1
         xs <- c(0, 1)
     } else if (is.numeric(x)) {
-        ## If x is continuous (or treated as such in the model fitting; e.g.,
-        ## count variables), make a sequence along its values controlled by the
-        ## arguments xlim and n
+        ## If 'x' is numeric, make a grid of size 'n' within 'xlim'
         xs <- seq(xlim[1], xlim[2], length.out = n)
     } else if (is.factor(x)) {
-        ## If x is a factor, use each of its levels
+        ## If 'x' is a factor, use each of its levels
         xs <- rep(x[1], nlevels(x))
         xs[] <- levels(x)
     } else if (is.logical(x)) {
-        ## If x is logical, use the logical values
+        ## If 'x' is logical, use the logical values
         xs <- c(FALSE, TRUE)
     }
 
+    ## construct a profile of values for the variables other than 'x'; see
+    ## 'makeProfile' above for how this is done
     prof <- makeProfile(model$model, ...)
     profData <- prof[rep(1, length(xs)), , drop = FALSE]
     profData[, xc] <- xs
     rownames(profData) <- seq_along(xs)
 
+    ## get predicted probabilities from the constructed profile
     ans <- predict(model, newdata = profData)
     if (is.list(ans))
         ans <- do.call(cbind, ans)
 
+    ## bootstrap confidence intervals for the predicted probabilities, using a
+    ## Clarify-style parametric resampling if the model was not bootstrapped initially
     if (ci > 0 && is.null(model$boot.matrix)) {
         warning("Bootstrap values unavailable; using normal resampling to generate confidence intervals")
         vcv <- vcov(model)[!model$fixed, !model$fixed, drop = FALSE]
@@ -308,13 +340,12 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
         }
         model$boot.matrix <- bbm
     }
-
     if (ci > 0)
         CIvals <- CIfromBoot(model, newdata = profData, ci = ci)
 
-    ## Saving the columns that the probabilities, confidence bounds, and
-    ## variable of interest are in, and making them attributes of the output, in
-    ## order for the plotting function to use them
+    ## save the indices of the columns that the probabilities, confidence
+    ## bounds, and variable of interest are in, and make them attributes of the
+    ## output in order for 'plot.predProbs' to use them
     probcols <- 1:ncol(ans)
     if (ci > 0) {
         ans <- cbind(ans, do.call(cbind, unname(CIvals)))
@@ -330,15 +361,17 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 
     if (makePlots)
         plot(ans)
+
     invisible(ans)
 }
 
-##
+## -----------------------------------------------------------------------------
+## NOTE:
 ## The next two functions are designed to mimic the behavior of the "plot"
 ## method for "gam" objects.  See the source of "plot.gam" and
 ## "plot.preplot.gam" for more.  The "gam" package is licensed under the GPL,
 ## and some of the code below closely matches it.
-## 
+## -----------------------------------------------------------------------------
 
 ##' Plots predicted probabilities and associated confidence bands, using the
 ##' data returned from a call to \code{\link{predProbs}}.
@@ -401,6 +434,8 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ##' plot(pp2, which = 3)
 plot.predProbs <- function(x, which = NULL, ask = FALSE, ...)
 {
+    ## retrieve the columns containing the variable of interest, predicted
+    ## probabilities, and confidence bands for each outcome
     probs <- x[, attr(x, "probcols"), drop = FALSE]
     if (length(attr(x, "lowcols"))) {
         lows <- x[, attr(x, "lowcols"), drop = FALSE]
@@ -411,6 +446,8 @@ plot.predProbs <- function(x, which = NULL, ask = FALSE, ...)
     xvar <- x[, attr(x, "xcol")]
     probnames <- names(x)[attr(x, "probcols")]
 
+    ## make a "preplot" object, which is a list of lists containing the plot
+    ## components for each outcome
     preplotObj <- vector("list", ncol(probs))
     class(preplotObj) <- "preplot.predProbs"
     for (i in 1:ncol(probs)) {
@@ -425,6 +462,7 @@ plot.predProbs <- function(x, which = NULL, ask = FALSE, ...)
     }
 
     if (is.null(which) && ask) {
+        ## run an interactive menu for choosing which plot to view
         tmenu <- c(paste("plot:", probnames), "plot all terms")
         pick <- 1
         while (pick > 0 && pick <= length(tmenu)) {
@@ -437,8 +475,10 @@ plot.predProbs <- function(x, which = NULL, ask = FALSE, ...)
             }
         }
     } else if (!is.null(which)) {
+        ## plot the requested outcomes
         plot.preplot.predProbs(preplotObj[[which]], ...)
     } else {
+        ## plot all outcomes
         plot.preplot.predProbs(preplotObj, ...)
     }
 
@@ -453,14 +493,16 @@ plot.preplot.predProbs <- function(x, xlab = x$xlab, ylab = x$ylab,
     cl <- match.call()
     
     if (listof) {
+        ## if 'x' contains a list of preplot objects, run the function on each
+        ## of its components (producing length(x) plots in sequence)
         for (i in seq_along(x)) {
             icall <- cl
             icall$x <- x[[i]]
             eval(icall, parent.frame())
         }
     } else if (is.factor(x$x)) {
-        ## If x is a factor, then we need to make boxplots "manually"
-        ## via the bxp function (see ?boxplot and ?bxp)
+        ## if the variable of interest is a factor, then we need to make
+        ## boxplots "manually" via the bxp function (see ?boxplot and ?bxp)
         boxStats <- list()
         boxStats$stats <- matrix(x$y, nrow = 5, ncol = length(x$y), byrow =
                                  TRUE)
@@ -476,6 +518,7 @@ plot.preplot.predProbs <- function(x, xlab = x$xlab, ylab = x$ylab,
 
         bxp(z = boxStats, xlab = xlab, ylab = ylab, ...)
     } else {
+        ## if the variable of interest is numeric, just make a typical plot
         plot(x$x, x$y, type = type, xlab = xlab, ylab = ylab, ylim = ylim, ...)
         if (!is.null(x$low)) {
             lines(x$x, x$low, lty = lty.ci)
