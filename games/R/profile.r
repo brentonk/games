@@ -226,7 +226,11 @@ plot.profile.game <- function(x, show.pts = FALSE, ...)
     for (nam in nm) {
         xvals <- x[[nam]][, nam]
         yvals <- x[[nam]][, "logLik"]
-        plot(xvals, yvals, xlab = nam, ylab = "log-likelihood", type = "n")
+        splineVals <- spline(xvals, yvals)
+        ylim <- c(min(yvals, splineVals$y), max(yvals, splineVals$y))
+        
+        plot(xvals, yvals, xlab = nam, ylab = "log-likelihood", type = "n",
+             ylim = ylim)
 
         ## plot an "x" at the main model estimate
         points(origcf[nam], origll, pch = 4)
@@ -239,7 +243,6 @@ plot.profile.game <- function(x, show.pts = FALSE, ...)
         }
 
         ## spline fit for the likelihood curve
-        splineVals <- spline(xvals, yvals)
         lines(splineVals$x, splineVals$y)
     }
 
