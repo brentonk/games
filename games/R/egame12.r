@@ -57,16 +57,16 @@ sbi12 <- function(y, regr, link)
     }
 
     ## regression for player 2's choice
-    z2 <- regr$Z[y != 1, ]
+    Z2 <- regr$Z[y != 1, ]
     y2 <- as.numeric(y == 3)[y != 1]
-    m2 <- glm.fit(Z2, y2, family = fam)
+    m2 <- suppressWarnings(glm.fit(Z2, y2, family = fam))
     p4 <- as.numeric(regr$Z %*% coef(m2))
     p4 <- if (link == "probit") pnorm(p4) else plogis(p4)
 
     ## regression for player 1's choice
     X1 <- cbind(-regr$X1, (1 - p4) * regr$X3, p4 * regr$X4)
     y1 <- as.numeric(y != 1)
-    m1 <- glm.fit(X1, y1, family = fam)
+    m1 <- suppressWarnings(glm.fit(X1, y1, family = fam))
 
     ## need to multiply by sqrt(2) because the standard glm assumes dispersion
     ## parameter 1, but agent error implies dispersion parameter sqrt(2)
