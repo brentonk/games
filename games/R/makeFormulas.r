@@ -2,7 +2,149 @@
 ##' @include helpers.r
 NULL
 
-makeFormulas <- function(model, yvals, yname = "y")
+##' Interactive prompt for constructing model formulas.
+##'
+##' All of the staistical models in the \pkg{games} package require the
+##' specification of multiple model formulas, as each player's utility is a
+##' function of potentially different regressors.  The number of equations to
+##' specify ranges from two in \code{\link{ultimatum}} to eight in
+##' \code{\link{egame123}}.  \code{makeFormulas} is an interactive tool to
+##' simplify the specification process.
+##'
+##' To use \code{makeFormulas}, specify the model you want to fit (\code{model})
+##' and descriptions of the outcomes of the game (\code{outcomes}).  The order
+##' of the descriptions in \code{outcomes} should match the numbering in the
+##' game tree in the help page for \code{model}.  For example, with
+##' \code{\link{egame122}}, the order is:
+##' \enumerate{
+##' \item Player 1 moves Left, Player 2 moves Left
+##' \item Player 1 moves Left, Player 2 moves Right
+##' \item Player 1 moves Right, Player 2 moves Left
+##' \item Player 1 moves Right, Player 2 moves Right}
+##' If the dependent variable in the dataset (\code{dat}) is a factor (\code{y})
+##' whose levels contain the descriptions, then either \code{outcomes = dat$y}
+##' or \code{outcomes = levels(dat$y)} will work.
+##'
+##' As an example, consider the following use of \code{\link{egame122}}.  Player
+##' 1 is the legislature, which can propose budget cuts (left on the game tree)
+##' or increases (right).  Player 2 is the president, who can sign or veto the
+##' legislature's budget proposal (left and right respectively).  The variables
+##' of interest are the president's party (\code{presparty}), the legislature's
+##' party (\code{legparty}), and the year's percentage GDP growth
+##' (\code{growth}).  To construct the formulas for this case, run
+##' \code{makeFormulas(egame122, outcomes = c("budget cuts passed", "budget cuts
+##' vetoed", "budget increase passed", "budget increase vetoed"))}.  The first
+##' set of options that appears is
+##' \preformatted{
+##' Equation for player 1's utility from budget cuts passed: 
+##' 
+##' 1: fix to 0
+##' 2: intercept only
+##' 3: regressors, no intercept
+##' 4: regressors with intercept}
+##' To specify this utility as a function of a constant, the legislature's
+##' party, and GDP growth, select option \code{4} and enter \code{legparty growth}
+##' at the prompt.  \code{makeFormulas} will then move on to ask about Player
+##' 1's utility for the other three outcomes, followed by Player 2's utility for
+##' the outcomes for which her utility is not fixed to 0 (see
+##' \code{\link{egame122}).  See "Examples" below for a full example of the
+##' input and constructed formula in this case.
+##'
+##' It is \strong{not} necessary to use \code{makeFormulas} to specify model
+##' formulas.  See the help file of each model for examples of "manually" making
+##' the formula.
+##' @title Model formula construction
+##' @param model name of the model (must be from the \pkg{games} package) for
+##' which to make a formula.
+##' @param outcomes character vector with descriptions of the possible outcomes
+##' of the game (see "Details" for a more precise explanation)
+##' @return An object of class \code{"Formula"}, typically to be used as the
+##' \code{formulas} argument in a statistical model from the \pkg{games}
+##' package.
+##' @seealso \code{\link{Formula}} (and the \pkg{Formula} package generally) for
+##' the details of how \pkg{games} deals with multiple model formulas.
+##' @export
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @examples
+##' \dontrun{R> f1 <- makeFormulas(egame122, outcomes = c("budget cuts passed", "budget cuts vetoed", "budget increase passed", "budget increase vetoed"))
+##'
+##' ---
+##' Equation for player 1's utility from budget cuts passed: 
+##'
+##' 1: fix to 0
+##' 2: intercept only
+##' 3: regressors, no intercept
+##' 4: regressors with intercept
+##'
+##' Selection: 4
+##'
+##' Enter variable names (separated by spaces):
+##' legparty growth
+##'
+##' ---
+##' Equation for player 1's utility from budget cuts vetoed: 
+##'
+##' 1: fix to 0
+##' 2: intercept only
+##' 3: regressors, no intercept
+##' 4: regressors with intercept
+##'
+##' Selection: 2
+##'
+##' ---
+##' Equation for player 1's utility from budget increase passed: 
+##'
+##' 1: fix to 0
+##' 2: intercept only
+##' 3: regressors, no intercept
+##' 4: regressors with intercept
+##'
+##' Selection: 4
+##'
+##' Enter variable names (separated by spaces):
+##' legparty growth
+##'
+##' ---
+##' Equation for player 1's utility from budget increase vetoed: 
+##'
+##' 1: fix to 0
+##' 2: regressors, no intercept
+##'
+##' Selection: 1
+##'
+##' ---
+##' Equation for player 2's utility from budget cuts vetoed: 
+##'
+##' 1: fix to 0
+##' 2: intercept only
+##' 3: regressors, no intercept
+##' 4: regressors with intercept
+##'
+##' Selection: 4
+##'
+##' Enter variable names (separated by spaces):
+##' presparty growth
+##'
+##' ---
+##' Equation for player 2's utility from budget increase vetoed: 
+##'
+##' 1: fix to 0
+##' 2: intercept only
+##' 3: regressors, no intercept
+##' 4: regressors with intercept
+##'
+##' Selection: 4
+##'
+##' Enter variable names (separated by spaces):
+##' presparty growth
+##'
+##' ---
+##' What is the name of the dependent variable in the dataset? (If stored as action indicators/dummies, separate their names with spaces.)
+##' budgincrease veto
+##' R> f1
+##' budgincrease + veto ~ legparty + growth | 1 | legparty + growth | 
+##'     0 | presparty + growth | presparty + growth}
+makeFormulas <- function(model, outcomes)
 {
     ## convert 'model' to character if supplied without quotation marks
     ischar <- tryCatch(is.character(model) && length(model) == TRUE, error =
@@ -12,9 +154,9 @@ makeFormulas <- function(model, yvals, yname = "y")
     if (!ischar)
         model <- deparse(substitute(model))
 
-    ## extract outcome names from 'yvals' if not directly supplied
-    if (!is.character(yvals))
-        yvals <- levels(as.factor(yvals))
+    ## extract outcome names from 'outcomes' if not directly supplied
+    if (missing(outcomes) || !is.character(outcomes))
+        outcomes <- levels(as.factor(outcomes))
 
     ## which players can have utilities in which equations
     eqByPlayer <- switch(model,
@@ -52,15 +194,21 @@ makeFormulas <- function(model, yvals, yname = "y")
         ans[[i]] <- vector("list", neqs)
         
         for (j in seq_len(neqs)) {
+            ## skip if player i doesn't have utility for outcome j (either fixed
+            ## to 0 or occurs before i's move)
             if (!eqByPlayer[[i]][j])
                 next
 
             if (model == "ultimatum") {
-                title <- paste("\nPlayer ", i, "'s reservation value:", sep = "")
+                title <- paste("\n---\nPlayer ", i, "'s reservation value:", sep = "")
             } else {
-                title <- paste("\nEquation for player ", i, "'s utility from ",
-                               yvals[j], ":", sep = "")
+                title <- paste("\n---\nEquation for player ", i, "'s utility from ",
+                               outcomes[j], ":", sep = "")
             }
+
+            ## disallow options with intercepts if this is the last of the
+            ## player's identification-relevant equations and all previous
+            ## equations contain an intercept
             allowCond <- j < neqs || !all(sel[idByPlayer[[i]]] %in% c(2, 4))
             allowed <- if (allowCond) 1:4 else c(1,3)
             eqtype <- menu(choices[allowed], title = title)
@@ -74,7 +222,9 @@ makeFormulas <- function(model, yvals, yname = "y")
             } else {
                 if (eqtype == 3L || !allowCond)
                     noconstant[j] <- TRUE
-                
+
+                ## keep asking for variable names until a valid list is supplied
+                ## (nothing that would cause identification problems)
                 repeat {
                     varnames <-
                         readline("\nEnter variable names (separated by spaces):\n")
@@ -108,6 +258,23 @@ makeFormulas <- function(model, yvals, yname = "y")
         }
     }
 
+    ## get the dependent variable name
+    if (model == "ultimatum") {
+        yname <-
+            readline("\n---\nWhat is the variable name for the level of offer made?\n")
+        aname <-
+            readline("\nWhat is the variable name for the offer acceptance indicator? (Leave blank if none will be used.)\n")
+        if (str_trim(aname) != "")
+            yname <- paste(yname, "+", aname)
+    } else {
+        yname <-
+            readline("\n---\nWhat is the name of the dependent variable in the dataset? (If stored as action indicators/dummies, separate their names with spaces.)\n")
+        yname <- str_split(yname, " ")[[1]]
+        yname <- yname[yname != ""]
+        yname <- paste(yname, collapse = " + ")
+    }
+
+    ## combine the strings obtained above and convert them to a Formula object
     ans <- unlist(ans)
     ans <- paste(ans, collapse = " | ")
     ans <- paste(yname, "~", ans)
