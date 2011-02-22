@@ -27,6 +27,7 @@ predict.egame123 <- function(object, newdata, probs = c("outcome", "action"),
     for (i in seq_len(length(object$formulas)[2]))
         regr[[i]] <- model.matrix(object$formulas, data = mf, rhs = i)
 
+    ## get action probabilities, as given by fitted model parameters
     ans <- makeProbs123(object$coefficients, regr = regr, link = object$link,
                         type = object$type)
 
@@ -53,12 +54,14 @@ sbi123 <- function(y, regr, link)
         linkfcn <- plogis
     }
 
+    ## regression for player 3's choice
     reg3 <- regr$W6[y == 3 | y == 4, , drop = FALSE]
     y3 <- as.numeric(y == 4)[y == 3 | y == 4]
     m3 <- suppressWarnings(glm.fit(reg3, y3, family = fam))
     p6 <- as.numeric(regr$W6 %*% coef(m3))
     p6 <- linkfcn(p6)
 
+    ## regression for player 2's choice
     reg2 <- cbind(-regr$Z3, (1-p6) * regr$Z5, p6 * regr$Z6)
     reg22 <- reg2[y != 1, , drop = FALSE]
     y22 <- as.numeric(y != 2)[y != 1]
@@ -66,6 +69,7 @@ sbi123 <- function(y, regr, link)
     p4 <- as.numeric(reg2 %*% coef(m22))
     p4 <- linkfcn(p4)
 
+    ## regression for player 1's choice
     reg1 <- cbind(-regr$X1, (1-p4) * regr$X3, p4 * (1-p6) * regr$X5,
                   p4 * p6 * regr$X6)
     y1 <- as.numeric(y != 1)
@@ -293,24 +297,59 @@ makeResponse123 <- function(yf)
 ##' For additional details on any of the function arguments or options, see
 ##' \code{\link{egame12}}.  The only difference is that the right-hand side of
 ##' \code{formulas} must have eight components (rather than four) in this case.
+##'
+##' Ways to specify the dependent variable in \code{egame123}:
+##' \itemize{
+##' \item Numeric vector \code{y} containing 4 unique values, corresponding to
+##' the outcomes (in order from left to right) as labeled in the game tree
+##' above.
+##' \item Factor \code{y}, where \code{y} has four levels, corresponding in
+##' order to the outcomes as labeled above.
+##' \item Indicator variables \code{y1 + y2 + y3}, where \code{y1} indicates
+##' whether Player 1 moves left or right, \code{y2} indicates Player 2's move,
+##' and \code{y3} indicates Player 3's move.  Non-observed values of \code{y2}
+##' and \code{y3} (where the game ended before the move could be made) should be
+##' set to \code{0}, \strong{not} \code{NA}, to ensure that observations are not
+##' dropped when \code{na.action = na.omit}.}
 ##' @title Strategic model with 3 players, 4 terminal nodes
-##' @param formulas 
-##' @param data 
-##' @param subset 
-##' @param na.action 
-##' @param link 
-##' @param type 
-##' @param startvals 
-##' @param fixedUtils 
-##' @param sdformula 
-##' @param sdByPlayer 
-##' @param boot 
-##' @param bootreport 
-##' @param profile 
-##' @param usegrad 
-##' @param ... 
-##' @return 
-##' @author Brenton Kenkel
+##' @param formulas a list of eight formulas, or a \code{\link{Formula}} object
+##' with eight right-hand sides.  See "Details" and "Examples".
+##' @param data a data frame.
+##' @param subset an optional logical vector specifying which observations from
+##' \code{data} to use in fitting.
+##' @param na.action how to deal with \code{NA}s in \code{data}.  Defaults to
+##' the \code{na.action} setting of \code{\link{options}}.  See
+##' \code{\link{na.omit}}
+##' @param link whether to use a probit (default) or logit link structure,
+##' @param type whether to use an agent-error ("agent", default) or
+##' private-information ("private") stochastic structure.
+##' @param startvals whether to calculate starting values for the optimization
+##' from statistical backwards induction ("sbi", default), draw them from a
+##' uniform distribution ("unif"), or to set them all to 0 ("zero")
+##' @param fixedUtils numeric vector of values to fix for u11, u13, u15, u16,
+##' u23, u25, u26, and u36.  \code{NULL} (the default) indicates that these
+##' should be estimated with regressors, not fixed.
+##' @param sdformula an optional list of formulas or a \code{\link{Formula}}
+##' containing a regression equation for the scale parameter.  See
+##' \code{\link{egame12}} for details.
+##' @param sdByPlayer logical: if scale parameters are being estimated (i.e.,
+##' \code{sdformula} or \code{fixedUtils} is non-\code{NULL}), should a separate
+##' one be estimated for each player?  This option is ignored unless
+##' \code{fixedUtils} or \code{sdformula} is specified.
+##' @param boot integer: number of bootstrap iterations to perform (if any).
+##' @param bootreport logical: whether to print status bar during bootstrapping.
+##' @param profile output from running \code{\link{profile.game}} on a previous
+##' fit of the model, used to generate starting values for refitting when an
+##' earlier fit converged to a non-global maximum.
+##' @param usegrad REMOVE THIS
+##' @param method character string specifying which optimization routine to use
+##' (see \code{\link{maxLik}})
+##' @param ... other arguments to pass to the fitting function (see
+##'ode{\link{maxLik}}).
+##' @return An object of class \code{c("game", "egame123")}.  See
+##' \code{\link{egame12}} for a description of the \code{game} class.
+##' @export
+##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 egame123 <- function(formulas, data, subset, na.action,
                      link = c("probit", "logit"),
                      type = c("agent", "private"),
@@ -320,7 +359,10 @@ egame123 <- function(formulas, data, subset, na.action,
                      sdByPlayer = FALSE,
                      boot = 0,
                      bootreport = TRUE,
-                     profile, usegrad = TRUE, ...)
+                     profile,
+                     usegrad = TRUE,  ## MAKE SURE TO REMOVE THIS
+                     method = "BFGS",
+                     ...)
 {
     cl <- match.call()
 
@@ -433,18 +475,20 @@ egame123 <- function(formulas, data, subset, na.action,
         fvec[1:8] <- TRUE
     }
 
-    results <- maxBFGS(fn = logLik123, grad = gr, start = sval, fixed = fvec, y
-                       = y, regr = regr, link = link, type = type, ...)
+    results <- maxLik(logLik = logLik123, grad = gr, start = sval, fixed = fvec,
+                      method = method, y = y, regr = regr, link = link, type =
+                      type, ...)
 
-    ## check for convergence (results$code == 0 if converged)
-    if (results$code)
+    ## check for convergence
+    cc <- convergenceCriterion(method)
+    if (!(results$code %in% cc))
         warning("Model fitting did not converge\nMessage: ", results$message)
 
     if (boot > 0) {
-        bootMatrix <- gameBoot(boot, report = bootreport, estimate =
-                               results$estimate, y = y, regr = regr, fn =
-                               logLik123, gr = gr, fixed = fvec, link = link,
-                               type = type, ...)
+        bootMatrix <-
+            gameBoot(boot, report = bootreport, estimate = results$estimate, y =
+                     y, regr = regr, fn = logLik123, gr = gr, fixed = fvec,
+                     method = method, link = link, type = type, ...)
     }
 
     ans <- list()
@@ -454,8 +498,9 @@ egame123 <- function(formulas, data, subset, na.action,
         logLik123(results$estimate, y = y, regr = regr, link = link, type =
                   type)
     ans$call <- cl
-    ans$convergence <- list(code = results$code, message = results$message,
-                            gradient = !is.null(gr))
+    ans$convergence <- list(method = method, iter = nIter(results), code =
+                            results$code, message = results$message, gradient =
+                            !is.null(gr))
     ans$formulas <- formulas
     ans$link <- link
     ans$type <- type
