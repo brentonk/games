@@ -304,6 +304,22 @@ makeResponse122 <- function(yf)
 ##' For additional details on any of the function arguments or options, see
 ##' \code{\link{egame12}}.  The only difference is that the right-hand side of
 ##' \code{formulas} must have six components (rather than four) in this case.
+##'
+##' Ways to specify the dependent variable in \code{egame122}:
+##' \itemize{
+##' \item Numeric vector \code{y}, numbered 1 through 4, corresponding to the
+##' outcomes as labeled in the game tree above.
+##' \item Factor \code{y}, where \code{y} has four levels, corresponding in
+##' order to the outcomes as labeled above.
+##' \item Indicator variables \code{y1 + y2}, where \code{y1} indicates whether
+##' Player 1 moves left or right, and \code{y2} indicates whether Player 2 moves
+##' left or right.
+##' \item Indicator variables \code{y1 + y2 + y3}, where \code{y1} indicates
+##' whether Player 1 moves left or right, \code{y2} indicates Player 2's move in
+##' case Player 1 moved left, and \code{y3} indicates Player 2's move in case
+##' Player 1 moved right.  Non-observed values of \code{y2} and \code{y3} should
+##' be set to \code{0}, \strong{not} \code{NA}, to ensure that observations are
+##' not dropped when \code{na.action = na.omit}.}
 ##' @title Strategic model with 2 players, 4 terminal nodes
 ##' @param formulas a list of six formulas, or a \code{Formula} object with six
 ##' right-hand sides.  See "Details" and "Examples".
@@ -324,11 +340,11 @@ makeResponse122 <- function(yf)
 ##' estimated with regressors, not fixed.
 ##' @param sdformula an optional list of formulas or a \code{\link{Formula}}
 ##' containing a regression equation for the scale parameter.  See
-##' \code{\link{egame12}} for details.  This option is ignored unless
-##' \code{fixedUtils} or \code{sdformula} is specified.
+##' \code{\link{egame12}} for details.
 ##' @param sdByPlayer logical: if scale parameters are being estimated (i.e.,
 ##' \code{sdformula} or \code{fixedUtils} is non-\code{NULL}), should a separate
-##' one be estimated for each player?
+##' one be estimated for each player?  This option is ignored unless
+##' \code{fixedUtils} or \code{sdformula} is specified.
 ##' @param boot integer: number of bootstrap iterations to perform (if any).
 ##' @param bootreport logical: whether to print status bar during bootstrapping.
 ##' @param profile output from running \code{\link{profile.game}} on a previous
