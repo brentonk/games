@@ -115,7 +115,7 @@ finitize <- function(x)
 checkFormulas <- function(f, argname = "formulas")
 {
     if (inherits(f, "list")) {
-        f <- do.call(as.Formula, f)
+        f <- do.call(as.Formula, unname(f))
     } else if (inherits(f, "formula")) {
         f <- as.Formula(f)
     } else {
