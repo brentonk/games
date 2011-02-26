@@ -232,6 +232,11 @@ plot.profile.game <- function(x, show.pts = FALSE, ...)
     for (nam in nm) {
         xvals <- x[[nam]][, nam]
         yvals <- x[[nam]][, "logLik"]
+
+        ## make sure interpolation passes through original fit
+        xvals <- c(xvals, origcf[nam])
+        yvals <- c(yvals, origll)
+        
         splineVals <- spline(xvals, yvals)
         ylim <- c(min(yvals, splineVals$y), max(yvals, splineVals$y))
         
