@@ -149,7 +149,7 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
             next
 
         ## calculate the new parameter values to maximize at
-        thisAns <- matrix(nrow = 2*steps + 1, ncol = length(cf) + 1)
+        thisAns <- matrix(nrow = 2*steps, ncol = length(cf) + 1)
         thisAns <- data.frame(thisAns)
         names(thisAns) <- c("logLik", names(cf))
         cfvals <- seq(cf[i] - dist*se[i], cf[i] + dist*se[i], length.out =
@@ -176,6 +176,8 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
             k <- k + 1
             setTxtProgressBar(pb, k)
         }
+
+        browser()
 
         ## check if any of the profiled fits yield a log-likelihood higher than
         ## that of the the original fitted model
