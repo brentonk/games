@@ -177,8 +177,6 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
             setTxtProgressBar(pb, k)
         }
 
-        browser()
-
         ## check if any of the profiled fits yield a log-likelihood higher than
         ## that of the the original fitted model
         if (any(thisAns[, 1] > sum(fitted$log.likelihood)))
