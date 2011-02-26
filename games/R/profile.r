@@ -202,6 +202,12 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
 ##' profiled (see \code{\link{profile.game}} for details of the profiling
 ##' process), a spline interpolation of the log-likelihood profile is provided,
 ##' with an "x" marking the value at the original parameter estimate.
+##'
+##' Sometimes the plot will seem to indicate that the original fit did not reach
+##' the global maximum, even though \code{profile.game} did not issue the
+##' non-covergence warning.  This is an artifact of the interpolation, which can
+##' be confirmed by re-running \code{plot.profile.game} with the argument
+##' \code{show.pts = TRUE}.
 ##' @title Plot profiles of strategic model log-likelihoods
 ##' @param x an object of class \code{profile.game}, typically created by
 ##' running \code{\link{profile.game}} on a fitted \code{game} model
@@ -244,13 +250,11 @@ plot.profile.game <- function(x, show.pts = FALSE, ...)
              ylim = ylim)
 
         ## plot an "x" at the main model estimate
-        points(origcf[nam], origll, pch = 4)
+        points(xvals[length(xvals)], yvals[length(yvals)], pch = 4)
 
         ## plot other points (if desired)
         if (show.pts) {
-            mval <- ceiling(nrow(x[[nam]]) / 2)  # leaving out the one that is
-                                                 # already plotted with an x
-            points(xvals[-mval], yvals[-mval])
+            points(xvals[-length(xvals)], yvals[-length(xvals)])
         }
 
         ## spline fit for the likelihood curve
