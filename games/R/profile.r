@@ -154,6 +154,10 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, report =
         names(thisAns) <- c("logLik", names(cf))
         cfvals <- seq(cf[i] - dist*se[i], cf[i] + dist*se[i], length.out =
                       2*steps + 1)
+        cfvals <- cfvals[-(steps + 1)]  # prevent refitting from original
+                                        # coefficients (causes the
+                                        # non-convergence warning to be issued
+                                        # inappropriately)
         fvec <- fixed
         fvec[i] <- TRUE
 
