@@ -32,11 +32,10 @@ NULL
 ##' of interest are the president's party (\code{presparty}), the legislature's
 ##' party (\code{legparty}), and the year's percentage GDP growth
 ##' (\code{growth}).  To construct the formulas for this case, run
-##' \code{makeFormulas(egame122, outcomes = c("budget cuts passed", "budget cuts
-##' vetoed", "budget increase passed", "budget increase vetoed"))}.  The first
-##' set of options that appears is
-##' \preformatted{
-##' Equation for player 1's utility from budget cuts passed: 
+##' \code{makeFormulas(egame122, outcomes = c("budget cuts passed",
+##' "budget cuts vetoed", "budget increase passed", "budget increase vetoed"))}.
+##' The first set of options that appears is
+##' \preformatted{Equation for player 1's utility from budget cuts passed: 
 ##' 
 ##' 1: fix to 0
 ##' 2: intercept only
@@ -47,7 +46,7 @@ NULL
 ##' at the prompt.  \code{makeFormulas} will then move on to ask about Player
 ##' 1's utility for the other three outcomes, followed by Player 2's utility for
 ##' the outcomes for which her utility is not fixed to 0 (see
-##' \code{\link{egame122}).  See "Examples" below for a full example of the
+##' \code{\link{egame122}}).  See "Examples" below for a full example of the
 ##' input and constructed formula in this case.
 ##'
 ##' It is \strong{not} necessary to use \code{makeFormulas} to specify model
@@ -66,7 +65,8 @@ NULL
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 ##' @examples
-##' \dontrun{R> f1 <- makeFormulas(egame122, outcomes = c("budget cuts passed", "budget cuts vetoed", "budget increase passed", "budget increase vetoed"))
+##' \dontrun{R> f1 <- makeFormulas(egame122, outcomes = c("budget cuts passed",
+##' "budget cuts vetoed", "budget increase passed", "budget increase vetoed"))
 ##'
 ##' ---
 ##' Equation for player 1's utility from budget cuts passed: 
@@ -139,7 +139,8 @@ NULL
 ##' presparty growth
 ##'
 ##' ---
-##' What is the name of the dependent variable in the dataset? (If stored as action indicators/dummies, separate their names with spaces.)
+##' What is the name of the dependent variable in the dataset? (If stored as
+##' action indicators/dummies, separate their names with spaces.)
 ##' budgincrease veto
 ##' R> f1
 ##' budgincrease + veto ~ legparty + growth | 1 | legparty + growth | 
