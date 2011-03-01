@@ -102,7 +102,8 @@ makeProbs12 <- function(b, regr, link, type)
     utils <- makeUtils(b, regr, nutils = 4,
                        unames = c("u11", "u13", "u14", "u24"))
 
-    ## length(utils$b) == 0 means no terms left for the variance components
+    ## length(utils$b) == 0 means no terms left for the variance components, so
+    ## set these to 1
     if (length(utils$b) == 0) {
         sds <- as.list(rep(1, 4))
     } else {
@@ -209,7 +210,7 @@ logLikGrad12 <- function(b, y, regr, link, type, ...)
 
 makeResponse12 <- function(yf)
 {
-    if (length(dim(yf))) {              # response specified as dummies
+    if (length(dim(yf))) {  # response specified as dummies
         Y <- yf
         if (ncol(Y) > 2)
             warning("only first two columns of response will be used")
@@ -228,7 +229,7 @@ makeResponse12 <- function(yf)
                         paste(names(Y)[1], ",", names(Y)[2], sep = ""))
     } else {
         yf <- as.factor(yf)
-        if (nlevels(yf) != 3) stop("dependent variable must have 3 values")
+        if (nlevels(yf) != 3) stop("dependent variable must have three values")
     }
 
     return(yf)
@@ -379,7 +380,8 @@ makeResponse12 <- function(yf)
 ##' The second class of the returned object, \code{egame12}, is for use in
 ##' generation of predicted probabilities.
 ##' @seealso \code{\link{summary.game}} and \code{\link{predProbs}} for
-##' postestimation analysis; \code{\link{Formula}} for formula specification.
+##' postestimation analysis; \code{\link{makeFormulas}} for formula
+##' specification.
 ##' @export
 ##' @references Jeffrey B. Lewis and Kenneth A Schultz.  2003.  "Revealing
 ##' Preferences: Empirical Estimation of a Crisis Bargaining Game with
@@ -542,7 +544,8 @@ egame12 <- function(formulas, data, subset, na.action,
     prefixes <- paste(c(rep("u1(", 3), "u2("), c(levels(yf), levels(yf)[3]),
                        ")", sep = "")
     sdterms <- if (!is.null(sdformula)) { if (sdByPlayer) 2L else 1L } else 0L
-    varNames <- makeVarNames(varNames, prefixes, link, sdterms)
+    utils <- if (is.null(fixedUtils)) 1:4 else numeric(0)
+    varNames <- makeVarNames(varNames, prefixes, utils, link, sdterms)
     hasColon <- varNames$hasColon
     names(sval) <- varNames$varNames
 

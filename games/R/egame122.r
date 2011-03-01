@@ -496,7 +496,8 @@ egame122 <- function(formulas, data, subset, na.action,
                       c(levels(yf), levels(yf)[2], levels(yf)[4]), ")",
                       sep = "")
     sdterms <- if (!is.null(sdformula)) { if (sdByPlayer) 2L else 1L } else 0L
-    varNames <- makeVarNames(varNames, prefixes, link, sdterms)
+    utils <- if (is.null(fixedUtils)) 1:6 else numeric(0)
+    varNames <- makeVarNames(varNames, prefixes, utils, link, sdterms)
     hasColon <- varNames$hasColon
     names(sval) <- varNames$varNames
 
