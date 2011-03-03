@@ -80,12 +80,12 @@ sbi122 <- function(y, regr, link)
 
 makeSDs122 <- function(b, regr, type)
 {
-    sds <- vector("list", 6)
+    sds <- vector("list", 8)
     rcols <- sapply(regr, ncol)
 
     if (length(rcols) == 7) {  ## sdByPlayer == FALSE
         v <- exp(as.numeric(regr[[7]] %*% b))
-        for (i in 1:6) sds[[i]] <- v
+        for (i in 1:8) sds[[i]] <- v
     } else {
         v1 <- exp(as.numeric(regr[[7]] %*% b[1:rcols[7]]))
         v2 <- exp(as.numeric(regr[[8]] %*% b[(rcols[7]+1):length(b)]))
@@ -94,7 +94,7 @@ makeSDs122 <- function(b, regr, type)
             sds[[3]] <- sds[[4]] <- sds[[5]] <- sds[[6]] <- v2
         } else {
             sds[[1]] <- sds[[2]] <- sds[[3]] <- sds[[4]] <- v1
-            sds[[5]] <- sds[[6]] <- v2
+            sds[[5]] <- sds[[6]] <- sds[[7]] <- sds[[8]] <- v2
         }
     }
 
@@ -120,11 +120,19 @@ makeProbs122 <- function(b, regr, link, type)
                       logit = function(x, sd = 1) plogis(x, scale = sd),
                       probit = pnorm)
 
-    sd6 <- if (private) sds[[6]] else sqrt(sds[[5]]^2 + sds[[6]]^2)
+    if (private) {
+        sd6 <- sqrt(sds[[7]]^2 + sds[[8]]^2)
+    } else {
+        sd6 <- sqrt(sds[[5]]^2 + sds[[6]]^2)
+    }
     p6 <- finiteProbs(linkfcn(utils$u24, sd = sd6))
     p5 <- 1 - p6
 
-    sd4 <- if (private) sds[[5]] else sqrt(sds[[3]]^2 + sds[[4]]^2)
+    if (private) {
+        sd4 <- sqrt(sds[[5]]^2 + sds[[6]]^2)
+    } else {
+        sd4 <- sqrt(sds[[3]]^2 + sds[[4]]^2)
+    }
     p4 <- finiteProbs(linkfcn(utils$u22, sd = sd4))
     p3 <- 1 - p4
 
@@ -173,14 +181,14 @@ logLikGrad122 <- function(b, y, regr, link, type, ...)
 
     if (link == "probit" && type == "private") {
         dp4db <- matrix(0L, nrow = n, ncol = sum(rcols[1:4]))
-        dp4dg2 <- dnorm(u$u22) * regr$Z2
+        dp4dg2 <- dnorm(u$u22 / sqrt(2)) * (regr$Z2 / sqrt(2))
         dp4dg4 <- matrix(0L, nrow = n, ncol = rcols[6])
         dp4 <- cbind(dp4db, dp4dg2, dp4dg4)
         dp3 <- -dp4
 
         dp6db <- dp4db
         dp6dg2 <- matrix(0L, nrow = n, ncol = rcols[5])
-        dp6dg4 <- dnorm(u$u24) * regr$Z4
+        dp6dg4 <- dnorm(u$u24 / sqrt(2)) * (regr$Z4 / sqrt(2))
         dp6 <- cbind(dp6db, dp6dg2, dp6dg4)
         dp5 <- -dp6
 
