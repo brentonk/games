@@ -453,7 +453,7 @@ egame12 <- function(formulas, data, subset, na.action,
                     boot = 0,
                     bootreport = TRUE,
                     profile,
-                    method = "BFGS", nograd = FALSE,
+                    method = "BFGS",
                     ...)
 {
     cl <- match.call()
@@ -559,7 +559,7 @@ egame12 <- function(formulas, data, subset, na.action,
     names(sval) <- varNames$varNames
 
     ## use the gradient iff no regressors in variance
-    gr <- if (!nograd && is.null(sdformula)) logLikGrad12 else NULL
+    gr <- if (is.null(sdformula)) logLikGrad12 else NULL
 
     ## deal with fixed utilities
     fvec <- rep(FALSE, length(sval))
