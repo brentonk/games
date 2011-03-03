@@ -76,12 +76,12 @@ sbi12 <- function(y, regr, link)
 
 makeSDs12 <- function(b, regr, type)
 {
-    sds <- vector("list", 4)
+    sds <- vector("list", 5)
     rcols <- sapply(regr, ncol)
 
     if (length(rcols) == 5) {  ## sdByPlayer == FALSE
         v <- exp(as.numeric(regr[[5]] %*% b))
-        for (i in 1:4) sds[[i]] <- v
+        for (i in 1:5) sds[[i]] <- v
     } else {
         v1 <- exp(as.numeric(regr[[5]] %*% b[1:rcols[5]]))
         v2 <- exp(as.numeric(regr[[6]] %*% b[(rcols[5]+1):length(b)]))
@@ -90,7 +90,7 @@ makeSDs12 <- function(b, regr, type)
             sds[[3]] <- sds[[4]] <- v2
         } else {
             sds[[1]] <- sds[[2]] <- sds[[3]] <- v1
-            sds[[4]] <- v2
+            sds[[4]] <- sds[[5]] <- v2
         }
     }
 
@@ -105,7 +105,7 @@ makeProbs12 <- function(b, regr, link, type)
     ## length(utils$b) == 0 means no terms left for the variance components, so
     ## set these to 1
     if (length(utils$b) == 0) {
-        sds <- as.list(rep(1, 4))
+        sds <- as.list(rep(1, 5))
     } else {
         sds <- makeSDs12(utils$b, regr, type)
     }
@@ -114,7 +114,11 @@ makeProbs12 <- function(b, regr, link, type)
                       logit = function(x, sd = 1) plogis(x, scale = sd),
                       probit = pnorm)
 
-    sd4 <- if (type == "private") sds[[4]] else sqrt(sds[[3]]^2 + sds[[4]]^2)
+    if (type == "private") {
+        sd4 <- sqrt(sds[[4]]^2 + sds[[5]]^2)
+    } else {
+        sd4 <- sqrt(sds[[3]]^2 + sds[[4]]^2)
+    }
     p4 <- finiteProbs(linkfcn(utils$u24, sd = sd4))
     p3 <- 1 - p4
 
@@ -158,30 +162,32 @@ logLikGrad12 <- function(b, y, regr, link, type, ...)
     u <- makeUtils(b, regr, nutils = 4,
                    unames = c("u11", "u13", "u14", "u24"))
     p <- makeProbs12(b, regr, link, type)
+    n <- nrow(regr$Z)
     rcols <- sapply(regr, ncol)
 
-    ## unfortunately these are not as consistent in the notation as the
-    ## gradients in egame122, egame123, and ultimatum -- I intend to fix this
-    ## for the sake of future maintainers' sanity, but the ugliness here doesn't
-    ## cause any user-visible problems
     if (link == "probit" && type == "private") {
-        dp4 <- dnorm(u$u24)
-        dgp4 <- dp4 * regr$Z
-        Dp4 <- cbind(matrix(0L, nrow = nrow(regr$X1), ncol = sum(rcols[1:3])),
-                     dgp4)
-        Dp3 <- -Dp4
+        dp4db <- matrix(0L, nrow = n, ncol = sum(rcols[1:3]))
+        dp4dg <- dnorm(u$u24 / sqrt(2)) * regr$Z / sqrt(2)
+        dp4 <- cbind(dp4db, dp4dg)
+        dp3 <- -dp4
 
-        dp1 <- dnorm((u$u11 - p$p3 * u$u13 - p$p4 * u$u14) /
-                     sqrt(1 + p$p3^2 + p$p4^2))
-        dp1 <- dp1 / sqrt(1 + p$p3^2 + p$p4^2)
-        dbp1 <- dp1 * cbind(regr$X1, -p$p3 * regr$X3, -p$p4 * regr$X4)
-        dgp1 <- (dp1 * dgp4) / sqrt(1 + p$p3^2 + p$p4^2)
-        dgp1 <- dgp1 * ((u$u13 - u$u14) * sqrt(1 + p$p3^2 + p$p4^2) -
-                        (u$u11 - p$p3*u$u13 - p$p4*u$u14) *
-                        ((p$p4 - p$p3) / sqrt(1 + p$p3^2 + p$p4^2)))
-        Dp1 <- cbind(dbp1, dgp1)
-        Dp2 <- -Dp1
+        num2 <- p$p3 * u$u13 + p$p4 * u$u14 - u$u11
+        denom2 <- sqrt(1 + p$p3^2 + p$p4^2)
+        dn2 <- dnorm(num2 / denom2)
+        dp2db1 <- dn2 * (-regr$X1 / denom2)
+        dp2db3 <- dn2 * p$p3 * regr$X3 / denom2
+        dp2db4 <- dn2 * p$p4 * regr$X4 / denom2
+        dp2dg <- dn2 * ((u$u14-u$u13)*denom2 - (p$p4-p$p3)*num2/denom2)
+        dp2dg <- (dp2dg * dp4dg) / (denom2^2)
+        Dp2 <- cbind(dp2db1, dp2db3, dp2db4, dp2dg)
+        Dp1 <- -Dp2
+        Dp3 <- dp3
+        Dp4 <- dp4
     } else if (type == "agent") {
+        ## unfortunately these are not as consistent in the notation as the
+        ## gradients in egame122, egame123, and ultimatum -- I intend to fix
+        ## this for the sake of future maintainers' sanity, but the ugliness
+        ## here doesn't cause any user-visible problems
         derivCDF <- switch(link,
                            logit = dlogis,
                            probit = dnorm)
@@ -203,8 +209,11 @@ logLikGrad12 <- function(b, y, regr, link, type, ...)
     dL3 <- Dp2 / p$p2 + Dp3 / p$p3
     dL4 <- Dp2 / p$p2 + Dp4 / p$p4
 
-    ans <- as.numeric(y == 1) * dL1 + as.numeric(y == 2) * dL3 +
-        as.numeric(y == 3) * dL4
+    ans <- matrix(NA, nrow = n, ncol = sum(rcols[1:4]))
+    ans[y == 1, ] <- dL1[y == 1, ]
+    ans[y == 2, ] <- dL3[y == 2, ]
+    ans[y == 3, ] <- dL4[y == 3, ]
+
     return(ans)
 }
 
@@ -444,7 +453,7 @@ egame12 <- function(formulas, data, subset, na.action,
                     boot = 0,
                     bootreport = TRUE,
                     profile,
-                    method = "BFGS",
+                    method = "BFGS", nograd = FALSE,
                     ...)
 {
     cl <- match.call()
@@ -550,7 +559,7 @@ egame12 <- function(formulas, data, subset, na.action,
     names(sval) <- varNames$varNames
 
     ## use the gradient iff no regressors in variance
-    gr <- if (is.null(sdformula)) logLikGrad12 else NULL
+    gr <- if (!nograd && is.null(sdformula)) logLikGrad12 else NULL
 
     ## deal with fixed utilities
     fvec <- rep(FALSE, length(sval))
