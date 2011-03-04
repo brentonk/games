@@ -430,8 +430,10 @@ ultimatum <- function(formulas, data, subset, na.action,
                       = offertol, reltol = reltol, ...)
 
     cc <- convergenceCriterion(method)
-    if (!(results$code %in% cc))
-        warning("Model fitting did not converge\nMessage: ", results$message)
+    if (!(results$code %in% cc)) {
+        warning("Model fitting did not converge\nCode:", results$code,
+                "\nMessage: ", results$message)
+    }
 
     if (boot > 0) {
         bootMatrix <-

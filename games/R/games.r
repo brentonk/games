@@ -64,8 +64,8 @@ print.game <- function(x, ...)
 
     cc <- convergenceCriterion(x$convergence$method)
     if (!(x$convergence$code %in% cc)) {
-        cat("\nWarning: Model fitting did not converge\nMessage:",
-            x$convergence$message)
+        cat("\nWarning: Model fitting did not converge\nCode:",
+            x$convergence$code, "\nMessage:", x$convergence$message)
     }
     
     cat("\n")
@@ -150,8 +150,8 @@ print.summary.game <- function(x, ...)
     cat("\nNo. observations:", x$nobs, "\n\n")
     cc <- convergenceCriterion(x$convergence$method)
     if (!(x$convergence$code %in% cc)) {
-        cat("\nWarning: Model fitting did not converge\nMessage:",
-            x$convergence$message, "\n")
+        cat("\nWarning: Model fitting did not converge\nCode:",
+            x$convergence$code, "\nMessage:", x$convergence$message)
     }
     invisible(x)
 }
