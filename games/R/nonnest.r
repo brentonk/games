@@ -188,8 +188,8 @@ nonnest <- function(model1, model2, outcome1, outcome2)
     if (!isTRUE(all.equal(y1, y2, check.attributes = FALSE)))
         stop("models do not have same dependent variable")
 
-    anyWeights <- !is.null(weights(model1)) || !is.null(weights(model2))
-    if (anyWeights)
+    anyWeights <- function(x) !is.null(weights(x)) && !all(weights(x)==1)
+    if (anyWeights(model1) || anyWeights(model2))
         stop("functions 'clarke' and 'vuong' do not yet support models with weights")
     
     loglik1 <- indivLogLiks(model1, outcome1)
