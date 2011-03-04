@@ -188,12 +188,9 @@ nonnest <- function(model1, model2, outcome1, outcome2)
     if (!isTRUE(all.equal(y1, y2, check.attributes = FALSE)))
         stop("models do not have same dependent variable")
 
-    if (is.null(w1 <- weights(model1)))
-        w1 <- rep(1L, n)
-    if (is.null(w2 <- weights(model2)))
-        w2 <- rep(1L, n)
-    if (!isTRUE(all.equal(w1, w2, check.attributes = FALSE)))
-        stop("model1 and model2 have different weights")
+    anyWeights <- !is.null(weights(model1)) || !is.null(weights(model2))
+    if (anyWeights)
+        stop("functions 'clarke' and 'vuong' do not yet support models with weights")
     
     loglik1 <- indivLogLiks(model1, outcome1)
     loglik2 <- indivLogLiks(model2, outcome2)
@@ -216,10 +213,10 @@ nonnest <- function(model1, model2, outcome1, outcome2)
 ##' details).
 ##'
 ##' It is crucial that the dependent variable be exactly the same between the
-##' two models being tested, including the order the observations are placed
-##' in.  Weights, if any are used, must also be the same between models.  The
-##' \code{vuong} and \code{clarke} functions check for such discrepancies, and
-##' stop with an error if any is found.
+##' two models being tested, including the order the observations are placed in.
+##' The \code{vuong} and \code{clarke} functions check for such discrepancies,
+##' and stop with an error if any is found.  Models with non-null \code{weights}
+##' are not yet supported.
 ##'
 ##' When comparing a strategic model to a (generalized) linear model, you must
 ##' take care to ensure that the dependent variable is truly the same between
