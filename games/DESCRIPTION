@@ -1,11 +1,12 @@
 Package: games
 Title: Statistical Estimation of Game-Theoretic Models
-Version: 0.6-0
-Date: 2010-12-09
+Version: 1.0-0
+Date: 2011-03-04
 Author: Curtis S. Signorino and Brenton Kenkel
 Maintainer: Brenton Kenkel <brenton.kenkel@gmail.com>
 Description: Provides estimation and analysis functions for
     strategic statistical models.
 License: GPL (>= 2)
 Depends: Formula (>= 0.2-0), maxLik (>= 0.7-0), MASS
+Imports: stringr
 LazyLoad: yes

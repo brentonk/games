@@ -1,6 +1,7 @@
 import(stringr)
 export(predict.egame12)
 export(predict.egame122)
+export(predict.egame123)
 export(predict.ultimatum)
 export(clarke)
 S3method(logLik, game)

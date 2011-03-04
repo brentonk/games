@@ -2,12 +2,79 @@
 ===== The 'games' package =====
 ===============================
 
-games 0.X-X (20XX-XX-XX)
+Maintained by Brenton Kenkel (brenton.kenkel@gmail.com).
+
+See also http://github.com/brentonk/games
+
+
+games 1.0-0 (2011-03-04)
 ------------------------
 
-* Log-likelihood component of fitted ultimatum objects where outcome == "both"
-  now includes attributes with individual log-likelihood contributions from
-  offers and from acceptance
+* Major additions:
+
+  - New model "egame123", a three-player extensive form game (and associated
+    simulated dataset "data_123")
+
+  - New functions "clarke" and "vuong" for non-nested model testing
+
+  - New interactive function "makeFormulas" for constructing model formulas
+
+  - Added dataset "leblang2003", for replication of David Leblang's 2003 article
+    "To Devalue or to Defend? The Political Economy of Exchange Rate Policy"
+
+  - All fitting functions now include argument "method" for selection of
+    optimization algorithm from any of the options available in the "maxLik"
+    package
+
+  - New dependencies: package "stringr"
+
+* Minor additions and changes:
+
+  - Added option "report" to "profile.game" for printing status bar while
+    computing profile log-likelihoods
+
+  - Fitted model objects' "convergence" component now contains information on
+    the optimization routine used and the number of iterations to convergence
+
+  - Fitted ultimatum objects include both offer and acceptance (if applicable)
+    in "y" component as matrix, rather than separately
+
+  - Log-likelihood component of fitted ultimatum objects where outcome == "both"
+    includes attributes with individual log-likelihood contributions from offers
+    and from acceptance
+
+  - Fitted models include component "xlevels" to store which levels of each
+    factor variable were used in fitting (similar to the attribute of the same
+    name in "lm" and "glm" objects)
+
+  - For consistency with previous software and published results, utilities
+    fixed to 0 (e.g., u23 in egame12) are now assumed to have a stochastic
+    component in the private-error case
+
+  - For consistency, the variable name for a utility equation containing only a
+    constant is now displayed in the form "u1(1):(Intercept)", rather than being
+    truncated to "u1(1)"
+
+* Bug fixes:
+
+  - "predict.game" works even if "newdata" does not contain variables
+    corresponding to the left-hand side of the original fit
+
+  - "predProbs" uses the modal value of binary variables by default when
+    constructing a regressor profile, rather than the first value that appears
+    in the dataset
+
+  - "profile.game" no longer refits starting at originally estimated
+    coefficients (this would yield infinitesimal improvements in the
+    log-likelihood from nearly identical coefficients, causing the
+    non-convergence warning to be issued inappropriately)
+
+  - "plot.profile.game" uses smarter defaults for y-axis limits
+
+  - In fitting functions, "formulas" specified as a list will no longer fail if
+    the list has names
+
+  - "latexTable" output now places the intercept in the first row
 
 
 games 0.6-0 (2010-12-09)

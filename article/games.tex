@@ -1,74 +1,144 @@
-\documentclass[11pt]{article}
-\usepackage{pstricks}
-\usepackage{color}
-\usepackage{egameps}
+%% need no \usepackage{Sweave.sty}
+\documentclass[article]{jss}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{natbib}
+\usepackage{subfig}
+\usepackage{todonotes}
+
+\author{Brenton Kenkel\\University of Rochester \And
+  Curtis S. Signorino\\University of Rochester}
+\Plainauthor{Brenton Kenkel, Curtis S. Signorino}
+
+\title{Estimating Models of Strategic Interaction in \proglang{R}}
+\Plaintitle{Estimating Models of Strategic Interaction in R}
+
+\Abstract{
+  Come up with this.
+}
+
+\Keywords{one, two, three}
+
+\Address{
+  Brenton Kenkel\\
+  315A Harkness Hall\\
+  Department of Political Science\\
+  University of Rochester\\
+  Rochester, NY 14627\\
+  Email: \email{brenton.kenkel@gmail.com}
+}
 
 \begin{document}
 
-\newcommand{\pb}[1]{\parbox{1in}{\centering #1}}
+\maketitle
 
-\begin{center}
-\begin{egame}(400,600)
-  \putbranch(200,600)(2,3){200}
-  \iib{$1$}{$p_1 + \alpha_1$}{$p_2 + \alpha_2$}[$U_{11}$][]
+\begin{Schunk}
+\begin{Sinput}
+R> options(useFancyQuotes = FALSE)
+R> library("games")
+R> packageVersion("games")
+\end{Sinput}
+\begin{Soutput}
+[1] '0.7.0'
+\end{Soutput}
+\end{Schunk}
 
-  \putbranch(400,300)(2,3){200}
-  \iib{$2$}[r]{$p_3 + \alpha_3$}{$p_4 + \alpha_4$}[\pb{$U_{13}$ \\ $0$}][\pb{$U_{14}$ \\ $U_{24}$}]
-\end{egame}
-\end{center}
+\section{Introduction}
 
-\newpage
+\proglang{R} \citep{Rlang}
 
-\begin{center}
-\begin{egame}(400,600)
-  \putbranch(200,600)(2,3){200}
-  \iib{$1$}{$p_1$}{$p_2$}[$U_{11} + \epsilon_{11}$][]
+\section{Strategic statistical models}
 
-  \putbranch(400,300)(2,3){200}
-  \iib{$2$}[r]{$p_3$}{$p_4$}[\pb{$U_{13} + \epsilon_{13}$ \\ $0$}][\pb{$U_{14} + \epsilon_{14}$ \\ $U_{24} + \epsilon_{24}$}]
-\end{egame}
-\end{center}
+\todo[inline]{cite curt's work, plus all applications in the literature}
 
-\newpage
+\todo[inline]{introduce leblang as running example}
 
-\begin{center}
-\begin{egame}(400,600)
-  \putbranch(200,600)(3,3){300}
-  \iib{$1$}{$p_1 + \alpha_1$}{$p_2 + \alpha_2$}
-  
-  \putbranch(-100,300)(2,3){200}
-  \iib{$2$}[l]{$p_3 + \alpha_3$}{$p_4 + \alpha_4$}[\pb{$U_{11}$ \\ $0$}][\pb{$U_{12}$ \\ $U_{22}$}]
+\section{Specification and estimation}
 
-  \putbranch(500,300)(2,3){200}
-  \iib{$2$}[r]{$p_5 + \alpha_5$}{$p_6 + \alpha_6$}[\pb{$U_{13}$ \\ $0$}][\pb{$U_{14}$ \\ $U_{24}$}]
-\end{egame}
-\end{center}
+\subsection{Modeling player utilities}
 
-\newpage
+The archetypal use of a strategic model is to estimate the effect of observed
+factors on players' utility for each possible outcome\todo{citations}.  To avoid
+an overabundance of parameters and potential inefficiency, analysts will
+typically want to make some exclusion restrictions---i.e., to leave some
+regressors out of some utility equations.\footnote{A necessary condition for
+  identification in a strategic model is that no regressor appear in all of a
+  player's utility equations for the outcomes reachable after her move
+  \citep{Lewis2003}.  The fitting functions and \code{makeFormulas} enforce this
+  condition.  One way to accomplish it is to fix each player's utility to $0$
+  for one outcome.  This comes without loss of generality, since Von
+  Neumann--Morgenstern utilities are unique only up to an affine transformation
+  \textbf{(cite)}.}  This necessitates the use of multiple model formulas, which
+we handle via the \pkg{Formula} package \citep{Formulapkg}.  The variables to
+include in each utility are specified using the standard \code{formula} syntax,
+and each set is separated by a vertical bar (\code{|}).  For example, in the
+\code{egame12} model, an analyst may want to use the specification
+\begin{align*}
+  U_{11} &= \beta_{11,0} + \beta_{11,1} x_1 \\
+  U_{13} &= 0 \\
+  U_{14} &= \beta_{14,0} + \beta_{14,1} x_1 + \beta_{14,2} x_2 \\
+  U_{24} &= \beta_{24,0} + \beta_{24,2} x_2,
+\end{align*}
+where $x_1$ and $x_2$ are observed variables.  The appropriate \code{Formula}
+syntax is \code{y ~ x1 | 0 | x1 + x2 | x2}.
 
-\begin{center}
-\begin{egame}(400,600)
-  \putbranch(200,600)(3,3){300}
-  \iib{$1$}{$p_1$}{$p_2$}
-  
-  \putbranch(-100,300)(2,3){200}
-  \iib{$2$}[l]{$p_3$}{$p_4$}[\pb{$U_{11} + \epsilon_{11}$ \\ $0$}][\pb{$U_{12} + \epsilon_{12}$ \\ $U_{22} + \epsilon_{22}$}]
+In some of the more complex models, such as \code{egame123} with its eight
+utility equations, writing the model formulas manually may be daunting or prone
+to error.  We provide two options for easing the process.  First, users may
+specify the model formulas as a list; the fitting functions then use the
+internal function \code{checkFormulas} to convert it to the appropriate
+\code{Formula} object.
+\begin{Schunk}
+\begin{Sinput}
+R> f1 <- list(u11 = y ~ x1, u13 = ~0, u14 = ~x1 + x2, u24 = ~x2)
+R> games:::checkFormulas(f1)
+\end{Sinput}
+\begin{Soutput}
+y ~ x1 | 0 | x1 + x2 | x2
+<environment: 0x929e084>
+\end{Soutput}
+\end{Schunk}
+(Elements of the list need not be named; in fact, the names are ignored.)
+Second, the function \code{makeFormulas} provides interactive prompts for
+constructing the model formulas step by step.  The user needs to supply the name
+of the model he or she intends to fit and a character vector containing outcome
+descriptions.  For the Leblang data, the appropriate call would look like
+\code{makeFormulas(egame12, outcomes = c("no attack", "devaluation",
+  "defense"))}.
+The following menu will appear at the \proglang{R} console:
+\begin{Code}
+Equation for player 1's utility from no attack: 
 
-  \putbranch(500,300)(2,3){200}
-  \iib{$2$}[r]{$p_5$}{$p_6$}[\pb{$U_{13} + \epsilon_{13}$ \\ $0$}][\pb{$U_{14} + \epsilon_{14}$ \\ $U_{24} + \epsilon_{24}$}]
-\end{egame}
-\end{center}
+1: fix to 0
+2: intercept only
+3: regressors, no intercept
+4: regressors with intercept
 
-\newpage
+Selection: 
+\end{Code}
+If \code{3} or \code{4} is selected, the user will be prompted to enter a
+space-separated list of variables to include in the utility equation of
+interest.  We use functions from \pkg{stringr} \citep{stringrpkg} in parsing the
+input.  The same menu will then be displayed for player 1's utility from
+devaluation, player 1's utility from defense, and player 2's utility from
+defense.  The final prompt will ask for the name of the variable (or variables;
+see Section~\ref{sec:fitting} below on dependent variable specification)
+containing information on the observed outcomes.  The function will then return
+the \code{Formula} specification corresponding to the given input, which can be
+supplied as the \code{formulas} argument of the appropriate fitting function.
 
-\begin{center}
-\begin{egame}(400,600)
-  \putbranch(200,600)(3,3){300}
-  \ctmb{1}(1,3){$x \in [0, Q]$}[i]
-  
-  \putbranch(300,300)(2,3){200}
-  \iib{$2$}[r]{$A$}{$R$}[\pb{$x$ \\ $Q - x$}][\pb{$R_1 + \epsilon_1$ \\ $R_2 + \epsilon_2$}]
-\end{egame}
-\end{center}
+\subsection{Model fitting}
+\label{sec:fitting}
+
+\todo[inline]{different y specification}
+
+\subsection{Assessing convergence}
+
+% remember to talk about sbi starting values
+
+\section{Analyzing fitted models}
+
+\bibliography{games}
 
 \end{document}

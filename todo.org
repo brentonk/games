@@ -1,37 +1,111 @@
-#+TITLE: To-Do List for Strat Project
+#+TITLE: To-do list for games package
 #+AUTHOR: Brenton Kenkel
 #+EMAIL: brenton.kenkel@gmail.com
 
 
+* Bugs
+
+- [X] Fix predict methods to work even if the new data frame doesn't have the
+      response variables (need to do term dropping stuff, look at ~predict.lm~)
+
+- [X] Include na.action in documentation of predict.game
+
+- [ ] Warning issued for m8 in example(egame12)?  Error with m7 on Mac but not
+      on Linux?
+
+- [X] Still need special treatment of ultimatum in gameBoot?
+
+- [X] Incorrect treatment of weights in calculating number of observations in
+      non-nested models?
+
+- [ ] Make sure no funky environment issues when using makeFormulas
+
+- [X] Display convergence code when no message is given
+
+
 * New features
 
-- [ ] Non-nested model tests (Clarke and Vuong)
+- [X] 3-player model
+
+- [X] Non-nested model tests (Clarke and Vuong)
 
 - [X] Likelihood profiling a la ~profile.glm~ in ~MASS~
 
 
+* Documentation
+
+- [X] Review and comment:
+  - [X] doc.r
+  - [X] egame122.r
+  - [X] egame123.r
+  - [X] egame12.r
+  - [X] games.r
+  - [X] helpers.r
+  - [X] latexTable.r
+  - [X] makeFormulas.r
+  - [X] nonnest.r
+  - [X] predProbs.r
+  - [X] profile.r
+  - [X] ultimatum.r
+
+- [X] Get Leblang data documented and into shape (add thing about rescaling)
+
+- [X] Make sure the description of game objects in egame12 is up-to-date
+
+- [X] Change the description of maximization method in egame12
+
+- [ ] Make sure each fitting function describes the alternative dependent
+      variable specifications allowed (e.g. three-col matrix in egame123)
+
+- [X] More informative comments for non-exported functions
+
+
 * General coding issues
 
-- [ ] Add comments all over the place!  Curt wants this stuff to be maintainable
+- [ ] Reduce duplication in predict methods; just pass ultimatum to its own
+      thing and otherwise use switches for the others
+
+- [X] Before sending to JSS, ask Curt about getting other students to bug-test,
+      try to break stuff?
+
+- [X] Make ~latexTable~ always put intercept at top.  Also, should deal better
+      with hasColon when the object in question is u11(blah) representing
+      u11(blah):(Intercept)?
+
+- [X] Use smarter name matching in the factor stuff with the ~predict~ methods
+      (e.g. allow for partial name matches), maybe play around with the ~lm~
+      predict method to see how it deals with this
+
+- [X] Add comments all over the place!  Curt wants this stuff to be maintainable
       by non-me people in the future
 
 - [ ] Make it so that NAs for unobserved cases in the dummy outcomes case don't
       cause hiccups; also, document this in na.action
 
-- [ ] Change ~strat12~ and ~strat122~ so that terms set to 0 have standard
+- [X] Change ~strat12~ and ~strat122~ so that terms set to 0 have standard
       deviations of 0?  (maybe ask Curt about this)
 
-- [ ] Make sure the ~predict~ functions actually work with new data (especially
+- [X] Make sure the ~predict~ functions actually work with new data (especially
       watch out for weird environment issues in the model frame creation)
 
-- [ ] Check code for commented-out things and other extraneous crap
+- [X] Check code for commented-out things and other extraneous crap
 
-- [ ] Use ~maxLik~ instead of ~maxBFGS~, and then use ~vcov.maxLik~ to calculate
-  variance-covariance matrices
+- [X] Use ~maxLik~ instead of ~maxBFGS~, and then use ~vcov.maxLik~ to calculate
+      variance-covariance matrices
 
-- [ ] Allow user-supplied starting values, particularly in conjunction with the
-  profiling function (maybe just allow a profile to be supplied and use the best
-  fit from that as the starting values)
+- [X] Allow user-supplied starting values, particularly in conjunction with the
+      profiling function (maybe just allow a profile to be supplied and use the
+      best fit from that as the starting values)
+
+- [ ] Make general ~makeSDs~ and ~actionsToOutcomes~ functions
+
+- [ ] Be consistent in use of ~if (type == "agent")~ vs ~if (type == "private")~
+
+- [X] Retitle help files to include # of players and of terminal nodes
+
+- [X] Take out the annoying dquotes in help files
+
+- [X] See whether ~update.default~ works with ~game~ models
 
 
 * egame12
@@ -54,7 +128,7 @@
 
 * ultimatum
 
-- [ ] Try actually running the model with only one thing on the left-hand side
+- [X] Try actually running the model with only one thing on the left-hand side
 
 - [ ] The gradient still seems a bit sketchy --- run Monte Carlos with a
       substantial amount of zeroes and Qs in the dependent variable to make sure
