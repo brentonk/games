@@ -433,16 +433,13 @@ makeResponse12 <- function(yf)
 ##' m7 <- egame12(f1, data = war1800, sdformula = ~ balanc - 1)
 ##' summary(m7)
 ##' 
-##' m8 <- egame12(f1, data = war1800, sdformula = ~ balanc | revis2, sdByPlayer = TRUE)
-##' summary(m8)
-##' 
 ##' ## using a factor outcome
 ##' y <- ifelse(war1800$esc == 1, ifelse(war1800$war == 1, "war", "cap"), "sq")
 ##' war1800$y <- as.factor(y)
 ##' f2 <- update(Formula(f1), y ~ .)
 ##' 
-##' m9 <- egame12(f2, data = war1800)
-##' summary(m9)
+##' m8 <- egame12(f2, data = war1800)
+##' summary(m8)
 egame12 <- function(formulas, data, subset, na.action,
                     link = c("probit", "logit"),
                     type = c("agent", "private"),
