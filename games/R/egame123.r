@@ -81,7 +81,7 @@ sbi123 <- function(y, regr, link)
 
 makeSDs123 <- function(b, regr, type)
 {
-    sds <- vector("list", if (type == "private") 8L else 6L)
+    sds <- vector("list", if (type == "private") 9L else 6L)
     regr <- regr[-(1:8)]
     rcols <- sapply(regr, ncol)
 
@@ -99,7 +99,7 @@ makeSDs123 <- function(b, regr, type)
         if (type == "private") {
             sds[[1]] <- sds[[2]] <- sds[[3]] <- sds[[4]] <- v1
             sds[[5]] <- sds[[6]] <- sds[[7]] <- v2
-            sds[[8]] <- v3
+            sds[[8]] <- sds[[9]] <- v3
         } else {
             sds[[1]] <- sds[[2]] <- v1
             sds[[3]] <- sds[[4]] <- v2
@@ -117,7 +117,7 @@ makeProbs123 <- function(b, regr, link, type)
                        "u26", "u36"))
 
     if (length(utils$b) == 0) {  ## variance unparameterized
-        sds <- as.list(rep(1, 8))
+        sds <- as.list(rep(1, 9))
     } else {
         sds <- makeSDs123(utils$b, regr, type)
     }
@@ -126,7 +126,11 @@ makeProbs123 <- function(b, regr, link, type)
                       logit = function(x, sd = 1) plogis(x, scale = sd),
                       probit = pnorm)
 
-    sd6 <- if (type == "private") sds[[8]] else sqrt(sds[[5]]^2 + sds[[6]]^2)
+    if (type == "private") {
+        sd6 <- sqrt(sds[[8]]^2 + sds[[9]]^2)
+    } else {
+        sd6 <- sqrt(sds[[5]]^2 + sds[[6]]^2)
+    }
     p6 <- finiteProbs(linkfcn(utils$u36, sd = sd6))
     p5 <- 1 - p6
 
@@ -188,6 +192,40 @@ logLikGrad123 <- function(b, y, regr, link, type, ...)
     n <- nrow(regr$X1)
 
     if (link == "probit" && type == "private") {
+        dp6db <- matrix(0L, nrow = n, ncol = sum(rcols[1:4]))
+        dp6dg <- matrix(0L, nrow = n, ncol = sum(rcols[5:7]))
+        dp6du <- dnorm(u$u36 / sqrt(2)) * regr$W6 / sqrt(2)
+        dp6 <- cbind(dp6db, dp6dg, dp6du)
+        dp5 <- -dp6
+
+        denom4 <- sqrt(1 + p$p5^2 + p$p6^2)
+        phi24 <- dnorm(eu24 / denom4)
+        dp4db <- matrix(0L, nrow = n, ncol = sum(rcols[1:4]))
+        dp4dg3 <- -phi24 * regr$Z3 / denom4
+        dp4dg5 <- p$p5 * phi24 * regr$Z5 / denom4
+        dp4dg6 <- p$p6 * phi24 * regr$Z6 / denom4
+        dp4dg <- cbind(dp4dg3, dp4dg5, dp4dg6)
+        dp4du <- phi24 * ((u$u26-u$u25)*denom4 - eu24*(p$p6-p$p5)/denom4)
+        dp4du <- (dp4du / denom4^2) * dp6du
+        dp4 <- cbind(dp4db, dp4dg, dp4du)
+        dp3 <- -dp4
+
+        denom2 <- sqrt(1 + p$p3^2 + (p$p4^2)*(p$p5^2) + (p$p4^2)*(p$p6^2))
+        phi12 <- dnorm(eu12 / denom2)
+        dp2db1 <- -phi12 * regr$X1 / denom2
+        dp2db3 <- p$p3 * phi12 * regr$X3 / denom2
+        dp2db5 <- p$p4 * p$p5 * phi12 * regr$X5 / denom2
+        dp2db6 <- p$p4 * p$p6 * phi12 * regr$X6 / denom2
+        dp2dg <- (eu14c2 * denom2 - eu12*(p$p4*(p$p5^2+p$p6^2)-p$p3)/denom2)
+        dp2dg <- phi12 * (dp2dg / denom2^2) * dp4dg
+        deu12du <- u$u13*(-dp4du) + u$u15*(p$p4*(-dp6du) + p$p5*dp4du) +
+            u$u16*(p$p4*dp6du + p$p6*dp4du)
+        ddenom2du <- p$p3*(-dp4du) + (p$p4^2)*p$p5*(-dp6du) +
+            p$p4*(p$p5^2)*dp4du + (p$p4^2)*p$p6*dp6du + p$p4*(p$p6^2)*dp4du
+        dp2du <- deu12du * denom2 - eu12 * ddenom2du / denom2
+        dp2du <- phi12 * (dp2du / denom2^2)
+        dp2 <- cbind(dp2db1, dp2db3, dp2db5, dp2db6, dp2dg, dp2du)
+        dp1 <- -dp2
     } else if (type == "agent") {
         dlink <- switch(link,
                         logit = dlogis,
@@ -341,7 +379,6 @@ makeResponse123 <- function(yf)
 ##' @param profile output from running \code{\link{profile.game}} on a previous
 ##' fit of the model, used to generate starting values for refitting when an
 ##' earlier fit converged to a non-global maximum.
-##' @param usegrad REMOVE THIS
 ##' @param method character string specifying which optimization routine to use
 ##' (see \code{\link{maxLik}})
 ##' @param ... other arguments to pass to the fitting function (see
@@ -350,6 +387,21 @@ makeResponse123 <- function(yf)
 ##' \code{\link{egame12}} for a description of the \code{game} class.
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
+##' @examples
+##' data(data_123)
+##'
+##' ## the formula:
+##' f1 <- y ~ x1 + x2 | 0 | x3 | x4 + x5 | 0 | x6 | x7 | x8
+##' ##    ^   ^^^^^^^   ^   ^^   ^^^^^^^   ^   ^^   ^^   ^^
+##' ##    y     u11    u13  u15    u16    u23  u25  u26  u36
+##' 
+##' m1 <- egame123(f1, data = data_123, link = "probit", type = "private")
+##' summary(m1)
+##'
+##' ## dummy specification of the dependent variable
+##' f2 <- update(Formula(f1), a1 + a2 + a3 ~ .)
+##' m2 <- egame123(f2, data = data_123, link = "probit", type = "private")
+##' summary(m2)
 egame123 <- function(formulas, data, subset, na.action,
                      link = c("probit", "logit"),
                      type = c("agent", "private"),
@@ -360,7 +412,6 @@ egame123 <- function(formulas, data, subset, na.action,
                      boot = 0,
                      bootreport = TRUE,
                      profile,
-                     usegrad = TRUE,  ## MAKE SURE TO REMOVE THIS
                      method = "BFGS",
                      ...)
 {
@@ -437,7 +488,7 @@ egame123 <- function(formulas, data, subset, na.action,
                 unif <- c(-1, 1)
             sval <- runif(sum(rcols), unif[1], unif[2])
         } else {
-            sval <- sbi122(y, regr, link)
+            sval <- sbi123(y, regr, link)
             sval <- c(sval, rep(0, sum(rcols) - length(sval)))
         }
     } else {
@@ -467,7 +518,7 @@ egame123 <- function(formulas, data, subset, na.action,
     names(sval) <- varNames$varNames
 
     ## use gradient only if variance isn't parameterized
-    gr <- if (is.null(sdformula) && usegrad) logLikGrad123 else NULL
+    gr <- if (is.null(sdformula)) logLikGrad123 else NULL
 
     fvec <- rep(FALSE, length(sval))
     names(fvec) <- names(sval)
@@ -482,8 +533,10 @@ egame123 <- function(formulas, data, subset, na.action,
 
     ## check for convergence
     cc <- convergenceCriterion(method)
-    if (!(results$code %in% cc))
-        warning("Model fitting did not converge\nMessage: ", results$message)
+    if (!(results$code %in% cc)) {
+        warning("Model fitting did not converge\nCode:", results$code,
+                "\nMessage: ", results$message)
+    }
 
     if (boot > 0) {
         bootMatrix <-
