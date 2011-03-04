@@ -54,31 +54,31 @@ NULL
 ##' attack in the given month}
 ##' \item{\code{preelec}}{Indicator for being in the three months prior to an
 ##' election}
-##' \item{\code{postelec}{Indicator for being in the three months following an
+##' \item{\code{postelec}}{Indicator for being in the three months following an
 ##' election}
-##' \item{\code{rightgov}{Indicator for a right-wing party being in power}
-##' \item{\code{unifgov}{Indicator for unified government: in presidential
+##' \item{\code{rightgov}}{Indicator for a right-wing party being in power}
+##' \item{\code{unifgov}}{Indicator for unified government: in presidential
 ##' systems, the same party controlling the presidency and the lower house of
 ##' the legislature; in parliamentary systems, one party/coalition having a
 ##' majority of seats}
-##' \item{\code{lreserves}{Logged ratio of currency reserves to base money in
+##' \item{\code{lreserves}}{Logged ratio of currency reserves to base money in
 ##' the previous month}
-##' \item{\code{realinterest}{Domestic real interest rate in the previous
+##' \item{\code{realinterest}}{Domestic real interest rate in the previous
 ##' month}
-##' \item{\code{lexports}{Logged ratio of exports to GDP in the previous month}
-##' \item{\code{capcont}{Indicator for capital controls in the previous year}
-##' \item{\code{overval}{Overvaluation of the real exchange rate}
-##' \item{\code{creditgrow}{Domestic credit growth in the previous month}
-##' \item{\code{service}{External debt service (as percentage of exports) paid
+##' \item{\code{lexports}}{Logged ratio of exports to GDP in the previous month}
+##' \item{\code{capcont}}{Indicator for capital controls in the previous year}
+##' \item{\code{overval}}{Overvaluation of the real exchange rate}
+##' \item{\code{creditgrow}}{Domestic credit growth in the previous month}
+##' \item{\code{service}}{External debt service (as percentage of exports) paid
 ##' in previous month}
-##' \item{\code{USinterest}{U.S. domestic interest rates in the previous month}
-##' \item{\code{contagion}{Number of other countries experiencing speculative
+##' \item{\code{USinterest}}{U.S. domestic interest rates in the previous month}
+##' \item{\code{contagion}}{Number of other countries experiencing speculative
 ##' attacks in the same month}
-##' \item{\code{prioratt}{Number of prior speculative attacks experienced by the
+##' \item{\code{prioratt}}{Number of prior speculative attacks experienced by the
 ##' country}
-##' \item{\code{nation}{Country name}
-##' \item{\code{month}{Month of observation}
-##' \item{\code{year}{Year of observation}
+##' \item{\code{nation}}{Country name}
+##' \item{\code{month}}{Month of observation}
+##' \item{\code{year}}{Year of observation}
 ##' }
 ##' All of the non-binary variables other than \code{nation}, \code{month},
 ##' and \code{year} are standardized to have mean 0 and unit variance.
