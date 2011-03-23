@@ -55,6 +55,8 @@ latexEsc <- function(x)
 ##' the table to the R console.
 ##' @param floatplace where to place the table float; e.g., for
 ##' \code{\\begin\{table\}[htp]}, use \code{floatplace = "htp"}.
+##' @param caption caption to use (none if \code{NULL})
+##' @param label reference label to use (none if \code{NULL})
 ##' @param rowsep amount of space (in points) to put between rows.
 ##' @param useboot logical: use bootstrap estimates (if available) to calculate
 ##' standard errors?
@@ -77,7 +79,8 @@ latexEsc <- function(x)
 ##' latexTable(m1, file = "my_table.tex")  ## write to file}
 latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
                        NA, blankfill = "", math.style.negative = TRUE, file =
-                       "", floatplace = "htbp", rowsep = 2, useboot = TRUE)
+                       "", floatplace = "htbp", caption = NULL, label = NULL,
+                       rowsep = 2, useboot = TRUE)
 {
     ## this whole function should be rewritten using writeLines; this is my hack
     ## until then
@@ -167,6 +170,11 @@ latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
     
     lcat("\\end{tabular}\n")
     lcat("\\end{center}\n")
+
+    if (!is.null(caption))
+        lcat("\\caption{", caption, "}\n")
+    if (!is.null(label))
+        lcat("\\label{", label, "}\n")
     lcat("\\end{table}\n")
 
     invisible(x)
