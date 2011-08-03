@@ -316,7 +316,7 @@ makeResponse12 <- function(yf)
 ##' (2003).
 ##'
 ##' The model is fit using \code{\link{maxLik}}, using the BFGS optimization
-##' method by default (see \code{link{maxBFGS}}).  Use the \code{method}
+##' method by default (see \code{\link{maxBFGS}}).  Use the \code{method}
 ##' argument to specify an alternative from among those supplied by
 ##' \code{maxLik}.
 ##' @title Strategic model with 2 players, 3 terminal nodes

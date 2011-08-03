@@ -1,6 +1,15 @@
 #+TITLE: To-do list for games package
 #+AUTHOR: Brenton Kenkel
 #+EMAIL: brenton.kenkel@gmail.com
+#+FILETAGS: :games:
+
+
+* Publicity
+
+- Email Polmeth listserv:
+  - Link to paper on Curt's website
+  - Mention that this is not the polywog software we mentioned at the Methods
+    conference, but rather something for estimating structural models
 
 
 * Bugs
@@ -16,6 +25,8 @@
 
 
 * Tweaks
+
+** TODO Implement ~nobs~ method, introduced R 2.13.0
 
 - [ ] Use tcrossprod(X, t(b)) everywhere instead of X %*% b
 
