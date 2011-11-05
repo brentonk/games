@@ -2,12 +2,12 @@
 ##' @include helpers.r
 NULL
 
-predict.egame123 <- function(object, newdata, probs = c("outcome", "action"),
+predict.egame123 <- function(object, newdata, type = c("outcome", "action"),
                              na.action = na.pass, ...)
 {
-    probs <- match.arg(probs)
+    type <- match.arg(type)
 
-    if (missing(newdata)) {
+    if (missing(newdata) || is.null(newdata)) {
         mf <- object$model
     } else {
         ## get rid of left-hand variables in the formula, since they're not
@@ -31,13 +31,21 @@ predict.egame123 <- function(object, newdata, probs = c("outcome", "action"),
     ans <- makeProbs123(object$coefficients, regr = regr, link = object$link,
                         type = object$type)
 
-    if (probs == "outcome") {
+    if (type == "outcome") {
         ans <- data.frame(actionsToOutcomes123(ans, log.p = FALSE))
         names(ans) <- paste("Pr(", levels(object$y), ")", sep="")
+    } else {
+        ans <- as.data.frame(ans)
+        names(ans)[1:2] <- paste("Pr(", c("", "~"), levels(object$y)[1], ")",
+                                 sep="")
+        names(ans)[3:4] <- paste("Pr(", c("", "~"), levels(object$y)[2], "|~",
+                                 levels(object$y)[1], ")", sep="")
+        names(ans)[5:6] <- paste("Pr(", levels(object$y)[3:4], "|~",
+                                 levels(object$y)[1], ",~[", levels(object$y)[2],
+                                 "])", sep = "")
+        names(ans) <- gsub("~~", "", names(ans))
     }
 
-    ans <- do.call(cbind, ans)
-    ans <- as.data.frame(ans)
     return(ans)
 }
 

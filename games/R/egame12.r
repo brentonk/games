@@ -2,12 +2,12 @@
 ##' @include helpers.r
 NULL
 
-predict.egame12 <- function(object, newdata, probs = c("outcome", "action"),
+predict.egame12 <- function(object, newdata, type = c("outcome", "action"),
                             na.action = na.pass, ...)
 {
-    probs <- match.arg(probs)
+    type <- match.arg(type)
     
-    if (missing(newdata)) {
+    if (missing(newdata) || is.null(newdata)) {
         ## use original data if 'newdata' not supplied
         mf <- object$model
     } else {
@@ -33,13 +33,19 @@ predict.egame12 <- function(object, newdata, probs = c("outcome", "action"),
                       = object$type)
     ans <- do.call(cbind, ans)
 
-    if (probs == "outcome") {
+    if (type == "outcome") {
         ans <- data.frame(cbind(ans[, 1], ans[, 2] * ans[, 3],
                                 ans[, 2] * ans[, 4]))
         names(ans) <- paste("Pr(", levels(object$y), ")", sep = "")
+    } else {
+        ans <- as.data.frame(ans)
+        names(ans)[1:2] <- paste("Pr(", c("", "~"), levels(object$y)[1], ")",
+                                 sep = "")
+        names(ans)[3:4] <- paste("Pr(", levels(object$y)[2:3], "|~",
+                                 levels(object$y)[1], ")", sep = "")
+        names(ans) <- gsub("~~", "", names(ans))
     }
 
-    ans <- as.data.frame(ans)
     return(ans)
 }
 
@@ -435,7 +441,7 @@ makeResponse12 <- function(yf)
 ##' 
 ##' ## using a factor outcome
 ##' y <- ifelse(war1800$esc == 1, ifelse(war1800$war == 1, "war", "cap"), "sq")
-##' war1800$y <- as.factor(y)
+##' war1800$y <- as.factor(y, levels = c("sq", "cap", "war"))
 ##' f2 <- update(Formula(f1), y ~ .)
 ##' 
 ##' m8 <- egame12(f2, data = war1800)

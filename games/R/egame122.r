@@ -2,12 +2,12 @@
 ##' @include helpers.r
 NULL
 
-predict.egame122 <- function(object, newdata, probs = c("outcome", "action"),
+predict.egame122 <- function(object, newdata, type = c("outcome", "action"),
                              na.action = na.pass, ...)
 {
-    probs <- match.arg(probs)
+    type <- match.arg(type)
 
-    if (missing(newdata)) {
+    if (missing(newdata) || is.null(newdata)) {
         ## use original data if 'newdata' not supplied
         mf <- object$model
     } else {
@@ -32,13 +32,20 @@ predict.egame122 <- function(object, newdata, probs = c("outcome", "action"),
     ans <- makeProbs122(object$coefficients, regr = regr, link = object$link, type
                         = object$type)
 
-    if (probs == "outcome") {
+    if (type == "outcome") {
         ans <- data.frame(actionsToOutcomes122(ans, log.p = FALSE))
         names(ans) <- paste("Pr(", levels(object$y), ")", sep = "")
+    } else {
+        ans <- as.data.frame(ans)
+        nl <- paste(levels(object$y)[1:2], collapse = " or ")
+        nr <- paste(levels(object$y)[3:4], collapse = " or ")
+        names(ans)[1:2] <- paste("Pr(", c(nl, nr), ")", sep = "")
+        names(ans)[3:4] <- paste("Pr(", levels(object$y)[1:2], "|", nl, ")",
+                                 sep="")
+        names(ans)[5:6] <- paste("Pr(", levels(object$y)[3:4], "|", nr, ")",
+                                 sep="")
     }
 
-    ans <- do.call(cbind, ans)
-    ans <- as.data.frame(ans)
     return(ans)
 }
 
