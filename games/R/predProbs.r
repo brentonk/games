@@ -132,19 +132,20 @@ makeProfile <- function(x, ...)
 ## x: fitted model of class "game" containing element 'boot.matrix'
 ## newdata: data frame to get predicted probabilities for
 ## ci: width of confidence bands
+## type: outcome or action
 ## report: whether to print status bar
 ##
 ## RETURN:
 ## list of bootstrapped lower and upper confidence bands ('lows' and 'highs'
 ## resp.) for the predicted probabilities
 ## 
-CIfromBoot <- function(x, newdata, ci = .95, report = TRUE)
+CIfromBoot <- function(x, newdata, ci = .95, type, report = TRUE)
 {
     ## the dimensions of the predicted-probability matrix varies with the type
     ## of model (3 for egame12, 4 for egame122, 2 for ultimatum, etc), so this
     ## is just to figure out the correct number
     n <- nrow(x$boot.matrix)
-    forDims <- predict(x, newdata = newdata)
+    forDims <- predict(x, newdata = newdata, type = type)
     ans <- vector("list", ncol(forDims))
     for (i in seq_along(ans))
         ans[[i]] <- matrix(nrow = n, ncol = nrow(forDims))
@@ -157,7 +158,7 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE)
     }
     for (i in seq_len(n)) {
         x$coefficients <- x$boot.matrix[i, ]
-        xpred <- predict(x, newdata = newdata)
+        xpred <- predict(x, newdata = newdata, type = type)
         for (j in seq_along(ans))
             ans[[j]][i, ] <- xpred[, j]
         if (report)
@@ -223,16 +224,19 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE)
 ##' x-axis" while all others are held constant.  Partial matches are accepted.
 ##' @param xlim numeric, length 2: the range that \code{x} should be varied over
 ##' (if \code{x} is continuous).  Defaults to the observed range of \code{x}.
+##' @param max) 
 ##' @param n integer: the number of observations to generate (if \code{x} is
 ##' continuous).
 ##' @param ci numeric: width of the confidence interval to estimate around each
 ##' predicted probability.  Set to \code{0} to estimate no confidence intervals.
+##' @param type whether to generate predicted values for outcomes (the default)
+##' or actions
 ##' @param makePlots logical: whether to automatically make the default plot
 ##' for the returned object.  See \code{\link{plot.predProbs}}.
 ##' @param report logical: whether to print a status bar while obtaining the
 ##' confidence intervals for the predicted probabilities.
 ##' @param ... used to set values for variables other than \code{x} in the
-##' profile of observations.  See "Details" and "Examples".
+##'ofile of observations.  See "Details" and "Examples".
 ##' @return An object of class \code{predProbs}.  This is a data frame containing
 ##' each hypothetical observation's predicted probability, the upper and lower
 ##' bounds of the confidence interval, and the value of each regressor.
@@ -262,21 +266,27 @@ CIfromBoot <- function(x, newdata, ci = .95, report = TRUE)
 ##'
 ##' ## x can be a factor too
 ##' pp6 <- predProbs(m1, x = "regime1")
+##'
+##' ## action probabilities
+##' pp7 <- predProbs(m1, x = "regime1", type = "action")
 ##' 
 ##' ## predProbs (despite the name) also provides predictions for the optimal
 ##' ## offer in ultimatum models
 ##' data(data_ult)
 ##' f2 <- offer + accept ~ x1 + x2 + x3 + x4 + w1 + w2 | z1 + z2 + z3 + z4 + w1 + w2
 ##' m2 <- ultimatum(f2, data = data_ult, maxOffer = 15, boot = 10)
-##' pp7 <- predProbs(m2, x = "w1", n = 5)
-##' print(pp7)
+##' pp8 <- predProbs(m2, x = "w1", n = 5)
+##' print(pp8)
 ##'
 ##' op <- par(mfrow = c(2, 1))
-##' plot(pp7)
+##' plot(pp8)
 ##' par(op)
 predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
+                      type = c("outcome", "action"),
                       makePlots = FALSE, report = TRUE, ...)
 {
+    type <- match.arg(type)
+
     ## find the variable corresponding to the named 'x' and stop if it matches
     ## none or more than one
     xc <- charmatch(x, names(model$model))
@@ -322,7 +332,7 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
     rownames(profData) <- seq_along(xs)
 
     ## get predicted probabilities from the constructed profile
-    ans <- predict(model, newdata = profData)
+    ans <- predict(model, newdata = profData, type = type)
     if (is.list(ans))
         ans <- do.call(cbind, ans)
 
@@ -341,7 +351,7 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
         model$boot.matrix <- bbm
     }
     if (ci > 0)
-        CIvals <- CIfromBoot(model, newdata = profData, ci = ci)
+        CIvals <- CIfromBoot(model, newdata = profData, ci = ci, type = type)
 
     ## save the indices of the columns that the probabilities, confidence
     ## bounds, and variable of interest are in, and make them attributes of the
