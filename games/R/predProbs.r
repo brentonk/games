@@ -224,7 +224,6 @@ CIfromBoot <- function(x, newdata, ci = .95, type, report = TRUE)
 ##' x-axis" while all others are held constant.  Partial matches are accepted.
 ##' @param xlim numeric, length 2: the range that \code{x} should be varied over
 ##' (if \code{x} is continuous).  Defaults to the observed range of \code{x}.
-##' @param max) 
 ##' @param n integer: the number of observations to generate (if \code{x} is
 ##' continuous).
 ##' @param ci numeric: width of the confidence interval to estimate around each
