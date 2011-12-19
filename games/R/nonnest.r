@@ -319,8 +319,8 @@ vuong <- function(model1, model2, outcome1 = NULL, outcome2 = NULL,
     correction <- (x$p1 - x$p2) * (log(x$n) / 2)
     num <- sum(x$loglik1) - sum(x$loglik2) - correction
     denom <- sd(x$loglik1 - x$loglik2) *
-        sqrt(x$n / (x$n-1))  # correcting for R's use of n-1 denominator in sd
-                             # calculation
+        sqrt((x$n - 1) / x$n)  # correcting for R's use of n-1 denominator in sd
+                               # calculation
     stat <- num / (sqrt(x$n) * denom)
 
     ans <- list(stat = stat,
