@@ -265,3 +265,18 @@ convergenceCriterion <- function(method)
            nm = 0L,
            sann = 0L)
 }
+
+##
+## INPUT:
+## H: Hessian matrix
+##
+## RETURN:
+## logical for whether 'H' is negative definite
+## 
+checkLocalID <- function(H)
+{
+    ## 'chol' returns an error for non-positive definite matrices
+    ans <- tryCatch(chol(-H), error = identity)
+    ans <- inherits(ans, "error")
+    return(ans)
+}
