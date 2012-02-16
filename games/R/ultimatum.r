@@ -435,6 +435,11 @@ ultimatum <- function(formulas, data, subset, na.action,
                 "\nMessage: ", results$message)
     }
 
+    ## check local identification
+    lid <- checkLocalID(results$hessian, fvec)
+    if (!lid)
+        warning("Hessian is not negative definite; coefficients may not be locally identified")
+
     if (boot > 0) {
         bootMatrix <-
             gameBoot(boot, report = bootreport, estimate = results$estimate, y =
@@ -468,6 +473,7 @@ ultimatum <- function(formulas, data, subset, na.action,
     ans$fixed <- fvec
     if (boot > 0)
         ans$boot.matrix <- bootMatrix
+    ans$localID <- lid
     ans$outcome <- outcome
     ans$maxOffer <- maxOffer
     ans$offertol <- offertol

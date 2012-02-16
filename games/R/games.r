@@ -67,7 +67,10 @@ print.game <- function(x, ...)
         cat("\nWarning: Model fitting did not converge\nCode:",
             x$convergence$code, "\nMessage:", x$convergence$message)
     }
-    
+
+    if (!x$localID)
+        warning("Hessian is not negative definite; coefficients may not be locally identified")
+
     cat("\n")
     invisible(oldx)
 }
@@ -111,6 +114,7 @@ summary.game <- function(object, useboot = TRUE, ...)
     ans$fixed.terms <- object$coefficients[object$fixed]
     ans$convergence <- object$convergence
     ans$useboot <- useboot
+    ans$localID <- object$localID
     class(ans) <- "summary.game"
 
     return(ans)
@@ -153,6 +157,8 @@ print.summary.game <- function(x, ...)
         cat("\nWarning: Model fitting did not converge\nCode:",
             x$convergence$code, "\nMessage:", x$convergence$message)
     }
+    if (!x$localID)
+        warning("Hessian is not negative definite; coefficients may not be locally identified")
     invisible(x)
 }
 
