@@ -277,6 +277,6 @@ checkLocalID <- function(H)
 {
     ## 'chol' returns an error for non-positive definite matrices
     ans <- tryCatch(chol(-H), error = identity)
-    ans <- inherits(ans, "error")
+    ans <- !inherits(ans, "error")
     return(ans)
 }
