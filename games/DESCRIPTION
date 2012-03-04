@@ -1,7 +1,7 @@
 Package: games
 Title: Statistical Estimation of Game-Theoretic Models
-Version: 1.0-4
-Date: 2011-12-18
+Version: 1.0-5
+Date: 2012-03-04
 Author: Curtis S. Signorino and Brenton Kenkel
 Maintainer: Brenton Kenkel <brenton.kenkel@gmail.com>
 Description: Provides estimation and analysis functions for

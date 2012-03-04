@@ -58,6 +58,9 @@
 
 \maketitle
 
+<<setup,echo=false,results=hide>>=
+options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
+@ 
 
 \section{Introduction}
 
@@ -556,20 +559,11 @@ In this section and those below, we replicate \citeauthor{Leblang2003}'s
 \citeyearpar{Leblang2003} analysis of speculative currency attacks to illustrate
 the package's functionality.  The dataset is available in \pkg{games} as
 \code{leblang2003}.
-\begin{Schunk}
-\begin{Sinput}
-R> library("games")
-R> data("leblang2003")
-R> names(leblang2003)
-\end{Sinput}
-\begin{Soutput}
- [1] "outcome"      "preelec"      "postelec"     "rightgov"    
- [5] "unifgov"      "lreserves"    "realinterest" "lexports"    
- [9] "capcont"      "overval"      "creditgrow"   "service"     
-[13] "USinterest"   "contagion"    "prioratt"     "nation"      
-[17] "month"        "year"        
-\end{Soutput}
-\end{Schunk}
+<<loadleb>>=
+library("games")
+data("leblang2003")
+names(leblang2003)
+@ %
 Each observation is a country observed in a particular year.  The assumed
 data-generating process follows the \code{egame12} model, with two players and
 three potential outcomes.  Player $1$ is ``the market,'' which decides whether
@@ -577,15 +571,9 @@ or not to initiate a speculative attack on Player $2$'s (the country's)
 currency.  If the market decides not to attack, the game ends.  If there is an
 attack, the country decides whether to devalue the currency or defend its
 exchange-rate peg.  The observed distribution of outcomes is:
-\begin{Schunk}
-\begin{Sinput}
-R> table(leblang2003$outcome)
-\end{Sinput}
-\begin{Soutput}
-  no attack devaluation     defense 
-       7152          42          46 
-\end{Soutput}
-\end{Schunk}
+<<lebtab>>=
+table(leblang2003$outcome)
+@ %
 We assume that the market is strategic, incorporating its
 expectations of the country's response into its initial decision of whether to
 make a currency attack.  The source of uncertainty is assumed to be private
@@ -626,15 +614,10 @@ to error.  We provide two options to ease the process.  First, users may specify
 the model formulas as a list; the fitting functions then use the internal
 function \code{checkFormulas} to convert it to the appropriate \code{Formula}
 object.
-\begin{Schunk}
-\begin{Sinput}
-R> f1 <- list(u11 = y ~ x1, u13 = ~ 0, u14 = ~ x1 + x2, u24 = ~ x2)
-R> games:::checkFormulas(f1)
-\end{Sinput}
-\begin{Soutput}
-y ~ x1 | 0 | x1 + x2 | x2
-\end{Soutput}
-\end{Schunk}
+<<formulaAsList>>=
+f1 <- list(u11 = y ~ x1, u13 = ~ 0, u14 = ~ x1 + x2, u24 = ~ x2)
+games:::checkFormulas(f1)
+@ %
 (Elements of the list need not be named; in fact, the names are ignored.)
 Second, the function \code{makeFormulas} provides interactive prompts for
 constructing the model formulas step by step.  The user only needs to supply the
@@ -692,43 +675,28 @@ typically result in their being removed from the dataset.
 
 The method of specifying the dependent variable has no effect on the estimation
 results, as shown in the next example.
-\begin{Schunk}
-\begin{Sinput}
-R> leblang2003$attack <- as.numeric(leblang2003$outcome != "no attack")
-R> leblang2003$defend <- as.numeric(leblang2003$outcome == "defense")
-R> flb <- outcome ~ capcont + lreserves + overval + creditgrow + USinterest +
-+      service + contagion + prioratt - 1 | 1 | 1 | unifgov + lexports + preelec +
-+      postelec + rightgov + realinterest + capcont + lreserves
-R> flb1 <- as.Formula(flb)
-R> flb2 <- update(flb1, attack + defend ~ .)
-R> leb1 <- egame12(flb1, data = leblang2003, link = "probit", type = "private")
-R> leb2 <- egame12(flb2, data = leblang2003, link = "probit", type = "private")
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> all.equal(coef(leb1), coef(leb2), check.attributes = FALSE)
-\end{Sinput}
-\begin{Soutput}
-[1] TRUE
-\end{Soutput}
-\end{Schunk}
+<<depvar,cache=true>>=
+leblang2003$attack <- as.numeric(leblang2003$outcome != "no attack")
+leblang2003$defend <- as.numeric(leblang2003$outcome == "defense")
+flb <- outcome ~ capcont + lreserves + overval + creditgrow + USinterest +
+    service + contagion + prioratt - 1 | 1 | 1 | unifgov + lexports + preelec +
+    postelec + rightgov + realinterest + capcont + lreserves
+flb1 <- as.Formula(flb)
+flb2 <- update(flb1, attack + defend ~ .)
+
+leb1 <- egame12(flb1, data = leblang2003, link = "probit", type = "private")
+leb2 <- egame12(flb2, data = leblang2003, link = "probit", type = "private")
+@ %
+<<printdepvar>>=
+all.equal(coef(leb1), coef(leb2), check.attributes = FALSE)
+@ %
 The only difference is in the construction of the names of the utility
 equations.  When binary action indicators are used, the outcome names are
 inferred from the names of the action variables.  When numeric or factor outcome
 variables are used, their values/levels are used as the outcome names.
-\begin{Schunk}
-\begin{Sinput}
-R> cbind(leb1$equations, leb2$equations)
-\end{Sinput}
-\begin{Soutput}
-     [,1]              [,2]                
-[1,] "u1(no attack)"   "u1(~attack)"       
-[2,] "u1(devaluation)" "u1(attack,~defend)"
-[3,] "u1(defense)"     "u1(attack,defend)" 
-[4,] "u2(defense)"     "u2(attack,defend)" 
-\end{Soutput}
-\end{Schunk}
+<<depvarnames>>=
+cbind(leb1$equations, leb2$equations)
+@ %
 The methods for specifying the dependent variable differ slightly
 across models; see the help page of each fitting function for a list of
 allowable specifications.
@@ -771,12 +739,10 @@ the \code{boot} argument of the model functions.  To run the bootstrap on a
 model that has already been estimated, use \code{update} as in the next example.
 A status bar is printed by default, but it can be suppressed by setting
 \code{bootreport = FALSE}.
-\begin{Schunk}
-\begin{Sinput}
-R> set.seed(42)  # for reproducibility
-R> leb1 <- update(leb1, boot = 100)
-\end{Sinput}
-\end{Schunk}
+<<boot,cache=true>>=
+set.seed(42)  # for reproducibility
+leb1 <- update(leb1, boot = 100)
+@ %
 % doing this manually b/c no printing from cached blocks
 \begin{Code}
 Running bootstrap iterations...
@@ -786,44 +752,9 @@ Bootstrap results are stored in the \code{boot.matrix} element of the fitted
 model object.  When a model has been bootstrapped, the default behavior of
 \code{summary.game} is to use the bootstrap results to calculate standard error
 estimates.
-\begin{Schunk}
-\begin{Sinput}
-R> summary(leb1)
-\end{Sinput}
-\begin{Soutput}
-Call:
-egame12(formulas = flb1, data = leblang2003, link = "probit", 
-    type = "private", boot = 100)
-
-Coefficients:
-                            Estimate Std. Error z value Pr(>|z|)
-u1(no attack):capcont        -0.4525     0.3352   -1.35  0.17710
-u1(no attack):lreserves       0.2292     0.0629    3.64  0.00027
-u1(no attack):overval        -0.4413     0.1400   -3.15  0.00162
-u1(no attack):creditgrow     -0.0648     0.0380   -1.71  0.08800
-u1(no attack):USinterest     -0.0505     0.0507   -1.00  0.31902
-u1(no attack):service        -0.0288     0.0401   -0.72  0.47291
-u1(no attack):contagion      -0.1159     0.0435   -2.66  0.00773
-u1(no attack):prioratt       -0.1218     0.0457   -2.66  0.00771
-u1(devaluation):(Intercept)  -3.6648     0.3855   -9.51  < 2e-16
-u1(defense):(Intercept)      -3.1385     0.4057   -7.74    1e-14
-u2(defense):(Intercept)       0.4269     1.7442    0.24  0.80663
-u2(defense):unifgov          -0.3568     0.3862   -0.92  0.35559
-u2(defense):lexports         -0.1997     0.1891   -1.06  0.29085
-u2(defense):preelec           1.6632     1.9215    0.87  0.38672
-u2(defense):postelec          1.0623     0.9031    1.18  0.23947
-u2(defense):rightgov         -0.9358     0.5176   -1.81  0.07058
-u2(defense):realinterest      1.7955     1.0693    1.68  0.09312
-u2(defense):capcont           0.0656     1.7098    0.04  0.96940
-u2(defense):lreserves         0.3099     0.2046    1.51  0.12985
-
-Standard errors estimated from bootstrap results
-
-Log-likelihood: -482.02
-AIC: 1002
-No. observations: 7240 
-\end{Soutput}
-\end{Schunk}
+<<printboot>>=
+summary(leb1)
+@ %
 To see the normal-theory standard errors instead, supply the option
 \code{useboot = FALSE} to the \code{summary} call.
 
@@ -850,41 +781,14 @@ as function of known covariates:
 The argument \code{sdformula} is used to estimate $\gamma$ for such a model.
 The formula should be one-sided, with nothing to the left of the \code{~}, as in
 the following example with the Leblang data.
-\begin{Schunk}
-\begin{Sinput}
-R> leb3 <- egame12(outcome ~ lreserves + overval - 1 | 1 | 1 | preelec +
-+                  realinterest, sdformula = ~ prioratt - 1, data = leblang2003,
-+                  link = "probit", type = "private")
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> summary(leb3)
-\end{Sinput}
-\begin{Soutput}
-Call:
-egame12(formulas = outcome ~ lreserves + overval - 1 | 1 | 1 | 
-    preelec + realinterest, data = leblang2003, link = "probit", 
-    type = "private", sdformula = ~prioratt - 1)
-
-Coefficients:
-                            Estimate Std. Error z value Pr(>|z|)
-u1(no attack):lreserves       0.2264     0.0464    4.88  1.1e-06
-u1(no attack):overval        -0.4381     0.0836   -5.24  1.6e-07
-u1(devaluation):(Intercept)  -3.0137     0.2470  -12.20  < 2e-16
-u1(defense):(Intercept)      -2.8410     0.2275  -12.49  < 2e-16
-u2(defense):(Intercept)      -0.0190     0.1988   -0.10   0.9239
-u2(defense):preelec           1.3690     0.6402    2.14   0.0325
-u2(defense):realinterest      1.4943     0.5610    2.66   0.0077
-log(sigma):prioratt           0.0427     0.0186    2.29   0.0221
-
-Standard errors estimated from inverse Hessian
-
-Log-likelihood: -495.37
-AIC: 1006.7
-No. observations: 7240 
-\end{Soutput}
-\end{Schunk}
+<<sdform,cache=true>>=
+leb3 <- egame12(outcome ~ lreserves + overval - 1 | 1 | 1 | preelec +
+                realinterest, sdformula = ~ prioratt - 1, data = leblang2003,
+                link = "probit", type = "private")
+@ %
+<<printsdform>>=
+summary(leb3)
+@ %
 The equation for the scale parameter coefficients is \code{log(sigma)}; for
 models with a logit link, it would be \code{log(lambda)}.  The positive
 coefficient on prior attacks indicates that outcomes are less predictable (since
@@ -902,37 +806,14 @@ is the outcome variable, so the \code{formulas} argument can be written in the
 form \code{y ~ .} or \code{y ~ 1}.  When the argument \code{fixedUtils} is used,
 the default behavior is to estimate a single common scale parameter, as in the
 next example.
-\begin{Schunk}
-\begin{Sinput}
-R> lebfixed <- egame12(outcome ~ ., data = leblang2003,
-+                      fixedUtils = c(1, -1, 0, 1), link = "probit", type =
-+                      "private")
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> summary(lebfixed)
-\end{Sinput}
-\begin{Soutput}
-Call:
-egame12(formulas = outcome ~ ., data = leblang2003, link = "probit", 
-    type = "private", fixedUtils = c(1, -1, 0, 1))
-
-Coefficients:
-           Estimate Std. Error z value Pr(>|z|)
-log(sigma)  -1.0513     0.0199   -52.9   <2e-16
-
-Standard errors estimated from inverse Hessian
-
-Fixed terms:
-  u1(no attack) u1(devaluation)     u1(defense)     u2(defense) 
-              1              -1               0               1 
-
-Log-likelihood: -646.54
-AIC: 1295.1
-No. observations: 7240 
-\end{Soutput}
-\end{Schunk}
+<<fixedutils,cache=true>>=
+lebfixed <- egame12(outcome ~ ., data = leblang2003,
+                    fixedUtils = c(1, -1, 0, 1), link = "probit", type =
+                    "private")
+@ %
+<<printfixedutils>>=
+summary(lebfixed)
+@ %
 Loosely speaking, the higher the estimated scale parameter relative to the
 utility values, the greater the role of uncertainty in each player's
 decisions. As before, \code{sdByPlayer} can be used to estimate a separate scale
@@ -979,45 +860,16 @@ experiment.  Each \code{gender} variable is an indicator for whether the
 proposer (1) or receiver (2) is female.  We investigate whether players'
 reservation values---the amount they get if the offer is rejected---is a
 function of their gender.
-\begin{Schunk}
-\begin{Sinput}
-R> load("ultimatum2010.rda")
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> ult1 <- ultimatum(offer + accept ~ gender1 | gender2, maxOffer = 100, data =
-+                    ultimatum2010, s2 = 3)
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> summary(ult1)
-\end{Sinput}
-\begin{Soutput}
-Call:
-ultimatum(formulas = offer + accept ~ gender1 | gender2, data = ultimatum2010, 
-    maxOffer = 100, s2 = 3)
-
-Coefficients:
-               Estimate Std. Error z value Pr(>|z|)
-R1:(Intercept)   62.198     18.734    3.32   0.0009
-R1:gender1      -25.409     39.290   -0.65   0.5178
-R2:(Intercept)   37.684      1.616   23.31   <2e-16
-R2:gender2       -0.897      1.150   -0.78   0.4355
-log(s1)           3.934      0.430    9.14   <2e-16
-
-Standard errors estimated from inverse Hessian
-
-Fixed terms:
-log(s2) 
- 1.0986 
-
-Log-likelihood: -292.14
-AIC: 594.27
-No. observations: 32 
-\end{Soutput}
-\end{Schunk}
+<<ult2010load>>=
+load("ultimatum2010.rda")
+@ %
+<<ult2010est,cache=true>>=
+ult1 <- ultimatum(offer + accept ~ gender1 | gender2, maxOffer = 100, data =
+                  ultimatum2010, s2 = 3)
+@ %
+<<printult1>>=
+summary(ult1)
+@ %
 The results indicate that the female students have lower reservation values,
 meaning they are more likely to make high offers (as the proposer) or accept low
 ones (as the receiver).  However, neither gender coefficient is statistically
@@ -1084,14 +936,12 @@ convergence check: if the log-likelihood of any of the refit models is greater
 than that of the original fit, then by definition the original procedure did not
 converge to a global maximum.  When this is the case, as in the following
 example, \code{profile.game} issues a warning.
-\begin{Schunk}
-\begin{Sinput}
-R> data("student_offers")
-R> stu1 <- ultimatum(offer + accept ~ gender1 | gender2, data = student_offers,
-+                    maxOffer = 100, s2 = 1)
-R> profstu1 <- profile(stu1, which = 1:4)
-\end{Sinput}
-\end{Schunk}
+<<profiling,cache=true,results=verbatim>>=
+data("student_offers")
+stu1 <- ultimatum(offer + accept ~ gender1 | gender2, data = student_offers,
+                  maxOffer = 100, s2 = 1)
+profstu1 <- profile(stu1, which = 1:4)
+@ %
 % must include manually since Sweave doesn't print errors
 \begin{Code}
 Warning message:
@@ -1105,15 +955,15 @@ the profile log-likelihood, we provide the \code{plot.profile.game} method,
 which displays a spline approximation.
 \begin{figure}[t]
   \centering
-\includegraphics{games-plotprof}
+<<plotprof,fig=true,echo=false>>=
+plot(profstu1)
+@ %
 \caption{Output of \code{plot.profile}.}
 \label{fig:plot-profile}
 \end{figure}
-\begin{Schunk}
-\begin{Sinput}
-R> plot(profstu1)
-\end{Sinput}
-\end{Schunk}
+<<eval=false,echo=true>>=
+<<plotprof>>
+@ %
 See Figure~\ref{fig:plot-profile} for the output from this example.  Slightly lower
 values of both the intercept and the gender coefficient for Player 1 appear to
 yield better-fitting models.
@@ -1121,90 +971,31 @@ yield better-fitting models.
 When \code{profile.game} finds parameters that yield a higher log-likelihood
 than the original fit, these can be used as starting values in re-estimation of
 the model via the \code{profile} argument of the fitting function.
-\begin{Schunk}
-\begin{Sinput}
-R> stu2 <- update(stu1, profile = profstu1)
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> logLik(stu1)
-\end{Sinput}
-\begin{Soutput}
-'log Lik.' -663.45 (df=5)
-\end{Soutput}
-\begin{Sinput}
-R> logLik(stu2)
-\end{Sinput}
-\begin{Soutput}
-'log Lik.' -663 (df=5)
-\end{Soutput}
-\end{Schunk}
+<<prof2,cache=true>>=
+stu2 <- update(stu1, profile = profstu1)
+@ %
+<<printprof2>>=
+logLik(stu1)
+logLik(stu2)
+@ %
 
 \subsection{Reporting results}
 \label{sec:report}
 
 %% have to break up long string to keep within margins in Sweave output
-%% latex table generated in R 2.14.1 by games package
-%% Sun Mar  4 18:21:01 2012
-%% remember to include \usepackage{multirow} in your preamble
+<<ltable,echo=false,results=tex>>=
+leb1cap <- paste("Replication of \\citeauthor{Leblang2003}'s",
+                 "\\citeyearpar{Leblang2003} results.")
+latexTable(leb1, caption = leb1cap,, label = "tab:leb1", floatplace = "p")
+@ %
 
-\begin{table}[p]
-\begin{center}
-\begin{tabular}{lcccc}
-\hline
- & u1(no attack) & u1(devaluation) & u1(defense) & u2(defense) \\
-\hline
-\multirow{2}{*}{(Intercept)} & \multirow{2}{*}{} & $-$3.6648 & $-$3.1385 & 0.4269 \\
- &  & (0.3855) & (0.4057) & (1.7442) \\[2pt]
-\multirow{2}{*}{capcont} & $-$0.4525 & \multirow{2}{*}{} & \multirow{2}{*}{} & 0.0656 \\
- & (0.3352) &  &  & (1.7098) \\[2pt]
-\multirow{2}{*}{lreserves} & 0.2292 & \multirow{2}{*}{} & \multirow{2}{*}{} & 0.3099 \\
- & (0.0629) &  &  & (0.2046) \\[2pt]
-\multirow{2}{*}{overval} & $-$0.4413 & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} \\
- & (0.1400) &  &  &  \\[2pt]
-\multirow{2}{*}{creditgrow} & $-$0.0648 & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} \\
- & (0.0380) &  &  &  \\[2pt]
-\multirow{2}{*}{USinterest} & $-$0.0505 & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} \\
- & (0.0507) &  &  &  \\[2pt]
-\multirow{2}{*}{service} & $-$0.0288 & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} \\
- & (0.0401) &  &  &  \\[2pt]
-\multirow{2}{*}{contagion} & $-$0.1159 & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} \\
- & (0.0435) &  &  &  \\[2pt]
-\multirow{2}{*}{prioratt} & $-$0.1218 & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} \\
- & (0.0457) &  &  &  \\[2pt]
-\multirow{2}{*}{unifgov} & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} & $-$0.3568 \\
- &  &  &  & (0.3862) \\[2pt]
-\multirow{2}{*}{lexports} & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} & $-$0.1997 \\
- &  &  &  & (0.1891) \\[2pt]
-\multirow{2}{*}{preelec} & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} & 1.6632 \\
- &  &  &  & (1.9215) \\[2pt]
-\multirow{2}{*}{postelec} & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} & 1.0623 \\
- &  &  &  & (0.9031) \\[2pt]
-\multirow{2}{*}{rightgov} & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} & $-$0.9358 \\
- &  &  &  & (0.5176) \\[2pt]
-\multirow{2}{*}{realinterest} & \multirow{2}{*}{} & \multirow{2}{*}{} & \multirow{2}{*}{} & 1.7955 \\
- &  &  &  & (1.0693) \\[2pt]
-\hline \hline
-Log-likelihood & $-$482.0155 \\
- $N$ & 7240\\
-\hline
-\end{tabular}
-\end{center}
-\caption{Replication of \citeauthor{Leblang2003}'s \citeyearpar{Leblang2003} results.}
-\label{tab:leb1}
-\end{table}
 A natural form to present the results of a fitted strategic model is in a table
 where each row is a covariate and each column is a utility equation.  We provide
 the function \code{latexTable} to automatically generate \LaTeX\ code for such
 tables.  Table~\ref{tab:leb1} was generated with the following code:
-\begin{Schunk}
-\begin{Sinput}
-R> leb1cap <- paste("Replication of \\citeauthor{Leblang2003}'s",
-+                   "\\citeyearpar{Leblang2003} results.")
-R> latexTable(leb1, caption = leb1cap,, label = "tab:leb1", floatplace = "p")
-\end{Sinput}
-\end{Schunk}
+<<printltable,eval=false,echo=true>>=
+<<ltable>>
+@ %
 Additional arguments include \code{digits} for the number of digits printed,
 \code{rowsep} for the point spacing between rows, and \code{useboot} for the use
 of bootstrap vs.\ normal-theory standard errors.
@@ -1215,10 +1006,16 @@ of bootstrap vs.\ normal-theory standard errors.
 \subsection{Predicted probabilities}
 \label{sec:pred-prob}
 
+<<pp1,cache=true,echo=false>>=
+predleb1 <- predProbs(leb1, x = "lreserves", contagion = max(contagion))
+@ %
 
 \begin{figure}[t]
   \centering
-\includegraphics{games-plotpp}
+<<plotpp,fig=true,echo=false>>=
+par(mfrow=c(2, 2))
+plot(predleb1)
+@ %
 \caption{Output of \code{plot.predProbs}.}
 \label{fig:plot-pp}
 \end{figure}
@@ -1281,11 +1078,9 @@ the estimated effect of currency reserves on the outcome probabilities when
 contagion is high (currency attacks are occurring elsewhere) but all other
 variables are held at their central values.  We would use \code{predProbs} as
 follows.
-\begin{Schunk}
-\begin{Sinput}
-R> predleb1 <- predProbs(leb1, x = "lreserves", contagion = max(contagion))
-\end{Sinput}
-\end{Schunk}
+<<echo=true,eval=false>>=
+<<pp1>>
+@ %
 % doing this manually b/c no printing from cached blocks
 \begin{Code}
 Calculating confidence intervals...
@@ -1303,12 +1098,9 @@ to the number of outcomes in the corresponding fitted model (e.g., three for an
 \code{egame12} model).  To deal with this, we have written \code{plot.predProbs}
 to behave similarly to \code{plot.gam} in the \pkg{gam} package \citep{gampkg},
 in which each fitted model corresponds to as many plots as there are covariates.
-\begin{Schunk}
-\begin{Sinput}
-R> par(mfrow=c(2, 2))
-R> plot(predleb1)
-\end{Sinput}
-\end{Schunk}
+<<echo=true,eval=false>>=
+<<plotpp>>
+@ %
 See Figure~\ref{fig:plot-pp} for the output.  If no additional arguments are
 specified to \code{plot.predProbs(x)}, all of the plots are printed in sequence.
 If \code{ask = TRUE} is specified, then an interactive menu is used for plot
@@ -1348,26 +1140,12 @@ correction to penalize overparameterization.
 The simplest use of the non-nested test functions is to compare two strategic
 models to each other.  For example, we can use them to determine whether agent
 error or private information is more appropriate for Leblang's data.
-\begin{Schunk}
-\begin{Sinput}
-R> lebagent <- update(leb1, type = "agent", boot = 0)
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> vuong(leb1, lebagent)
-\end{Sinput}
-\begin{Soutput}
-Vuong test for non-nested models
-
-Model 1 log-likelihood: -482
-Model 2 log-likelihood: -482
-Observations: 7240
-Test statistic: -0.15
-
-Neither model is significantly preferred (p = 0.88)
-\end{Soutput}
-\end{Schunk}
+<<lebagent,cache=true>>=
+lebagent <- update(leb1, type = "agent", boot = 0)
+@ %
+<<lebtest>>=
+vuong(leb1, lebagent)
+@ %
 Neither stochastic structure appears to be significantly preferred over the
 other.
 
@@ -1382,28 +1160,14 @@ comparisons in such cases, the \code{vuong} and \code{clarke} functions have
 \code{outcome} arguments.  For example, we could compare the strategic model of
 Leblang's data to a logistic regression in terms of their ability to predict the
 occurrence of speculative attacks as follows.
-\begin{Schunk}
-\begin{Sinput}
-R> leblang2003$noattack <- 1 - leblang2003$attack
-R> logit1 <- glm(noattack ~ lreserves + overval + creditgrow + contagion + prioratt
-+                + rightgov + realinterest, data = leblang2003, family = binomial)
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> vuong(model1 = leb1, outcome1 = 1, model2 = logit1)
-\end{Sinput}
-\begin{Soutput}
-Vuong test for non-nested models
-
-Model 1 log-likelihood: -430
-Model 2 log-likelihood: -431
-Observations: 7240
-Test statistic: -9.8
-
-Model 2 is preferred (p < 2e-16)
-\end{Soutput}
-\end{Schunk}
+<<leblogit,cache=true>>=
+leblang2003$noattack <- 1 - leblang2003$attack
+logit1 <- glm(noattack ~ lreserves + overval + creditgrow + contagion + prioratt
+              + rightgov + realinterest, data = leblang2003, family = binomial)
+@ %
+<<lebvslogit>>=
+vuong(model1 = leb1, outcome1 = 1, model2 = logit1)
+@ %
 The logistic regression is preferred despite having a lower log-likelihood,
 since it fits 8 parameters compared to the strategic model's 19.  The argument
 \code{outcome1 = 1} is used to indicate that the strategic model should be
