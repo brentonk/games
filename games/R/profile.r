@@ -120,12 +120,12 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
         maxOffer <- acc <- offerOnly <- offertol <- NULL
     }
 
-    ## Special stuff for egame12cor models
-    if (inherits(fitted, "egame12cor")) {
-        gridsize <- fitted$gridsize
-    } else {
-        gridsize <- NULL
-    }
+    ## ## Special stuff for egame12cor models
+    ## if (inherits(fitted, "egame12cor")) {
+    ##     gridsize <- fitted$gridsize
+    ## } else {
+    ##     gridsize <- NULL
+    ## }
 
     ## retrieve the appropriate log-likelihood and gradient, based on the type
     ## of model.  this relies on the class attribute of the object being ordered
@@ -134,13 +134,13 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
     ## like the "family" attribute of glm objects
     logLik <- switch(class(fitted)[2],
                      egame12 = logLik12,
-                     egame12cor = logLik12cor,
+                     ## egame12cor = logLik12cor,
                      egame122 = logLik122,
                      egame123 = logLik123,
                      ultimatum = logLikUlt)
     logLikGrad <- switch(class(fitted)[2],
                          egame12 = logLikGrad12,
-                         egame12cor = NULL,
+                         ## egame12cor = NULL,
                          egame122 = logLikGrad122,
                          egame123 = logLikGrad123,
                          ultimatum = logLikGradUlt)
