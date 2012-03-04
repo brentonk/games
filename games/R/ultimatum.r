@@ -2,6 +2,8 @@
 ##' @include helpers.r
 NULL
 
+##' Lambert's W
+##' 
 ##' Solves for W in the equation \eqn{W e^W = x}{W * exp(W) = x}.
 ##'
 ##' The function is based on the code given in Barry et al. (1995).  It is used
@@ -9,7 +11,6 @@ NULL
 ##'
 ##' If negative values of \code{x} are supplied, \code{NaN}s will likely be
 ##' returned.
-##' @title Lambert's W
 ##' @param x vector of values to solve for.
 ##' @return Solutions to Lambert's W for each value in \code{x}.
 ##' @export
@@ -232,6 +233,8 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
     return(ans)
 }
 
+##' Statistical ultimatum game
+##' 
 ##' Estimates the statistical ultimatum game described in Ramsay and Signorino
 ##' (2009), illustrated below in "Details".
 ##'
@@ -272,7 +275,6 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##'
 ##' Numerical instability is not uncommon in the statistical ultimatum game,
 ##' especially when the scale parameters are being estimated.
-##' @title Statistical ultimatum game
 ##' @param formulas a list of two formulas, or a \code{\link{Formula}} object
 ##' with two right-hand sides.  See "Details" and the examples below.
 ##' @param data data frame containing the variables in the model.

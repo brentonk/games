@@ -2,15 +2,18 @@
 ##' 
 ##' @name games-package
 ##' @docType package
+##' @section Acknowledgements: We thank the Wallis Institute of Political
+##' Economy for financial support.
 ##' @references
 ##' Curtis S. Signorino.  2003.  "Structure and Uncertainty
 ##' in Discrete Choice Models."  \emph{Political Analysis} 11:316--344.
 NULL
 
+##' Print a strategic model object
+##' 
 ##' The default method for printing a \code{game} object.
 ##'
 ##' Prints the call and coefficients of a fitted strategic model.
-##' @title Print a strategic model object
 ##' @param x a fitted model of class \code{game}
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly
@@ -75,12 +78,13 @@ print.game <- function(x, ...)
     invisible(oldx)
 }
 
+##' Summarize a strategic model object
+##' 
 ##' The default method for summarizing a \code{game} object.
 ##'
 ##' Forms the standard regression results table from a fitted strategic model.
 ##' Normally used interactively, in conjunction with
 ##' \code{\link{print.summary.game}}.
-##' @title Summarize a strategic model object
 ##' @method summary game
 ##' @S3method summary game
 ##' @param object a fitted model of class \code{game}
@@ -120,11 +124,12 @@ summary.game <- function(object, useboot = TRUE, ...)
     return(ans)
 }
 
+##' Print strategic model summary
+##' 
 ##' Print output from \code{summary.game}
 ##'
 ##' Prints the standard regression results table from a fitted strategic model,
 ##' along with the log-likelihood, AIC, and number of observations.
-##' @title Print strategic model summary
 ##' @method print summary.game
 ##' @S3method print summary.game
 ##' @param x an object of class \code{summary.game}, typically produced by
@@ -190,6 +195,8 @@ logLik.summary.game <- function(object, ...)
     return(ans)
 }
 
+##' Predicted probabilities for strategic models
+##' 
 ##' Makes predicted probabilities from a strategic model.
 ##'
 ##' This method uses a fitted strategic model to make predictions for a new
@@ -198,7 +205,6 @@ logLik.summary.game <- function(object, ...)
 ##' For many uses, such as analyzing the marginal effect of a particular
 ##' independent variable, the function \code{\link{predProbs}} will be more
 ##' convenient.
-##' @title Predicted probabilities for strategic models
 ##' @aliases predict.game predict.egame12 predict.egame122 predict.egame123
 ##' predict.ultimatum
 ##' @usage

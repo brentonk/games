@@ -200,6 +200,8 @@ nonnest <- function(model1, model2, outcome1, outcome2)
     return(list(n = n, loglik1 = loglik1, loglik2 = loglik2, p1 = p1, p2 = p2))
 }
 
+##' Non-nested model tests
+##' 
 ##' Perform Vuong's (1989) or Clarke's (2007) test for non-nested model
 ##' selection.
 ##'
@@ -236,7 +238,6 @@ nonnest <- function(model1, model2, outcome1, outcome2)
 ##' whether war occurs, the dependent variable for each observation is a
 ##' scalar.  To compare these models, it is necessary to specify \code{outcome1
 ##' = 3}.
-##' @title Non-nested model tests
 ##' @aliases vuong clarke
 ##' @usage vuong(model1, model2, outcome1=NULL, outcome2=NULL, level=0.05, digits=2)
 ##' clarke(model1, model2, outcome1=NULL, outcome2=NULL, level=0.05, digits=2)

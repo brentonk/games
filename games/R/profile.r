@@ -2,6 +2,8 @@
 ##' @include helpers.r
 NULL
 
+##' Likelihood profiles for fitted strategic models
+##' 
 ##' Calculate profile likelihood to assess convergence of a model.
 ##'
 ##' Likelihood profiling can help determine if a model fit failed to reach a
@@ -27,7 +29,6 @@ NULL
 ##' confidence intervals for regression coefficients, whereas this one is for
 ##' diagnosing non-convergence.  Future versions of the \pkg{games} package may
 ##' incorporate the confidence interval functionality as well.
-##' @title Likelihood profiles for fitted strategic models
 ##' @param fitted a fitted model of class \code{game}.
 ##' @param which integer vector giving the indices of the parameters to be
 ##' profiled.  The default is to use all parameters.  Parameters that were held
@@ -219,6 +220,8 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
     return(ans)
 }
 
+##' Plot profiles of strategic model log-likelihoods
+##' 
 ##' Plot output of \code{\link{profile.game}}.
 ##'
 ##' This method provides plots for a quick assessment of whether \code{game}
@@ -232,7 +235,6 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
 ##' non-covergence warning.  This is an artifact of the interpolation, which can
 ##' be confirmed by re-running \code{plot.profile.game} with the argument
 ##' \code{show.pts = TRUE}.
-##' @title Plot profiles of strategic model log-likelihoods
 ##' @param x an object of class \code{profile.game}, typically created by
 ##' running \code{\link{profile.game}} on a fitted \code{game} model
 ##' @param show.pts logical: plot a point for the log-likelihood of each

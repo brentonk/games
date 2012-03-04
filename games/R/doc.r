@@ -1,6 +1,8 @@
 ##' @include games.r
 NULL
 
+##' 19th-century international disputes
+##' 
 ##' Dataset of militarized international disputes between 1816 and 1899.
 ##'
 ##' The dataset is taken from the Correlates of War project.  The unit of
@@ -34,7 +36,6 @@ NULL
 ##' }
 ##' @name war1800
 ##' @usage data(war1800)
-##' @title 19th-century international disputes
 ##' @docType data
 ##' @references Daniel M. Jones, Stuart A. Bremer and J. David Singer.  1996.
 ##' "Militarized Interstate Disputes, 1816-1992: Rationale, Coding Rules, and
@@ -44,6 +45,8 @@ NULL
 ##' @keywords data
 NULL
 
+##' Currency attacks
+##' 
 ##' Data on speculative currency attacks and devaluation decisions for 90
 ##' countries from 1985 to 1998.
 ##'
@@ -89,7 +92,6 @@ NULL
 ##' (as of 2010-03-01).
 ##' @name leblang2003
 ##' @usage data(leblang2003)
-##' @title Currency attacks
 ##' @docType data
 ##' @references David Leblang.  2003.  "To Defend or Devalue: The Political
 ##' Economy of Exchange Rate Policy."  \emph{International Studies Quarterly}
@@ -107,6 +109,8 @@ NULL
 ##' summary(m1)
 NULL
 
+##' Simulated egame122 data
+##' 
 ##' Simulated data for illustrating \code{\link{egame122}}.
 ##'
 ##' The variables are: \describe{
@@ -119,12 +123,13 @@ NULL
 ##' }
 ##' @name data_122
 ##' @usage data(data_122)
-##' @title Simulated egame122 data
 ##' @docType data
 ##' @seealso \code{\link{egame122}}
 ##' @keywords data
 NULL
 
+##' Simulated egame123 data
+##' 
 ##' Simulated data for illustrating \code{\link{egame123}}.
 ##'
 ##' The variables are: \describe{
@@ -138,12 +143,13 @@ NULL
 ##' }
 ##' @name data_123
 ##' @usage data(data_123)
-##' @title Simulated egame123 data
 ##' @docType data
 ##' @seealso \code{\link{egame123}}
 ##' @keywords data
 NULL
 
+##' Simulated ultimatum data
+##' 
 ##' Simulated data for illustrating \code{\link{ultimatum}}.
 ##'
 ##' The variables are: \describe{
@@ -157,12 +163,13 @@ NULL
 ##' The maximum offer size is 15.
 ##' @name data_ult
 ##' @usage data(data_ult)
-##' @title Simulated ultimatum data
 ##' @docType data
 ##' @seealso \code{\link{ultimatum}}
 ##' @keywords data
 NULL
 
+##' Data from students playing the ultimatum game
+##' 
 ##' Data from a trial of the ultimatum game with graduate students.
 ##'
 ##' The variables are: \describe{
@@ -175,7 +182,6 @@ NULL
 ##' The maximum offer size is 100.
 ##' @name student_offers
 ##' @usage data(student_offers)
-##' @title Data from students playing the ultimatum game
 ##' @docType data
 ##' @seealso \code{\link{ultimatum}}
 ##' @keywords data

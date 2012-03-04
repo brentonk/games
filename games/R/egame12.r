@@ -250,6 +250,8 @@ makeResponse12 <- function(yf)
     return(yf)
 }
 
+##' Strategic model with 2 players, 3 terminal nodes
+##' 
 ##' Fits a strategic model with two players and three terminal nodes, as in the
 ##' game illustrated below in "Details".
 ##'
@@ -325,7 +327,6 @@ makeResponse12 <- function(yf)
 ##' method by default (see \code{\link{maxBFGS}}).  Use the \code{method}
 ##' argument to specify an alternative from among those supplied by
 ##' \code{maxLik}.
-##' @title Strategic model with 2 players, 3 terminal nodes
 ##' @param formulas a list of four formulas, or a \code{\link{Formula}} object
 ##' with four right-hand sides.  See "Details" and the examples below.
 ##' @param data a data frame containing the variables in the model.

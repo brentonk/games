@@ -320,6 +320,8 @@ makeResponse123 <- function(yf)
     return(yf)
 }
 
+##' Strategic model with 3 players, 4 terminal nodes
+##' 
 ##' Fits a strategic model with three players and four terminal nodes, as in the
 ##' game illustrated below in "Details".
 ##'
@@ -357,7 +359,6 @@ makeResponse123 <- function(yf)
 ##' and \code{y3} (where the game ended before the move could be made) should be
 ##' set to \code{0}, \strong{not} \code{NA}, to ensure that observations are not
 ##' dropped when \code{na.action = na.omit}.}
-##' @title Strategic model with 3 players, 4 terminal nodes
 ##' @param formulas a list of eight formulas, or a \code{\link{Formula}} object
 ##' with eight right-hand sides.  See "Details" and "Examples".
 ##' @param data a data frame.

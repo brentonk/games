@@ -24,6 +24,8 @@ latexEsc <- function(x)
     return(x)
 }
 
+##' LaTeX table for strategic models
+##' 
 ##' Makes a LaTeX table of strategic model results.
 ##'
 ##' \code{latexTable} prints LaTeX code for the presentation of results from a
@@ -42,7 +44,6 @@ latexEsc <- function(x)
 ##' 
 ##' The \code{digits} option does not yet work seamlessly; you may have to
 ##' resort to trial and error.
-##' @title LaTeX table for strategic models
 ##' @param x a fitted model of class \code{game}.
 ##' @param digits number of digits to print.
 ##' @param scientific logical or integer value to control use of scientific

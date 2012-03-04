@@ -2,11 +2,12 @@
 ##' @include helpers.r
 NULL
 
+##' Mode of a vector
+##' 
 ##' Finds the modal value of a vector of any class.
 ##'
 ##' Based on code from the R wiki:
 ##' \url{http://rwiki.sciviews.org/doku.php?id=tips:stats-basic:modalvalue}.
-##' @title Mode of a vector
 ##' @param x a vector (lists and arrays will be flattened).
 ##' @param na.rm logical: strip \code{NA} values?
 ##' @return The value of \code{x} that occurs most often.  If there is a tie,
@@ -180,6 +181,8 @@ CIfromBoot <- function(x, newdata, ci = .95, type, report = TRUE)
     return(list(lows = lows, highs = highs))
 }
 
+##' User-friendly predicted probability analysis
+##' 
 ##' Easy generation and plotting of predicted probabilities from a fitted
 ##' strategic model.
 ##'
@@ -218,7 +221,6 @@ CIfromBoot <- function(x, newdata, ci = .95, type, report = TRUE)
 ##' \code{\link{plot.predProbs}}.  The plots are made with base graphics.  If you
 ##' prefer to use an alternative graphics package, all the information necessary
 ##' to make the plots is included in the data frame returned.
-##' @title User-friendly predicted probability analysis
 ##' @param model a fitted model of class \code{game}.
 ##' @param x character string giving the name of the variable to place "on the
 ##' x-axis" while all others are held constant.  Partial matches are accepted.
@@ -382,6 +384,8 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ## and some of the code below closely matches it.
 ## -----------------------------------------------------------------------------
 
+##' Plot predicted probabilities
+##' 
 ##' Plots predicted probabilities and associated confidence bands, using the
 ##' data returned from a call to \code{\link{predProbs}}.
 ##'
@@ -395,7 +399,6 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ##' \code{par(mfrow = ...)}).  The argument \code{ask} displays a menu to select
 ##' among the possible plots for a given object, and \code{which} allows for
 ##' this to be done non-interactively.
-##' @title Plot predicted probabilities
 ##' @param x an object of class \code{predProbs} (i.e., a data frame returned by
 ##' \code{\link{predProbs}}).
 ##' @param which optional integer specifying which plot (as numbered in the menu

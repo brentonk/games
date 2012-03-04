@@ -2,6 +2,8 @@
 ##' @include helpers.r
 NULL
 
+##' Model formula construction
+##' 
 ##' Interactive prompt for constructing model formulas.
 ##'
 ##' All of the staistical models in the \pkg{games} package require the
@@ -52,7 +54,6 @@ NULL
 ##' It is \strong{not} necessary to use \code{makeFormulas} to specify model
 ##' formulas.  See the help file of each model for examples of "manually" making
 ##' the formula.
-##' @title Model formula construction
 ##' @param model name of the model (must be from the \pkg{games} package) for
 ##' which to make a formula.
 ##' @param outcomes character vector with descriptions of the possible outcomes
