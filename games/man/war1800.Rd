@@ -1,0 +1,52 @@
+\docType{data}
+\name{war1800}
+\alias{war1800}
+\title{19th-century international disputes}
+\usage{
+data(war1800)
+}
+\description{
+Dataset of militarized international disputes between 1816 and 1899.
+}
+\details{
+The dataset is taken from the Correlates of War project.  The unit of
+observation is the dyad-year, and the variables are: \describe{
+\item{\code{ccode1}}{Initiator's COW country code}
+\item{\code{ccode2}}{Respondent's COW country code}
+\item{\code{year}}{Year of dispute}
+\item{\code{cap_1}}{Initiator's military capabilities (as percent of total
+system capabilities)}
+\item{\code{cap_2}}{Respondent's military capabilities (as percent of total
+system capabilities)}
+\item{\code{balanc}}{Balance of dyadic capabilities possessed by the
+initiator (i.e., \code{cap_1 / (cap_1 + cap_2)})}
+\item{\code{s_wt_re1}}{Dyadic S-score (see Signorino and Ritter 1998),
+weighted by initiator's region}
+\item{\code{s_wt_re2}}{Dyadic S-score, weighted by respondent's region}
+\item{\code{dem1}}{Initiator's Polity score}
+\item{\code{dem2}}{Respondent's Polity score}
+\item{\code{distance}}{Distance (in miles) between initiator and respondent}
+\item{\code{peaceyrs}}{Years since last dispute in this dyad}
+\item{\code{midnum}}{Dispute's number in the MID data set}
+\item{\code{revis1}}{Whether the initiator had "revisionist" aims}
+\item{\code{revis2}}{Whether the respondent had "revisionist" aims}
+\item{\code{sq}}{Indicator for status quo outcome}
+\item{\code{capit}}{Indicator for capitulation outcome}
+\item{\code{war}}{Indicator for war outcome}
+\item{\code{esc}}{Indicator for escalation (i.e., either capitulation or war
+occurs)}
+\item{\code{regime1}}{Initiator's regime type (calculated from \code{dem1})}
+\item{\code{regime2}}{Respondent's regime type (calculated from \code{dem2})}
+}
+}
+\references{
+Daniel M. Jones, Stuart A. Bremer and J. David Singer.  1996.
+"Militarized Interstate Disputes, 1816-1992: Rationale, Coding Rules, and
+Empirical Patterns." \emph{Conflict Management and Peace Science} 15(2):
+163--213.
+}
+\seealso{
+\code{\link{egame12}}
+}
+\keyword{data}
+

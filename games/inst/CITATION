@@ -1,0 +1,20 @@
+citHeader("To cite games in publications use:")
+
+citEntry(entry = "Article",
+  title        = "Estimating Extensive Form Games in {R}",
+  author       = personList(as.person("Brenton Kenkel"),
+                   as.person("Curtis S. Signorino")),
+  journal      = "Journal of Statistical Software",
+  year         = "2014",
+  volume       = "56",
+  number       = "8",
+  pages        = "1--27",
+  url          = "http://www.jstatsoft.org/v56/i08/",
+
+  textVersion  =
+  paste("Brenton Kenkel, Curtis S. Signorino (2014).",
+        "Estimating Extensive Form Games in R.",
+        "Journal of Statistical Software, 56(8), 1-27.",
+        "URL http://www.jstatsoft.org/v56/i08/.")
+)
+

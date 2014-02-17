@@ -396,16 +396,10 @@ makeResponse122 <- function(yf)
 ##' m3 <- egame122(fr3, data = data_122, sdformula = ~ x4 + z3 - 1)
 ##' summary(m3)
 ##'
-##' m4 <- egame122(fr3, data = data_122, sdformula = ~ x4 - 1 | z3 - 1, sdByPlayer = TRUE)
-##' summary(m4)
-##'
 ##' ## fixed utilities
 ##' utils <- c(0.25, -0.25, 0, 0.25, 0.5, -0.5)
-##' m5 <- egame122(y ~ 1, data = data_122, fixedUtils = utils)
-##' summary(m5)
-##'
-##' m6 <- egame122(y ~ 1, data = data_122, fixedUtils = utils, sdByPlayer = TRUE)
-##' summary(m6)
+##' m4 <- egame122(y ~ 1, data = data_122, fixedUtils = utils)
+##' summary(m4)
 egame122 <- function(formulas, data, subset, na.action,
                      link = c("probit", "logit"),
                      type = c("agent", "private"),

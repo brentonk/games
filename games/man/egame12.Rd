@@ -1,0 +1,246 @@
+\name{egame12}
+\alias{egame12}
+\title{Strategic model with 2 players, 3 terminal nodes}
+\usage{
+egame12(formulas, data, subset, na.action, link = c("probit", "logit"),
+  type = c("agent", "private"), startvals = c("sbi", "unif", "zero"),
+  fixedUtils = NULL, sdformula = NULL, sdByPlayer = FALSE, boot = 0,
+  bootreport = TRUE, profile, method = "BFGS", ...)
+}
+\arguments{
+  \item{formulas}{a list of four formulas, or a
+  \code{\link{Formula}} object with four right-hand sides.
+  See "Details" and the examples below.}
+
+  \item{data}{a data frame containing the variables in the
+  model.}
+
+  \item{subset}{optional logical expression specifying
+  which observations from \code{data} to use in fitting.}
+
+  \item{na.action}{how to deal with \code{NA}s in
+  \code{data}.  Defaults to the \code{na.action} setting of
+  \code{\link{options}}.  See \code{\link{na.omit}}.}
+
+  \item{link}{whether to use a probit (default) or logit
+  link structure,}
+
+  \item{type}{whether to use an agent-error ("agent",
+  default) or private-information ("private") stochastic
+  structure.}
+
+  \item{startvals}{whether to calculate starting values for
+  the optimization using statistical backwards induction
+  ("sbi", default), draw them from a uniform distribution
+  ("unif"), or to set them all to 0 ("zero")}
+
+  \item{fixedUtils}{numeric vector of values to fix for
+  u11, u13, u14, and u24 respectively.  \code{NULL} (the
+  default) indicates that these should be estimated with
+  regressors rather than fixed.}
+
+  \item{sdformula}{an optional list of formulas or a
+  \code{\link{Formula}} containing a regression equation
+  for the scale parameter.  The formula(s) should have
+  nothing on the left-hand side; the right-hand side should
+  have one equation if \code{sdByPlayer} is \code{FALSE}
+  and two equations if \code{sdByPlayer} is \code{TRUE}.
+  See the examples below for how to specify
+  \code{sdformula}.}
+
+  \item{sdByPlayer}{logical: if scale parameters are being
+  estimated (i.e., \code{sdformula} or \code{fixedUtils} is
+  non-\code{NULL}), should a separate one be estimated for
+  each player?  This option is ignored unless
+  \code{fixedUtils} or \code{sdformula} is specified.}
+
+  \item{boot}{integer: number of bootstrap iterations to
+  perform (if any).}
+
+  \item{bootreport}{logical: whether to print status bar
+  when performing bootstrap iterations.}
+
+  \item{profile}{output from running
+  \code{\link{profile.game}} on a previous fit of the
+  model, used to generate starting values for refitting
+  when an earlier fit converged to a non-global maximum.}
+
+  \item{method}{character string specifying which
+  optimization routine to use (see \code{\link{maxLik}})}
+
+  \item{...}{other arguments to pass to the fitting
+  function (see \code{\link{maxLik}}).}
+}
+\value{
+An object of class \code{c("game", "egame12")}. A
+\code{game} object is a list containing: \describe{
+\item{\code{coefficients}}{estimated parameters of the model.}
+\item{\code{vcov}}{estimated variance-covariance matrix.  Cells referring to
+a fixed parameter (e.g., a utility when \code{fixedUtils} is specified) will
+contain \code{NA}s.}
+\item{\code{log.likelihood}}{vector of individual log likelihoods (left
+unsummed for use with non-nested model tests).}
+\item{\code{call}}{the call used to produce the model.}
+\item{\code{convergence}}{a list containing the optimization method used
+(see argument \code{method}), the number of iterations to convergence, the
+convergence code and message returned by \code{\link{maxLik}}, and an
+indicator for whether the (analytic) gradient was used in fitting.}
+\item{\code{formulas}}{the final \code{Formula} object passed to
+\code{model.frame} (including anything specified for the scale parameters).}
+\item{\code{link}}{the specified link function.}
+\item{\code{type}}{the specified stochastic structure (i.e., agent error or
+private information).}
+\item{\code{model}}{the model frame containing all variables used in
+fitting.}
+\item{\code{xlevels}}{a record of the levels of any factor regressors.}
+\item{\code{y}}{the dependent variable, represented as a factor.}
+\item{\code{equations}}{names of each separate equation (e.g.,
+"u1(sq)", "u1(cap)", etc.).}
+\item{\code{fixed}}{logical vector specifying which parameter values, if
+any, were fixed in the estimation procedure.}
+\item{\code{boot.matrix}}{if \code{boot} was non-zero, a matrix of bootstrap
+parameter estimates (otherwise \code{NULL}).}
+\item{\code{localID}}{an indicator for whether the Hessian matrix is
+negative definite, a sufficient condition for local identification of the
+model parameters.}
+}
+The second class of the returned object, \code{egame12}, is for use in
+generation of predicted probabilities.
+}
+\description{
+Fits a strategic model with two players and three terminal nodes, as in the
+game illustrated below in "Details".
+}
+\details{
+The model corresponds to the following extensive-form game, described in
+Signorino (2003):
+\preformatted{
+.     1
+.     /\
+.    /  \
+.   /    \ 2
+.  u11   /\
+.       /  \
+.      /    \
+.    u13    u14
+.    0      u24}
+
+If Player 1 chooses L, the game ends and Player 1 receives payoffs of u11.
+(Player 2's utilities in this case cannot be identified in a statistical
+model.)  If Player 1 chooses L, then Player 2 can choose L, resulting in
+payoffs of u13 for Player 1 and 0 for Player 2, or R, with payoffs of u14
+for 1 and u24 for 2.
+
+The four equations specified in the function's \code{formulas} argument
+correspond to the regressors to be placed in u11, u13, u14, and u24
+respectively.  If there is any regressor (including the constant) placed in
+all of u11, u13, and u14, \code{egame12} will stop and issue an error
+message, because the model is then unidentified (see Lewis and Schultz
+2003).  There are two equivalent ways to express the formulas passed to this
+argument.  One is to use a list of four formulas, where the first contains
+the response variable(s) (discussed below) on the left-hand side and the
+other three are one-sided.  For instance, suppose:
+\itemize{
+\item u11 is a function of \code{x1}, \code{x2}, and a constant
+\item u13 is set to 0
+\item u14 is a function of \code{x3} and a constant
+\item u24 is a function of \code{z} and a constant.}
+The list notation would be \code{formulas = list(y ~ x1 + x2, ~ 0, ~ x3, ~
+z)}.  The other method is to use the \code{\link{Formula}} syntax, with one
+left-hand side and four right-hand sides (separated by vertical bars).  This
+notation would be \code{formulas = y ~ x1 + x2 | 0 | x3 | z}.
+
+To fix a utility at 0, just use \code{0} as its equation, as in the example
+just given.  To estimate only a constant for a particular utility, use
+\code{1} as its equation.
+
+There are three equivalent ways to specify the outcome in \code{formulas}.
+One is to use a numeric vector with three unique values, with their values
+(from lowest to highest) corresponding with the terminal nodes of the game
+tree illustrated above (from left to right).  The second is to use a factor,
+with the levels (in order as given by \code{levels(y)}) corresponding to the
+terminal nodes.  The final way is to use two indicator variables, with the
+first standing for whether Player 1 moves L (0) or R (1), the second
+standing for Player 2's choice if Player 1 moves R.  (The values of the
+second when Player 1 moves L should be set to 0 or 1, \strong{not}
+\code{NA}, in order to ensure that observations are not dropped from the
+data when \code{na.action = na.omit}.)  The way to specify \code{formulas}
+when using indicator variables is, for example, \code{y1 + y2 ~ x1 + x2 | 0
+| x3 | z}.
+
+If \code{fixedUtils} or \code{sdformula} is specified, the estimated
+parameters will include terms labeled \code{log(sigma)} (for probit links)
+or \code{log(lambda)}.  These are the scale parameters of the stochastic
+components of the players' utility.  If \code{sdByPlayer} is \code{FALSE},
+then the variance of error terms (or the equation describing it, if
+\code{sdformula} contains non-constant regressors) is assumed to be common
+across all players.  If \code{sdByPlayer} is \code{TRUE}, then two variances
+(or equations) are estimated: one for each player.  For more on the
+interpretation of the scale parameters in these models and how it differs
+between the agent error and private information models, see Signorino
+(2003).
+
+The model is fit using \code{\link{maxLik}}, using the BFGS optimization
+method by default (see \code{\link{maxBFGS}}).  Use the \code{method}
+argument to specify an alternative from among those supplied by
+\code{maxLik}.
+}
+\examples{
+data(war1800)
+
+## the formula:
+f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | regime1 | balanc + regime2
+##    ^^^^^^^^^   ^^^^^^^^^^^^^^^^^   ^   ^^^^^^^   ^^^^^^^^^^^^^^^^
+##        y              u11         u13    u14           u24
+
+m1 <- egame12(f1, data = war1800)
+summary(m1)
+
+m2 <- egame12(f1, data = war1800, link = "logit")
+summary(m2)
+
+m3 <- egame12(f1, data = war1800, subset = year >= 1850)
+summary(m3)
+
+m4 <- egame12(f1, data = war1800, boot = 10)
+summary(m4)
+summary(m4, useboot = FALSE)
+
+## estimating scale parameters under fixed utilities
+utils <- c(-1, 0, -1.4, 0.1)
+m5 <- egame12(esc + war ~ 1, data = war1800, fixedUtils = utils)
+summary(m5)
+
+m6 <- egame12(esc + war ~ 1, data = war1800, fixedUtils = utils, sdByPlayer = TRUE)
+summary(m6)
+
+## estimating scale parameters with regressors
+m7 <- egame12(f1, data = war1800, sdformula = ~ balanc - 1)
+summary(m7)
+
+## using a factor outcome
+y <- ifelse(war1800$esc == 1, ifelse(war1800$war == 1, "war", "cap"), "sq")
+war1800$y <- factor(y, levels = c("sq", "cap", "war"))
+f2 <- update(Formula(f1), y ~ .)
+
+m8 <- egame12(f2, data = war1800)
+summary(m8)
+}
+\author{
+Brenton Kenkel (\email{brenton.kenkel@gmail.com}) and Curtis
+S. Signorino
+}
+\references{
+Jeffrey B. Lewis and Kenneth A Schultz.  2003.  "Revealing
+Preferences: Empirical Estimation of a Crisis Bargaining Game with
+Incomplete Information."  \emph{Political Analysis} 11:345--367.
+
+Curtis S. Signorino.  2003.  "Structure and Uncertainty in Discrete Choice
+Models."  \emph{Political Analysis} 11:316--344.
+}
+\seealso{
+\code{\link{summary.game}} and \code{\link{predProbs}} for
+postestimation analysis; \code{\link{makeFormulas}} for formula
+specification.
+}
+

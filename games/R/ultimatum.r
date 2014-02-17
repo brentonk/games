@@ -59,7 +59,8 @@ LW <- function(x)
     return(W4)
 }
 
-predict.ultimatum <- function(object, newdata, na.action = na.pass, ...)
+predict.ultimatum <- function(object, newdata, na.action = na.pass,
+                              n.sim = 1000, ...)
 {
     if (missing(newdata)) {
         mf <- object$model
@@ -89,11 +90,27 @@ predict.ultimatum <- function(object, newdata, na.action = na.pass, ...)
     b <- head(b, length(b) - ncol(Z))
     fit1 <- as.numeric(X %*% b)
     fit2 <- as.numeric(Z %*% g)
-    Q <- object$maxOffer
+    maxOffer <- object$maxOffer
+    minOffer <- object$minOffer
+
+    ## There isn't an analytic expression for the expected value of Player 1's
+    ## optimal offer, so we need to simulate
+    e1 <- matrix(rlogis(nrow(X) * n.sim, scale = s1), nrow = nrow(X))
+    bestOffer <- (maxOffer - fit1 - e1 - s2 - fit2) / s2
+    bestOffer <- exp(bestOffer)
+    bestOffer[bestOffer > .Machine$double.xmax] <- .Machine$double.xmax
+    bestOffer[bestOffer < .Machine$double.xmin] <- .Machine$double.xmin
+    bestOffer <- maxOffer - fit1 - e1 - s2 * (1 + LW(bestOffer))
+    offer <- bestOffer
+    offer[offer < minOffer] <- minOffer
+    offer[offer > maxOffer] <- maxOffer
+
+    e2 <- matrix(rlogis(nrow(X) * n.sim, scale = s2), nrow = nrow(X))
+    accept <- offer > fit2 + e2
 
     ## expected offer and probability of acceptance
-    Ey <- Q - fit1 - s2 * (1 + LW(exp((Q - fit1 - s2 - fit2) / s2)))
-    PrA <- 1 / (1 + exp(-(Ey - fit2) / s2))
+    Ey <- rowMeans(offer)
+    PrA <- rowMeans(accept)
 
     ans <- as.data.frame(cbind(Ey, PrA))
     names(ans) <- c("E(offer)", "Pr(accept)")
@@ -113,7 +130,7 @@ offerPDF <- function(y, maxOffer, fit1, fit2, s1, s2)
     return(ans)
 }
 
-logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
+logLikUlt <- function(b, y, acc, regr, minOffer=0, maxOffer, offerOnly, offertol, ...)
 {
     ## extract parameters
     s1 <- exp(b[length(b) - 1])
@@ -131,14 +148,14 @@ logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 
     ## probability of making an offer of 0 ('lowball') or the maximal offer
     ## ('highball'), and interior density of observed offer
-    lowball <- finiteProbs(offerCDF(0, maxOffer, fit1, fit2, s1, s2))
+    lowball <- finiteProbs(offerCDF(minOffer, maxOffer, fit1, fit2, s1, s2))
     highball <- finiteProbs(1 - offerCDF(maxOffer, maxOffer, fit1, fit2, s1,
                                          s2))
     interior <- offerPDF(y, maxOffer, fit1, fit2, s1, s2)
 
     ## identify maximal/minimal offers
     isMax <- abs(y - maxOffer) < offertol
-    isMin <- abs(y) < offertol
+    isMin <- abs(y - minOffer) < offertol
 
     ## evaulate log-likelihood for offers
     ans1 <- ifelse(isMax, highball, ifelse(isMin, lowball, interior))
@@ -157,10 +174,10 @@ logLikUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
     return(ans)
 }
 
-logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
+logLikGradUlt <- function(b, y, acc, regr, minOffer=0, maxOffer, offerOnly, offertol, ...)
 {
     isMax <- abs(y - maxOffer) < offertol
-    isMin <- abs(y) < offertol
+    isMin <- abs(y - minOffer) < offertol
 
     s1 <- exp(b[length(b) - 1])
     s2 <- exp(b[length(b)])
@@ -283,11 +300,13 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' @param na.action how to deal with \code{NA}s in \code{data}.  Defaults to
 ##' the \code{na.action} setting of \code{\link{options}}.  See
 ##' \code{\link{na.omit}}.
+##' @param minOffer numeric: the lowest offer Player 1 could feasibly make
+##' (default 0).
 ##' @param maxOffer numeric: the highest offer Player 1 could feasibly make.
-##' @param offertol numeric: offers within \code{offertol} of \code{maxOffer}
-##' will be considered to be at the maximum.  If \code{maxOffer} and all
-##' observed offers are integer-valued, the value of \code{offertol} should not
-##' matter.
+##' @param offertol numeric: offers within \code{offertol} of
+##' \code{minOffer}/\code{maxOffer} will be considered to be at the
+##' minimum/maximum.  (This is used to prevent floating-point problems and
+##' need not be changed in most applications.)
 ##' @param s1 numeric: scale parameter for Player 1.  If \code{NULL} (the
 ##' default), the parameter will be estimated.
 ##' @param s2 numeric: scale parameter for Player 2.  If \code{NULL} (the
@@ -335,7 +354,7 @@ logLikGradUlt <- function(b, y, acc, regr, maxOffer, offerOnly, offertol, ...)
 ##' ## fixing scale terms
 ##' m3 <- ultimatum(f1, data = data_ult, maxOffer = 15, s1 = 5, s2 = 1)
 ##' summary(m3)
-ultimatum <- function(formulas, data, subset, na.action,
+ultimatum <- function(formulas, data, subset, na.action, minOffer=0,
                       maxOffer, offertol = sqrt(.Machine$double.eps),
                       s1 = NULL, s2 = NULL,
                       outcome = c("both", "offer"),
@@ -380,7 +399,9 @@ ultimatum <- function(formulas, data, subset, na.action,
     }
     if (any(y > maxOffer))
         stop("observed offers greater than maxOffer")
-
+	if (sum(y<minOffer)>0)
+		stop("observed offer less than minOffer")
+		
     ## retrieve the regressors for each player's reservation value
     regr <- list()
     regr$X <- model.matrix(formulas, data = mf, rhs = 1)
@@ -403,8 +424,8 @@ ultimatum <- function(formulas, data, subset, na.action,
 
         ## see if the pseudo-sbi yields a finite log-likelihood; if not, just
         ## set everything to 0 except the constants
-        firstTry <- logLikUlt(sval, y = y, acc = a, regr = regr, maxOffer =
-                              maxOffer, offerOnly = offerOnly, offertol =
+        firstTry <- logLikUlt(sval, y = y, acc = a, regr = regr, minOffer=minOffer,
+        					  maxOffer = maxOffer, offerOnly = offerOnly, offertol =
                               offertol)
         if (!is.finite(sum(firstTry))) {
             sval <- c(maxOffer - mean(y), rep(0, length(m1$coefficients) - 1),
@@ -428,8 +449,8 @@ ultimatum <- function(formulas, data, subset, na.action,
 
     results <- maxLik(logLik = logLikUlt, grad = logLikGradUlt, start = sval,
                       fixed = fvec, method = method, y = y, acc = a, regr =
-                      regr, maxOffer = maxOffer, offerOnly = offerOnly, offertol
-                      = offertol, reltol = reltol, ...)
+                      regr, minOffer = minOffer, maxOffer = maxOffer, 
+                      offerOnly = offerOnly, offertol = offertol, reltol = reltol, ...)
 
     cc <- convergenceCriterion(method)
     if (!(results$code %in% cc)) {
@@ -446,7 +467,7 @@ ultimatum <- function(formulas, data, subset, na.action,
         bootMatrix <-
             gameBoot(boot, report = bootreport, estimate = results$estimate, y =
                      y, a = a, regr = regr, fn = logLikUlt, gr = logLikGradUlt ,
-                     fixed = fvec, method = method, maxOffer = maxOffer,
+                     fixed = fvec, method = method, minOffer = minOffer, maxOffer = maxOffer,
                      offerOnly = offerOnly, offertol = offertol, reltol =
                      reltol, ...)
     }
@@ -457,8 +478,8 @@ ultimatum <- function(formulas, data, subset, na.action,
     ans$coefficients <- results$estimate
     ans$vcov <- getGameVcov(results$hessian, fvec)
     ans$log.likelihood <-
-        logLikUlt(results$estimate, y = y, acc = a, regr = regr, maxOffer =
-                  maxOffer, offertol = offertol, offerOnly = offerOnly)
+        logLikUlt(results$estimate, y = y, acc = a, regr = regr, minOffer = minOffer,
+        			maxOffer = maxOffer, offertol = offertol, offerOnly = offerOnly)
     ans$call <- cl
     ans$convergence <- list(method = method, iter = nIter(results), code =
                             results$code, message = results$message, gradient =
@@ -477,6 +498,7 @@ ultimatum <- function(formulas, data, subset, na.action,
         ans$boot.matrix <- bootMatrix
     ans$localID <- lid
     ans$outcome <- outcome
+    ans$minOffer <- minOffer
     ans$maxOffer <- maxOffer
     ans$offertol <- offertol
 

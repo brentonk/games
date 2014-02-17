@@ -5,8 +5,30 @@
 ##' @section Acknowledgements: We thank the Wallis Institute of Political
 ##' Economy for financial support.
 ##' @references
+##' Brenton Kenkel and Curtis S. Signorino.  2014.  "Estimating Extensive Form
+##' Games in R."  \emph{Journal of Statistical Software} 56(8):1--27.
+##' 
 ##' Curtis S. Signorino.  2003.  "Structure and Uncertainty
 ##' in Discrete Choice Models."  \emph{Political Analysis} 11:316--344.
+##' @import stringr
+##' @import Formula
+##' @import maxLik
+##' @import MASS
+##' @export predict.egame12
+##' @export predict.egame122
+##' @export predict.egame123
+##' @export predict.ultimatum
+##' @export clarke
+##' @S3method logLik game
+##' @S3method logLik summary.game
+##' @S3method coef game
+##' @S3method vcov game
+##' @S3method plot preplot.predProbs
+##' @S3method predict egame12
+##' @S3method predict egame122
+##' @S3method predict egame123
+##' @S3method predict ultimatum
+##' @S3method print nonnest.test
 NULL
 
 ##' Print a strategic model object
@@ -72,7 +94,7 @@ print.game <- function(x, ...)
     }
 
     if (!x$localID)
-        warning("Hessian is not negative definite; coefficients may not be locally identified")
+        warning("Hessian is not negative definite; estimate may not be a strict local maximum")
 
     cat("\n")
     invisible(oldx)
@@ -163,7 +185,7 @@ print.summary.game <- function(x, ...)
             x$convergence$code, "\nMessage:", x$convergence$message)
     }
     if (!x$localID)
-        warning("Hessian is not negative definite; coefficients may not be locally identified")
+        warning("Hessian is not negative definite; coefficients may not be a strict local maximum")
     invisible(x)
 }
 
@@ -200,23 +222,27 @@ logLik.summary.game <- function(object, ...)
 ##' Makes predicted probabilities from a strategic model.
 ##'
 ##' This method uses a fitted strategic model to make predictions for a new
-##' set of data.  Useful for cross-validating or for graphical analysis.
+##' set of data.  This is useful for cross-validating or for graphical
+##' analysis.  For many uses, such as analyzing the marginal effect of a
+##' particular independent variable, the function \code{\link{predProbs}} will
+##' be more convenient.
 ##'
-##' For many uses, such as analyzing the marginal effect of a particular
-##' independent variable, the function \code{\link{predProbs}} will be more
-##' convenient.
+##' In the \code{\link{ultimatum}} model, there is not an analytic expression
+##' for the expected value of Player 1's offer.  Therefore, predicted values
+##' are instead generating via simulation by drawing errors from a logistic
+##' distribution.  The number of draws per observation can be controlled via
+##' the \code{n.sim} argument.  For replicability, we recommend seeding the
+##' random number generator via \code{\link{set.seed}} before using
+##' \code{predict.ultimatum}.
 ##' @aliases predict.game predict.egame12 predict.egame122 predict.egame123
 ##' predict.ultimatum
 ##' @usage
 ##' \method{predict}{game}(object, ...)
 ##'
-##' \method{predict}{egame12}(object, newdata, type=c("outcome", "action"),
-##' na.action = na.pass, ...)
-##' \method{predict}{egame122}(object, newdata, type=c("outcome", "action"),
-##' na.action = na.pass, ...)
-##' \method{predict}{egame123}(object, newdata, type=c("outcome", "action"),
-##' na.action = na.pass, ...)
-##' \method{predict}{ultimatum}(object, newdata, na.action = na.pass, ...)
+##' \method{predict}{egame12}(object, newdata, type=c("outcome", "action"), na.action = na.pass, ...)
+##' \method{predict}{egame122}(object, newdata, type=c("outcome", "action"), na.action = na.pass, ...)
+##' \method{predict}{egame123}(object, newdata, type=c("outcome", "action"), na.action = na.pass, ...)
+##' \method{predict}{ultimatum}(object, newdata, na.action = na.pass, n.sim = 1000, ...)
 ##' @param object a fitted model of class \code{game}.
 ##' @param newdata data frame of values to make the predicted probabilities for.
 ##' If this is left empty, the original dataset is used.
@@ -224,6 +250,8 @@ logLik.summary.game <- function(object, ...)
 ##' RR in \code{egame12}) or for actions (e.g., whether 2 moves L or R given
 ##' that 1 moved R).
 ##' @param na.action how to deal with \code{NA}s in \code{newdata}
+##' @param n.sim number of simulation draws to use per observation for
+##' \code{ultimatum} models (see Details).
 ##' @param ... other arguments, currently ignored.
 ##' @return A data frame of predicted probabilities.
 ##' @method predict game

@@ -6,6 +6,20 @@ Maintained by Brenton Kenkel (brenton.kenkel@gmail.com).
 
 See also http://github.com/brentonk/games
 
+games 1.1-1 (2014-01-16)
+------------------------
+
+* Includes citation to published article in the Journal of Statistical Software
+
+
+games 1.1-0 (2013-01-30)
+------------------------
+
+* "ultimatum" has new argument "minOffer"
+
+* Fixed bug where "predict.ultimatum" computed E[offer] incorrectly; now using
+  simulation due to absence of closed-form expression
+
 
 games 1.0-5 (2012-03-04)
 ------------------------

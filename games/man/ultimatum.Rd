@@ -1,0 +1,148 @@
+\name{ultimatum}
+\alias{ultimatum}
+\title{Statistical ultimatum game}
+\usage{
+ultimatum(formulas, data, subset, na.action, minOffer = 0, maxOffer,
+  offertol = sqrt(.Machine$double.eps), s1 = NULL, s2 = NULL,
+  outcome = c("both", "offer"), boot = 0, bootreport = TRUE, profile,
+  method = "BFGS", ..., reltol = 1e-12)
+}
+\arguments{
+  \item{formulas}{a list of two formulas, or a
+  \code{\link{Formula}} object with two right-hand sides.
+  See "Details" and the examples below.}
+
+  \item{data}{data frame containing the variables in the
+  model.}
+
+  \item{subset}{optional logical expression specifying
+  which observations from \code{data} to use in fitting.}
+
+  \item{na.action}{how to deal with \code{NA}s in
+  \code{data}.  Defaults to the \code{na.action} setting of
+  \code{\link{options}}.  See \code{\link{na.omit}}.}
+
+  \item{minOffer}{numeric: the lowest offer Player 1 could
+  feasibly make (default 0).}
+
+  \item{maxOffer}{numeric: the highest offer Player 1 could
+  feasibly make.}
+
+  \item{offertol}{numeric: offers within \code{offertol} of
+  \code{minOffer}/\code{maxOffer} will be considered to be
+  at the minimum/maximum.  (This is used to prevent
+  floating-point problems and need not be changed in most
+  applications.)}
+
+  \item{s1}{numeric: scale parameter for Player 1.  If
+  \code{NULL} (the default), the parameter will be
+  estimated.}
+
+  \item{s2}{numeric: scale parameter for Player 2.  If
+  \code{NULL} (the default), the parameter will be
+  estimated.}
+
+  \item{outcome}{the outcome of interest: just Player 1's
+  offer ("offer") or both the offer and its acceptance
+  ("both").  See "Details".}
+
+  \item{boot}{integer: number of bootstrap iterations to
+  perform (if any).}
+
+  \item{bootreport}{logical: whether to print status bar
+  when performing bootstrap iterations.}
+
+  \item{profile}{output from running
+  \code{\link{profile.game}} on a previous fit of the
+  model, used to generate starting values for refitting
+  when an earlier fit converged to a non-global maximum.}
+
+  \item{method}{character string specifying which
+  optimization routine to use (see \code{\link{maxLik}})}
+
+  \item{...}{other arguments to pass to the fitting
+  function (see \code{\link{maxLik}}).}
+
+  \item{reltol}{numeric: relative convergence tolerance
+  level (see \code{\link{optim}}).  Use of values higher
+  than the default is discouraged.}
+}
+\value{
+An object of class \code{c("game", "ultimatum")}.  For details on
+the \code{game} class, see \code{\link{egame12}}.  The \code{ultimatum}
+class is just for use in the generation of predicted values (see
+\code{\link{predProbs}}) and profiling (see \code{\link{profile.game}}).
+}
+\description{
+Estimates the statistical ultimatum game described in Ramsay and Signorino
+(2009), illustrated below in "Details".
+}
+\details{
+The model corresponds to the following extensive-form game, described in
+Ramsay and Signorino (2009):
+\preformatted{
+.       1
+.      / \
+.     /   \
+.    /     \ y in [0, Q]
+.   /       \
+.   ---------
+.       /\  2
+.      /  \
+.     /    \
+.    /      \
+. Q - y     R1
+. y         R2}
+Q refers to the maximum feasible offer (the argument \code{maxOffer}).
+
+The two equations on the right-hand side of \code{formulas} refer to Player
+1's and Player 2's reservation values respectively.  The left-hand side
+should take the form \code{offer + acceptance}, where \code{outcome}
+contains the numeric value of the offer made and \code{acceptance} is an
+indicator for whether it was accepted.  (If \code{outcome} is set to
+"offer", the acceptance indicator can be omitted.  See below for more.)
+
+The \code{outcome} argument refers to whether the outcome of interest is
+just the level of the offer made, or both the level of the offer and whether
+it was accepted.  If acceptance was unobserved, then \code{outcome} should
+be set to "offer".  If so, the estimates for Player 2's reservation value
+should be interpreted as Player 1's expectations about these parameters.  It
+may also be useful to set \code{outcome} to "offer" even if acceptance data
+are available, for the purpose of comparing the strategic model to other
+models of offer levels (as in Ramsay and Signorino 2009).  If an acceptance
+variable is specified but \code{outcome} is set to "offer", the acceptance
+data will be used for starting values but not in the actual fitting.
+
+Numerical instability is not uncommon in the statistical ultimatum game,
+especially when the scale parameters are being estimated.
+}
+\examples{
+data(data_ult)
+
+## the formula:
+f1 <- offer + accept ~ x1 + x2 + x3 + x4 + w1 + w2 | z1 + z2 + z3 + z4 + w1 + w2
+##                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+##                                  R1                              R2
+
+m1 <- ultimatum(f1, data = data_ult, maxOffer = 15)
+summary(m1)
+
+## estimating offer size only
+f2 <- update(Formula(f1), offer ~ .)
+m2 <- ultimatum(f2, data = data_ult, maxOffer = 15, outcome = "offer")
+summary(m2)
+
+## fixing scale terms
+m3 <- ultimatum(f1, data = data_ult, maxOffer = 15, s1 = 5, s2 = 1)
+summary(m3)
+}
+\author{
+Brenton Kenkel (\email{brenton.kenkel@gmail.com}) and Curtis
+S. Signorino
+}
+\references{
+Kristopher W. Ramsay and Curtis S. Signorino.  2009.  "A
+Statistical Model of the Ultimatum Game."  Available online at
+\url{http://www.rochester.edu/college/psc/signorino/research/RamsaySignorino_Ultimatum.pdf}.
+}
+

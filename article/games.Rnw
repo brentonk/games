@@ -9,16 +9,18 @@
 \usepackage{todonotes}
 \usepackage{multirow}
 
+\SweaveOpts{prefix.string=Figures}
+
 \author{Brenton Kenkel\\University of Rochester \And
   Curtis S. Signorino\\University of Rochester}
 \Plainauthor{Brenton Kenkel, Curtis S. Signorino}
 
-\title{Estimating Models of Strategic Interaction in \proglang{R}}
-\Plaintitle{Estimating Models of Strategic Interaction in R}
+\title{Estimating Extensive Form Games in \proglang{R}}
+\Plaintitle{Estimating Extensive Form Games in R}
 
 \Abstract{%
-  This article introduces new software, the \pkg{games} package, for the
-  estimation of strategic statistical models in \proglang{R}.  In these models,
+  This article introduces new software, the \pkg{games} package, for
+  estimating strategic statistical models in \proglang{R}.  In these models,
   the probability distribution over outcomes corresponds to the equilibrium of
   an underlying game form.  We review such models and provide derivations for
   one example, including discussion of alternative motivations for the
@@ -40,7 +42,7 @@
 
 \Address{
   Brenton Kenkel\\
-  315A Harkness Hall\\
+  334 Harkness Hall\\
   Department of Political Science\\
   University of Rochester\\
   Rochester, NY 14627\\
@@ -64,20 +66,20 @@ options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 
 \section{Introduction}
 
-The \pkg{games} package provides functions for estimation of statistical models
-of strategic interaction in the \proglang{R} language \citep{Rlang}.  These are
-random-utility models of choices by multiple agents, each of whom conditions his
-or her actions on the likely decisions of the other players.  In these models,
-the distribution of outcomes is determined by the equilibrium of the underlying
-game.  The goal is to estimate how the players' utility for each possible
-outcomes varies as a function of observed variables.  These models are
-appropriate for situations where the ultimate outcome following one actor's
-choice depends on actions taken by another, which are common in social science.
-In such cases, standard estimators like binary-choice regression or Heckman
-selection models will lead to incorrect inferences
-\citep{Signorino2002,Signorino2003a}.  The \pkg{games} package currently
-implements full information maximum likelihood estimation functions for four
-models of strategic choice:
+The \pkg{games} package provides functions for estimating  extensive form
+models of strategic interaction in the \proglang{R} language \citep{Rlang}.
+These are random-utility models of choices by multiple agents, each of whom
+conditions his or her actions on the likely decisions of the other players.
+In these models, the distribution of outcomes is determined by the equilibrium
+of the underlying game.  The goal is to estimate how the players' utility for
+each possible outcome varies as a function of observed variables.  These
+models are appropriate for situations where the ultimate outcome following one
+actor's choice depends on actions taken by another, which are common in social
+science.  In such cases, standard estimators like binary-choice regression or
+Heckman selection models will lead to incorrect inferences
+\citep{Signorino1999,Signorino2002,Signorino2003a}.  The \pkg{games} package
+currently implements full information maximum likelihood estimation functions
+for four models of strategic choice:
 \begin{itemize}
   \item \code{egame12}, a discrete extensive form game with two players
   and three terminal nodes.
@@ -91,24 +93,49 @@ The package also provides various post-estimation functions, including
 convergence checks, plotting of fitted values, and non-nested model comparison
 tests.
 
-The models available in the \pkg{games} package are those that have been used
-most widely in the analysis of strategic interaction within the political
-science literature (see the citations in Section~\ref{sec:models}).  For
-analysis of other models with a recursive structure, \citet{Bas2007} provide a
-multi-stage method similar to
-\citeauthor{Heckman1979tb}'s~\citeyearpar{Heckman1979tb} two-step estimator for
-selection models.  This method, statistical backward induction, uses only
-logistic or probit regression and can be easily implemented in virtually any
-statistical software.  However, like the Heckman two-step estimator, statistical
-backward induction is inefficient relative to full information maximum
-likelihood.  The purpose of the \pkg{games} package is to provide efficient
-maximum likelihood estimation for the most common models of strategic choice.
+The models available in the \pkg{games} package include those that have been
+used most widely in the analysis of strategic interaction within the political
+science literature.  The \texttt{egame12} model, in which there are two
+players and three possible outcomes, has been used to analyze speculative
+attacks in currency markets \citep{Leblang2003}, deterrence of international
+conflict \citep{Signorino2006}, the efficacy of economic sanctions
+\citep{McLean2010}, and Latin American governmental crises \citep{Helmke2010}.
+The \texttt{egame122} model, with two players and four possible outcomes, has
+been applied to data on candidate entry into U.S.\ Congressional races
+\citep{Carson2003,Carson2005}, appeals court decisions \citep{Randazzo2008we},
+and coalition formation between lobbyists \citep{Holyoke2009hb}.
+The \texttt{ultimatum} bargaining model has been used to analyze lab
+experiments of the ultimatum game \citep{Ramsay2009} and bargaining between
+rulers and subjects over war mobilization \citep{Kedziora2012po}.
 
-Estimation of strategic statistical models was previously implemented in
-\proglang{Gauss} in the \pkg{Strat} package \citep{stratgauss}.  The \pkg{games}
-package provides new models and additional post-estimation functionality over
+All of the models implemented in the \pkg{games} package are recursive, sequential move games with finite time horizons.  As such, they represent one part of a broader
+literature on statistical modeling of competitive behavior.  Much of the
+earliest econometric work in this area focused on static games with
+simultaneous moves, with applications to labor force participation and
+market entry \citep{Bjorn1984ct,Bresnahan1991tt,Berry1992tl}.  More recent
+work on static games has focused on semiparametric estimation via iterative
+methods \citep{AradillasLopez2010bb,Bajari2010ql}.
+Similar techniques have been developed to estimate the parameters of dynamic
+games from observed data
+\citep{Hotz1993hz,Aguirregabiria2002mq,Pakes2007yt,Pesendorfer2008ju}.
+Another important area of the econometric literature on strategic interaction
+is the estimation of auction models.
+These techniques use bid data to estimate features of the distribution of
+private valuations of the goods being auctioned
+\citep{Laffont1995kj,Guerre2000pq,2005}.  To be clear, the \pkg{games} package currently provides statistical tools for estimating recursive, sequential games, and not simultaneous move games or dynamic games with infinite time horizons.
+
+Estimation of discrete strategic models was previously implemented as  the program \pkg{Strat} \citep{stratgauss} using the \proglang{Gauss} programming language.  The \pkg{games} package provides new models and additional post-estimation functionality over
 that available in \pkg{Strat}, and it is implemented in the popular \proglang{R}
 language.
+For analysis of other models with a recursive structure, \citet{Bas2007}
+provide a multi-stage method similar to
+\citeauthor{Heckman1979tb}'s~\citeyearpar{Heckman1979tb} two-step estimator
+for selection models.  This method, statistical backward induction (SBI), uses only
+logistic or probit regression and can be easily implemented in virtually any
+statistical software.  However, like the Heckman two-step estimator,
+statistical backward induction is inefficient relative to full information
+maximum likelihood.  The purpose of the \pkg{games} package is to provide
+efficient maximum likelihood estimation for the most common extensive-form models of strategic choice.
 
 Section~\ref{sec:models} of this paper provides a brief introduction to
 strategic statistical models, including a derivation of a simple example.
@@ -119,31 +146,20 @@ post-estimation functionality is covered in Section~\ref{sec:post}.
 \section{Strategic statistical models}
 \label{sec:models}
 
-Strategic statistical models were first introduced to analyze international
-crises and the outbreak of war \citep{Signorino1999}.  Signorino shows that
-standard techniques like logistic regression are inappropriate when applied to
-data generated by multi-agent strategic interactions, a point developed further
-by \citet{Signorino2003a}.  \citet{Signorino2003} introduces a class of models
-that yield consistent estimates of players' utilities when the structure of
-interaction is known.  These models have since been applied to data on U.S.\
-congressional races \citep{Carson2003,Carson2005}, currency markets
-\citep{Leblang2003}, armed deterrence \citep{Signorino2006}, international
-economic sanctions \citep{McLean2010}, territorial conflict \citep{Carter2010a},
-and Latin American governmental crises \citep{Helmke2010}.
-
-Every strategic model is associated with a game form and solution concept.
-First, the structure of the interaction must be known: the number of players,
-the order in which they move, the number of actions each has available, and the
-possible outcomes.  The purpose is to estimate players' utilities for each
-outcome, usually as a function of covariates, from data on observed outcomes of
-the game being played.  This requires the introduction of a stochastic
-component, so that there is a non-degenerate probability distribution over
-outcomes for any given set of coefficients (i.e., those on the covariates
-describing players' utilities).  In particular, we will specify where error
-enters the model and calculate the equilibrium outcome for each given set of
-parameters and stochastic shocks, using the appropriate solution concept for the
-assumed stochastic structure (see below).  The probability of each outcome can
-then be obtained by assuming a distribution for the error terms.
+Every strategic statistical model is associated with a game form and solution
+concept.  First, the structure of the interaction must be known: the number of
+players, the order in which they move, the number of actions each has
+available, and the possible outcomes.  The purpose is to estimate players'
+utilities for each outcome, usually as a function of covariates, from data on
+observed outcomes of the game being played.  This requires the introduction of
+a stochastic component, so that there is a non-degenerate probability
+distribution over outcomes for any given set of coefficients (i.e., those on
+the covariates describing players' utilities).  In particular, we will specify
+where error enters the model and calculate the equilibrium outcome for each
+given set of parameters and stochastic shocks, using the appropriate solution
+concept for the assumed stochastic structure (see below).  The probability of
+each outcome can then be obtained by assuming a distribution for the error
+terms.
 
 The choice of stochastic structure is crucial for the estimation and
 interpretation of utility parameters.  The \pkg{games} package implements
@@ -159,7 +175,7 @@ methods for two cases:
   each $\alpha_{mj}$ is drawn independently from a normal or logistic
   distribution.  The solution concept under agent error is quantal response
   equilibrium \citep{McKelvey1998}, wherein each player anticipates the
-  probability of ``mistakes'' by the others and adjusts her expectations
+  probability of ``mistakes'' by  others and adjusts her expectations
   accordingly.
 
   \item[Private information] There is a different stochastic shock to each
@@ -176,11 +192,14 @@ methods for two cases:
   preferences.  Except in the statistical ultimatum model, we will assume that
   each $\pi_{mk}$ is drawn from a normal distribution.
 \end{description}
-We illustrate both of these stochastic structures in the \code{egame12} example
-below. \citet{Signorino2003} discusses these in greater depth, and concludes
-from Monte Carlo experiments that models of the two types do not yield
-appreciably different results when the underlying game form is relatively
-simple.
+We illustrate both of these stochastic structures in the \code{egame12}
+example below.  It is important to recognize that different assumptions about
+the form of the error correspond to distinct statistical models, and thus may
+yield different results.  Users of the \pkg{games} package should select the
+form of error with care, taking into account which set of assumptions best
+fits their application.  The implications of different error structures for
+strategic models are discussed in detail in \citet{Signorino2003}.
+
 
 \subsection[Illustration: The egame12 model]%
 {Illustration: The \code{egame12} model}
@@ -359,7 +378,7 @@ the values of $p_{3i}$ and $p_{4i}$, but its variance is $1 + p_{3i}^2 +
 p_{4i}^2$ and thus may vary across observations.  In particular, the variance is
 least when $p_{3i} = p_{4i} = 0.5$ and greatest when $p_{3i} = 1$ or $p_{4i} =
 1$.  In practice, this does not make for a major difference, and the two models
-almost always yield similar estimates of $\beta$.
+usually yield similar estimates of $\beta$.
 
 
 \subsection{Identification of model parameters}
@@ -448,10 +467,10 @@ facilitate analysis of bargaining data, we implement the statistical ultimatum
 game of \citet{Ramsay2009} via the \code{ultimatum} function.  The structure of
 the game is:
 \begin{enumerate}
-  \item Player 1 makes an offer $x \in [0, Q]$ to Player 2.
+  \item Player 1 makes an offer $y \in [M, Q]$ to Player 2.
   \item Player 2 can accept or reject the offer.
   \begin{enumerate}
-    \item If accepted, payoffs are $Q - x$ for Player 1 and $x$ for Player 2.
+    \item If accepted, payoffs are $Q - y$ for Player 1 and $y$ for Player 2.
     \item If rejected, payoffs are $R_1 + \epsilon_1$ and $R_2 + \epsilon_2$
     respectively, where $\epsilon_1, \epsilon_2$ are i.i.d.\ logistic variables
     with scale parameters $s_1$ and $s_2$.  The reservations $R_m$ are common
@@ -536,20 +555,29 @@ for the p.d.f.\ and c.d.f.\ of $y^*$:
     }
   }.
 \end{align*}
-Due to the constraint that offers must be between $0$ and $Q$, the observed
-offer will be $y = 0$ if $y^* < 0$ and $y = Q$ if $y^* > Q$.  Letting $\delta_i$
+Due to the constraint that offers must be between $M$ and $Q$, the observed
+offer will be $y = M$ if $y^* < M$ and $y = Q$ if $y^* > Q$.  Letting $\delta_i$
 be an indicator for whether the offer was accepted in observation $i$, we yield
 the log-likelihood
 \begin{equation}
   \label{eq:loglik-ult}
   \begin{aligned}
     \log \ell(\beta_1, \beta_2, s_1, s_2 \,|\, y, X, \delta)
-    &= \sum_{y_i = 0} \log F(0) + \sum_{y_i \in [0, Q]} \log f(y_i) + \sum_{y_i
-      = Q} \log (1 - F(Q)) \\
+    &= \sum_{y_i = M} \log F(M) + \sum_{y_i \in [M, Q]} \log f(y_i) +
+    \sum_{y_i = Q} \log (1 - F(Q)) \\
     &\quad + \sum_{\delta_i = 0} \log (1 - \Prob(\text{accept} \,|\, y_i))
     + \sum_{\delta_i = 1} \log \Prob(\text{accept} \,|\, y_i).
   \end{aligned}
 \end{equation}
+
+The main criterion for identification in the statistical ultimatum game is the
+usual condition that the variables within each $x_m$ be linearly independent;
+otherwise, the corresponding $\beta_m$ is unidentified.  Unlike in most
+discrete-choice models, the scale parameters $s_1$ and $s_2$ are individually
+identified in the ultimatum model.  This is a consequence of the shared
+observability of the offer $y$ \citep[see][]{Ramsay2009}.  In small samples,
+however, estimation of $s_2$ may cause numerical difficulties; when this
+occurs, users may instead treat its value as fixed.
 
 
 \section{Specification and estimation}
@@ -755,7 +783,7 @@ estimates.
 <<printboot>>=
 summary(leb1)
 @ %
-To see the normal-theory standard errors instead, supply the option
+To see the asymptotic, normal-theory standard errors instead, supply the option
 \code{useboot = FALSE} to the \code{summary} call.
 
 The other arguments for the fitting functions depend on whether the model is one
@@ -822,17 +850,18 @@ a function of covariates.
 
 \subsubsection[The ultimatum model]{The \code{ultimatum} model}
 
-In the ultimatum model, each observation consists of the value of the offer made
-by Player 1 and whether Player 2 accepted it.  By assumption, there is an
+In the ultimatum model, each observation consists of the value of the offer
+made by Player 1 and whether Player 2 accepted it.  By assumption, there is an
 exogenous upper bound on the size of the offer, which is specified via
-\code{maxOffer}.  The lower bound is always 0.  It is important to be able to
-identify which offers were at one of these boundary points, since the
-log-likelihood of an observation depends on whether the offer was interior.  If
-offers are stored as floating-point numbers, naive equality tests may
-misclassify some boundary observations as interior.  To mitigate this, we use
-the argument \code{offertol} and code an offer $x$ as meeting the lower bound if
-$x < \mbox{\code{offertol}}$ and the upper bound if $x > \mbox{\code{maxOffer}}
-- \mbox{\code{offertol}}$.  Unless there are extremely slight differences
+\code{maxOffer}, and a lower bound specified via \code{minOffer} (default 0).
+It is important to be able to identify which offers were at one of these
+boundary points, since the log-likelihood of an observation depends on whether
+the offer was interior.  If offers are stored as floating-point numbers, naive
+equality tests may misclassify some boundary observations as interior.  To
+mitigate this, we use the argument \code{offertol} and code an offer $x$ as
+meeting the lower bound if $x < \mbox{\code{minOffer}} +
+\mbox{\code{offertol}}$ and the upper bound if $x > \mbox{\code{maxOffer}} -
+\mbox{\code{offertol}}$.  Unless there are extremely slight differences
 between observed offers, on the order of $1 \times 10^{-8}$, the default value
 of \code{offertol} should suffice for most analyses.
 
@@ -1128,14 +1157,15 @@ regression as ``restricted'' strategic models, or vice versa.  Therefore,
 standard likelihood ratio tests are inappropriate for comparing the fit of a
 strategic model to that of a generalized linear model; a non-nested model
 comparison is necessary \citep{Clarke2010}.  The \pkg{games} package implements
-the tests of \citet{Vuong1989} and \citet{Clarke2006} via the \code{vuong} and
-\code{clarke} functions respectively.  Each test compares two models, under the
-null hypothesis that the two have an equal Kullback-Leibler distance from the
-true model.  Both use test statistics formed from the log-likelihood
-contributions of each individual observation.  The main difference is that
-Clarke's test is unbiased in finite samples, whereas Vuong's depends on
-asymptotic properties.  We implement both tests with the recommended BIC-based
-correction to penalize overparameterization.
+\citeauthor{Vuong1989}'s~\citeyearpar{Vuong1989} test for strictly nonnested
+models and \citeauthor{Clarke2006}'s~\citeyearpar{Clarke2006} distribution-free
+test via the \code{vuong} and \code{clarke} functions respectively.  Each test
+compares two models, under the null hypothesis that the two have an equal
+Kullback-Leibler distance from the true model.  Both use test statistics formed
+from the log-likelihood contributions of each individual observation.  The main
+difference is that Clarke's test has greater power in small samples, whereas
+Vuong's depends on asymptotic properties.  We implement both tests with the
+recommended BIC-based correction to penalize overparameterization.
 
 The simplest use of the non-nested test functions is to compare two strategic
 models to each other.  For example, we can use them to determine whether agent
@@ -1180,9 +1210,9 @@ detecting models with different dependent variables.
 
 \section{Conclusion}
 
-We have provided new software, the \pkg{games} package, for estimation of
-strategic statistical models in \proglang{R}.  We argue that such models are
-appropriate for the analysis of data where agents' expectations of each other's
+We have provided new software, the \pkg{games} package, for estimating 
+strategic statistical models in \proglang{R}.  Such models are
+appropriate for the analysis of data where multiple agents make decisions sequentially and where the agents' expectations of each other's
 actions determine their choices.  The new software implements multiple strategic
 models, including a statistical bargaining game.  The software is easy to use
 and includes post-estimation features such as non-nested comparison tests and
@@ -1194,8 +1224,7 @@ statistical model \citep{Leblang2003}.
 \section*{Acknowledgments}
 
 We are grateful to David Leblang for sharing his data.  We thank the Wallis
-Institute for Political Economy at the University of Rochester for financial
-support.
+Institute for Political Economy and the Theory and Statistics Research Lab (the star lab) for financial support.
 
 
 \bibliography{games,software}

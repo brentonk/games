@@ -1,0 +1,162 @@
+\name{makeFormulas}
+\alias{makeFormulas}
+\title{Model formula construction}
+\usage{
+makeFormulas(model, outcomes)
+}
+\arguments{
+  \item{model}{name of the model (must be from the
+  \pkg{games} package) for which to make a formula.}
+
+  \item{outcomes}{character vector with descriptions of the
+  possible outcomes of the game (see "Details" for a more
+  precise explanation)}
+}
+\value{
+An object of class \code{"Formula"}, typically to be used as the
+\code{formulas} argument in a statistical model from the \pkg{games}
+package.
+}
+\description{
+Interactive prompt for constructing model formulas.
+}
+\details{
+All of the staistical models in the \pkg{games} package require the
+specification of multiple model formulas, as each player's utility is a
+function of potentially different regressors.  The number of equations to
+specify ranges from two in \code{\link{ultimatum}} to eight in
+\code{\link{egame123}}.  \code{makeFormulas} is an interactive tool to
+simplify the specification process.
+
+To use \code{makeFormulas}, specify the model you want to fit (\code{model})
+and descriptions of the outcomes of the game (\code{outcomes}).  The order
+of the descriptions in \code{outcomes} should match the numbering in the
+game tree in the help page for \code{model}.  For example, with
+\code{\link{egame122}}, the order is:
+\enumerate{
+\item Player 1 moves Left, Player 2 moves Left
+\item Player 1 moves Left, Player 2 moves Right
+\item Player 1 moves Right, Player 2 moves Left
+\item Player 1 moves Right, Player 2 moves Right}
+If the dependent variable in the dataset (\code{dat}) is a factor (\code{y})
+whose levels contain the descriptions, then either \code{outcomes = dat$y}
+or \code{outcomes = levels(dat$y)} will work.
+
+As an example, consider the following use of \code{\link{egame122}}.  Player
+1 is the legislature, which can propose budget cuts (left on the game tree)
+or increases (right).  Player 2 is the president, who can sign or veto the
+legislature's budget proposal (left and right respectively).  The variables
+of interest are the president's party (\code{presparty}), the legislature's
+party (\code{legparty}), and the year's percentage GDP growth
+(\code{growth}).  To construct the formulas for this case, run
+\code{makeFormulas(egame122, outcomes = c("budget cuts passed",
+"budget cuts vetoed", "budget increase passed", "budget increase vetoed"))}.
+The first set of options that appears is
+\preformatted{Equation for player 1's utility from budget cuts passed:
+
+1: fix to 0
+2: intercept only
+3: regressors, no intercept
+4: regressors with intercept}
+To specify this utility as a function of a constant, the legislature's
+party, and GDP growth, select option \code{4} and enter \code{legparty growth}
+at the prompt.  \code{makeFormulas} will then move on to ask about Player
+1's utility for the other three outcomes, followed by Player 2's utility for
+the outcomes for which her utility is not fixed to 0 (see
+\code{\link{egame122}}).  See "Examples" below for a full example of the
+input and constructed formula in this case.
+
+It is \strong{not} necessary to use \code{makeFormulas} to specify model
+formulas.  See the help file of each model for examples of "manually" making
+the formula.
+}
+\examples{
+\dontrun{R> f1 <- makeFormulas(egame122, outcomes = c("budget cuts passed",
+"budget cuts vetoed", "budget increase passed", "budget increase vetoed"))
+
+---
+Equation for player 1's utility from budget cuts passed:
+
+1: fix to 0
+2: intercept only
+3: regressors, no intercept
+4: regressors with intercept
+
+Selection: 4
+
+Enter variable names (separated by spaces):
+legparty growth
+
+---
+Equation for player 1's utility from budget cuts vetoed:
+
+1: fix to 0
+2: intercept only
+3: regressors, no intercept
+4: regressors with intercept
+
+Selection: 2
+
+---
+Equation for player 1's utility from budget increase passed:
+
+1: fix to 0
+2: intercept only
+3: regressors, no intercept
+4: regressors with intercept
+
+Selection: 4
+
+Enter variable names (separated by spaces):
+legparty growth
+
+---
+Equation for player 1's utility from budget increase vetoed:
+
+1: fix to 0
+2: regressors, no intercept
+
+Selection: 1
+
+---
+Equation for player 2's utility from budget cuts vetoed:
+
+1: fix to 0
+2: intercept only
+3: regressors, no intercept
+4: regressors with intercept
+
+Selection: 4
+
+Enter variable names (separated by spaces):
+presparty growth
+
+---
+Equation for player 2's utility from budget increase vetoed:
+
+1: fix to 0
+2: intercept only
+3: regressors, no intercept
+4: regressors with intercept
+
+Selection: 4
+
+Enter variable names (separated by spaces):
+presparty growth
+
+---
+What is the name of the dependent variable in the dataset? (If stored as
+action indicators/dummies, separate their names with spaces.)
+budgincrease veto
+R> f1
+budgincrease + veto ~ legparty + growth | 1 | legparty + growth |
+    0 | presparty + growth | presparty + growth}
+}
+\author{
+Brenton Kenkel (\email{brenton.kenkel@gmail.com})
+}
+\seealso{
+\code{\link{Formula}} (and the \pkg{Formula} package generally) for
+the details of how \pkg{games} deals with multiple model formulas.
+}
+

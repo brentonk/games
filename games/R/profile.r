@@ -112,13 +112,14 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
 
     ## special stuff for ultimatum models
     if (inherits(fitted, "ultimatum")) {
+    	minOffer <- fitted$minOffer
         maxOffer <- fitted$maxOffer
         acc <- if (length(dim(fitted$y))) fitted$y[, 2] else NULL
         offerOnly <- fitted$outcome == "offer"
         offertol <- fitted$offertol
         names(regr) <- c("X", "Z")
     } else {
-        maxOffer <- acc <- offerOnly <- offertol <- NULL
+        minOffer <- maxOffer <- acc <- offerOnly <- offertol <- NULL
     }
 
     ## ## Special stuff for egame12cor models
@@ -189,8 +190,8 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
                 tryCatch(maxLik(logLik = logLik, grad = logLikGrad, start =
                                 sval, fixed = fvec, method = method, y = y, regr
                                 = regr, link = link, type = type, acc = acc,
-                                maxOffer = maxOffer, offerOnly = offerOnly,
-                                offertol = offertol, gridsize = gridsize, ...),
+                                minOffer=minOffer, maxOffer = maxOffer, offerOnly = offerOnly,
+                                offertol = offertol, ...),
                          error = identity)
             if (inherits(results, "error")) {
                 thisAns[j, ] <- NA

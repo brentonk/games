@@ -1,0 +1,31 @@
+\documentclass[11pt]{article}
+\usepackage{pstricks}
+\usepackage{pstcol}
+\usepackage{egameps}
+
+\pagestyle{empty}  % prevent page numbers
+
+\begin{document}
+
+\newcommand{\pb}[1]{\parbox{1in}{\centering #1}}
+\newcommand{\E}{\mathsf{E}}
+
+\begin{center}
+\begin{egame}(400,600)
+  \putbranch(200,600)(2,3){200}
+  \iib{$1$}{$\E U_1(L) + \alpha_{1L}$}{$\E U_1(R) + \alpha_{1R}$}[$U_{11}$][]
+
+  \initialtrue
+  \putbranch(200,600)(2,3){200}
+  \iib{$1$}{$p_1$}{$p_2$}[i]
+
+  \putbranch(400,300)(2,3){200}
+  \iib{$2$}[r]{$\E U_2(L) + \alpha_{2L}$}{$\E U_2(R) + \alpha_{2R}$}[\pb{$U_{13}$ \\
+    $U_{23}$}][\pb{$U_{14}$ \\ $U_{24}$}]
+
+  \putbranch(400,300)(2,3){200}
+  \iib{$2$}[r]{$p_3$}{$p_4$}[i]
+\end{egame}
+\end{center}
+
+\end{document}

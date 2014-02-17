@@ -1,0 +1,132 @@
+\name{egame123}
+\alias{egame123}
+\title{Strategic model with 3 players, 4 terminal nodes}
+\usage{
+egame123(formulas, data, subset, na.action, link = c("probit", "logit"),
+  type = c("agent", "private"), startvals = c("sbi", "unif", "zero"),
+  fixedUtils = NULL, sdformula = NULL, sdByPlayer = FALSE, boot = 0,
+  bootreport = TRUE, profile, method = "BFGS", ...)
+}
+\arguments{
+  \item{formulas}{a list of eight formulas, or a
+  \code{\link{Formula}} object with eight right-hand sides.
+  See "Details" and "Examples".}
+
+  \item{data}{a data frame.}
+
+  \item{subset}{an optional logical vector specifying which
+  observations from \code{data} to use in fitting.}
+
+  \item{na.action}{how to deal with \code{NA}s in
+  \code{data}.  Defaults to the \code{na.action} setting of
+  \code{\link{options}}.  See \code{\link{na.omit}}}
+
+  \item{link}{whether to use a probit (default) or logit
+  link structure,}
+
+  \item{type}{whether to use an agent-error ("agent",
+  default) or private-information ("private") stochastic
+  structure.}
+
+  \item{startvals}{whether to calculate starting values for
+  the optimization from statistical backwards induction
+  ("sbi", default), draw them from a uniform distribution
+  ("unif"), or to set them all to 0 ("zero")}
+
+  \item{fixedUtils}{numeric vector of values to fix for
+  u11, u13, u15, u16, u23, u25, u26, and u36.  \code{NULL}
+  (the default) indicates that these should be estimated
+  with regressors, not fixed.}
+
+  \item{sdformula}{an optional list of formulas or a
+  \code{\link{Formula}} containing a regression equation
+  for the scale parameter.  See \code{\link{egame12}} for
+  details.}
+
+  \item{sdByPlayer}{logical: if scale parameters are being
+  estimated (i.e., \code{sdformula} or \code{fixedUtils} is
+  non-\code{NULL}), should a separate one be estimated for
+  each player?  This option is ignored unless
+  \code{fixedUtils} or \code{sdformula} is specified.}
+
+  \item{boot}{integer: number of bootstrap iterations to
+  perform (if any).}
+
+  \item{bootreport}{logical: whether to print status bar
+  during bootstrapping.}
+
+  \item{profile}{output from running
+  \code{\link{profile.game}} on a previous fit of the
+  model, used to generate starting values for refitting
+  when an earlier fit converged to a non-global maximum.}
+
+  \item{method}{character string specifying which
+  optimization routine to use (see \code{\link{maxLik}})}
+
+  \item{...}{other arguments to pass to the fitting
+  function (see ode{\link{maxLik}}).}
+}
+\value{
+An object of class \code{c("game", "egame123")}.  See
+\code{\link{egame12}} for a description of the \code{game} class.
+}
+\description{
+Fits a strategic model with three players and four terminal nodes, as in the
+game illustrated below in "Details".
+}
+\details{
+The model corresponds to the following extensive-form game:
+\preformatted{
+.     1
+.     /\
+.    /  \
+.   /    \ 2
+.  u11   /\
+.       /  \
+.      /    \
+.    u13     \ 3
+.    u23     /\
+.           /  \
+.          /    \
+.         u15   u16
+.         u25   u26
+.         0     u36}
+
+For additional details on any of the function arguments or options, see
+\code{\link{egame12}}.  The only difference is that the right-hand side of
+\code{formulas} must have eight components (rather than four) in this case.
+
+Ways to specify the dependent variable in \code{egame123}:
+\itemize{
+\item Numeric vector \code{y} containing 4 unique values, corresponding to
+the outcomes (in order from left to right) as labeled in the game tree
+above.
+\item Factor \code{y}, where \code{y} has four levels, corresponding in
+order to the outcomes as labeled above.
+\item Indicator variables \code{y1 + y2 + y3}, where \code{y1} indicates
+whether Player 1 moves left or right, \code{y2} indicates Player 2's move,
+and \code{y3} indicates Player 3's move.  Non-observed values of \code{y2}
+and \code{y3} (where the game ended before the move could be made) should be
+set to \code{0}, \strong{not} \code{NA}, to ensure that observations are not
+dropped when \code{na.action = na.omit}.}
+}
+\examples{
+data(data_123)
+
+## the formula:
+f1 <- y ~ x1 + x2 | 0 | x3 | x4 + x5 | 0 | x6 | x7 | x8
+##    ^   ^^^^^^^   ^   ^^   ^^^^^^^   ^   ^^   ^^   ^^
+##    y     u11    u13  u15    u16    u23  u25  u26  u36
+
+m1 <- egame123(f1, data = data_123, link = "probit", type = "private")
+summary(m1)
+
+## dummy specification of the dependent variable
+f2 <- update(Formula(f1), a1 + a2 + a3 ~ .)
+m2 <- egame123(f2, data = data_123, link = "probit", type = "private")
+summary(m2)
+}
+\author{
+Brenton Kenkel (\email{brenton.kenkel@gmail.com})
+}
+

@@ -239,7 +239,9 @@ nonnest <- function(model1, model2, outcome1, outcome2)
 ##' scalar.  To compare these models, it is necessary to specify \code{outcome1
 ##' = 3}.
 ##' @aliases vuong clarke
-##' @usage vuong(model1, model2, outcome1=NULL, outcome2=NULL, level=0.05, digits=2)
+##' @usage vuong(model1, model2, outcome1=NULL, outcome2=NULL, level=0.05,
+##' digits=2)
+##' 
 ##' clarke(model1, model2, outcome1=NULL, outcome2=NULL, level=0.05, digits=2)
 ##' @param model1 A fitted statistical model of class \code{"game"},
 ##' \code{"lm"}, or \code{"glm"}
