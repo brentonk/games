@@ -134,12 +134,14 @@ makeProbs123 <- function(b, regr, link, type)
                       logit = function(x, sd = 1) plogis(x, scale = sd),
                       probit = pnorm)
 
+    ## KERIM MOD: Use player 1's utility instead of player 3's
     if (type == "private") {
         sd6 <- sqrt(sds[[8]]^2 + sds[[9]]^2)
     } else {
         sd6 <- sqrt(sds[[5]]^2 + sds[[6]]^2)
     }
-    p6 <- finiteProbs(linkfcn(utils$u36, sd = sd6))
+    ## p6 <- finiteProbs(linkfcn(utils$u36, sd = sd6))
+    p6 <- finiteProbs(linkfcn(utils$u16 - utils$u15, sd = sd6))
     p5 <- 1 - p6
 
     if (type == "private") {
@@ -414,7 +416,7 @@ makeResponse123 <- function(yf)
 egame123 <- function(formulas, data, subset, na.action,
                      link = c("probit", "logit"),
                      type = c("agent", "private"),
-                     startvals = c("sbi", "unif", "zero"),
+                     startvals = c("unif", "zero", "sbi"),
                      fixedUtils = NULL,
                      sdformula = NULL,
                      sdByPlayer = FALSE,
@@ -432,44 +434,10 @@ egame123 <- function(formulas, data, subset, na.action,
 
     formulas <- checkFormulas(formulas)
 
-    if (!is.null(fixedUtils)) {  ## error checking for fixed utilities
-        if (length(fixedUtils) < 8)
-            stop("fixedUtils must have 8 elements (u11, u13, u15, u16, u23, u25, u26, u36)")
-        if (length(fixedUtils) > 8) {
-            warning("only the first 8 elements of fixedUtils will be used")
-            fixedUtils <- fixedUtils[1:8]
-        }
-
-        formulas <- update(formulas, . ~ 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1)
-
-        if (startvals == "sbi")
-            startvals <- "zero"
-
-        if (is.null(sdformula))
-            sdformula <- if (sdByPlayer) Formula(~ 1 | 1 | 1) else Formula(~ 1)
-    }
-
-    if (!is.null(sdformula)) {  ## error checking for parameterized variance
-        sdformula <- checkFormulas(sdformula, argname = "sdformula")
-        if (sdByPlayer && length(sdformula)[2] != 3)
-            stop("'sdformula' should have three components (one for each player) on the right-hand side when sdByPlayer == TRUE")
-        if (!sdByPlayer && length(sdformula)[2] != 1)
-            stop("'sdformula' should have exactly one component on the right-hand side")
-
-        ## make one big Formula object with all utility and variance equations
-        ## on the right-hand side
-        formulas <- as.Formula(formula(formulas), formula(sdformula))
-    }
-
-    if (sdByPlayer && is.null(sdformula)) {
-        warning("to estimate SDs by player, you must specify `sdformula` or `fixedUtils`")
-        sdByPlayer <- FALSE
-    }
-
-    if (link == "logit" && type == "private") {
-        warning("logit link cannot be used with private information model; changing to probit link")
-        link <- "probit"
-    }
+    ## KERIM MOD: Must use agent error, cannot use fixed utilities or
+    ## parameterize the variance
+    if (type == "private" || !is.null(fixedUtils) || !is.null(sdformula) || startvals == "sbi")
+        stop("MODDED VERSION: Must use agent error; fixed utilities and parameterized variance not allowed; SBI starting values not allowed")
 
     ## make the model frame
     mf <- match(c("data", "subset", "na.action"), names(cl), 0L)
@@ -526,8 +494,8 @@ egame123 <- function(formulas, data, subset, na.action,
     hasColon <- varNames$hasColon
     names(sval) <- varNames$varNames
 
-    ## use gradient only if variance isn't parameterized
-    gr <- if (is.null(sdformula)) logLikGrad123 else NULL
+    ## KERIM MOD: Don't use gradient (too lazy to reprogram numeric gradient)
+    gr <- NULL
 
     fvec <- rep(FALSE, length(sval))
     names(fvec) <- names(sval)
