@@ -14,7 +14,6 @@ Depends:
     MASS
 Imports:
     stringr
-LazyLoad: yes
 Roxygen: list(wrap = FALSE)
 Collate:
     'games.r'
