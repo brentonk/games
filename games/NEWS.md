@@ -1,3 +1,6 @@
+# games 1.1.1.9000
+
+
 # games 1.1-1
 
 * Includes citation to published article in *Journal of Statistical Software*
