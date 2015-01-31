@@ -1,7 +1,7 @@
 Estimating Extensive Form Games in R
 ====================================
 
-[![Build Status](https://travis-ci.org/brentonk/games.svg)](https://travis-ci.org/brentonk/games)
+[![Build Status](https://travis-ci.org/brentonk/games.svg?branch=master)](https://travis-ci.org/brentonk/games)
 
 `games` is an R package by [Brenton Kenkel](http://www.bkenkel.com) and
 [Curt Signorino](http://www.rochester.edu/College/psc/signorino/) for
