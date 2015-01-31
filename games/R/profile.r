@@ -48,8 +48,6 @@ NULL
 ##' across the profiled values for a particular parameter.  The first column of
 ##' each data frame is the log-likelihood for the given fits.  The returned
 ##' object is of class \code{c("profile.game", "profile")}.
-##' @method profile game
-##' @S3method profile game
 ##' @seealso \code{\link{plot.profile.game}} for plotting profiled likelihoods
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
@@ -243,7 +241,6 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly
 ##' @method plot profile.game
-##' @S3method plot profile.game
 ##' @seealso \code{\link{profile.game}}
 ##' @export
 ##' @author Brenton Kenkel

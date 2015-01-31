@@ -2,6 +2,8 @@
 ##' @include helpers.r
 NULL
 
+##' @method print nonnest.test
+##' @export
 print.nonnest.test <- function(x, digits = x$digits, ...)
 {
     ## calculate p-value from test statistic

@@ -399,8 +399,6 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ##' or \code{\link{bxp}} (when it is discrete).
 ##' @return an object of class \code{preplot.predProbs}, invisibly.  This contains
 ##' the raw information used by lower-level plotting functions.
-##' @method plot predProbs
-##' @S3method plot predProbs
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 ##' @examples
@@ -485,6 +483,8 @@ plot.predProbs <- function(x, which = NULL, ask = FALSE, ...)
     invisible(preplotObj)
 }
 
+##' @method plot preplot.predProbs
+##' @export
 plot.preplot.predProbs <- function(x, xlab = x$xlab, ylab = x$ylab,
                                    ylim = c(min(x$y, x$low), max(x$y, x$high)),
                                    type = "l", lty.ci = 2, ...)

@@ -59,6 +59,7 @@ LW <- function(x)
     return(W4)
 }
 
+##' @export
 predict.ultimatum <- function(object, newdata, na.action = na.pass,
                               n.sim = 1000, ...)
 {

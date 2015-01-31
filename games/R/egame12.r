@@ -2,6 +2,7 @@
 ##' @include helpers.r
 NULL
 
+##' @export
 predict.egame12 <- function(object, newdata, type = c("outcome", "action"),
                             na.action = na.pass, ...)
 {
