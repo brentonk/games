@@ -1,7 +1,3 @@
-##' @include games.r
-##' @include helpers.r
-NULL
-
 ##' Lambert's W
 ##' 
 ##' Solves for W in the equation \eqn{W e^W = x}{W * exp(W) = x}.

@@ -1,7 +1,3 @@
-##' @include games.r
-##' @include helpers.r
-NULL
-
 ##' Likelihood profiles for fitted strategic models
 ##' 
 ##' Calculate profile likelihood to assess convergence of a model.

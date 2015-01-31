@@ -1,6 +1,3 @@
-##' @include games.r
-NULL
-
 ##' 19th-century international disputes
 ##' 
 ##' Dataset of militarized international disputes between 1816 and 1899.

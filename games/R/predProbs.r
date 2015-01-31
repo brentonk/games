@@ -1,7 +1,3 @@
-##' @include games.r
-##' @include helpers.r
-NULL
-
 ##' Mode of a vector
 ##' 
 ##' Finds the modal value of a vector of any class.

@@ -1,7 +1,3 @@
-##' @include games.r
-##' @include helpers.r
-NULL
-
 ##
 ## INPUT:
 ## x: character vector

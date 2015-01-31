@@ -1,7 +1,3 @@
-##' @include games.r
-##' @include helpers.r
-NULL
-
 ##' Model formula construction
 ##' 
 ##' Interactive prompt for constructing model formulas.

@@ -1,6 +1,3 @@
-##' @include games.r
-NULL
-
 ##
 ## INPUT:
 ## boot: number of bootstrap iterations
