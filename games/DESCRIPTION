@@ -8,10 +8,11 @@ Authors@R: c(person(c("Curtis", "S."), "Signorino", role = "aut"),
 Description: Provides estimation and analysis functions for
     strategic statistical models.
 License: GPL (>= 2)
-Depends:
+Depends: 
     maxLik (>= 0.7-0),
     Formula (>= 0.2-0),
     MASS
-Imports:
+Imports: 
     stringr
 Roxygen: list(wrap = FALSE)
+Suggests: testthat
