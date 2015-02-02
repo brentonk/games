@@ -114,6 +114,19 @@ predict.ultimatum <- function(object, newdata, na.action = na.pass,
     return(ans)
 }
 
+##
+## INPUT:
+## x: numeric vector
+##
+## RETURN:
+## numeric vector, replacing Inf with largest representable values
+##
+finitize <- function(x)
+{
+    x <- ifelse(is.finite(x), x, sign(x) * .Machine$double.xmax)
+    return(x)
+}
+
 offerCDF <- function(y, maxOffer, fit1, fit2, s1, s2)
 {
     1 / (1 + exp((maxOffer - y - fit1 - s2 * (1 + exp((y - fit2) / s2))) / s1))
