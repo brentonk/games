@@ -32,7 +32,7 @@ Mode(x.factor)  # "c", with levels "a", "c", "d"
 x.logical <- x > 3
 Mode(x.logical)  # FALSE
 
-## behavior with ties
+## Behavior with ties
 y <- c(3, 3, 1, 1, 2)
 Mode(y)  # 3
 z <- c(2, 1, 1, 3, 3)

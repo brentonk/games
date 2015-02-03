@@ -95,15 +95,7 @@ NULL
 ##' 47: 533--559.
 ##' @seealso \code{\link{egame12}}
 ##' @keywords data
-##' @examples
-##' ## replicate analysis in Leblang (2003)
-##' data(leblang2003)
-##' m1 <- egame12(outcome ~ capcont + lreserves + overval + creditgrow +
-##' USinterest + service + contagion + prioratt - 1 | 1 | 1 | unifgov + lexports
-##' + preelec + postelec + rightgov + realinterest + capcont + lreserves, data =
-##' leblang2003, link = "probit", type = "private")
-##'
-##' summary(m1)
+##' @example inst/examples/leblang2003.r
 NULL
 
 ##' Simulated egame122 data

@@ -65,22 +65,22 @@ diagnosing non-convergence.  Future versions of the \pkg{games} package may
 incorporate the confidence interval functionality as well.
 }
 \examples{
-data(student_offers)
+data("student_offers")
 
-## a model that does not converge to global max
+## A model that does not converge to global max
 f1 <- offer + accept ~ gender1 | gender2
 m1 <- ultimatum(f1, maxOffer = 100, data = student_offers, s2 = 1)
 
-p1 <- profile(m1)  ## issues warning
+p1 <- profile(m1)  ## Issues warning
 plot(p1)
 
-## refit model with better starting values
+## Refit model with better starting values
 m2 <- ultimatum(f1, maxOffer = 100, data = student_offers, s2 = 1, profile = p1)
 p2 <- profile(m2)
 plot(p2)
 
 logLik(m1)
-logLik(m2)  ## improved
+logLik(m2)  ## Improved
 }
 \author{
 Brenton Kenkel (\email{brenton.kenkel@gmail.com})

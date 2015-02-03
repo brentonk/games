@@ -72,11 +72,12 @@ formulas.  See the help file of each model for examples of "manually" making
 the formula.
 }
 \examples{
-\dontrun{R> f1 <- makeFormulas(egame122, outcomes = c("budget cuts passed",
+\dontrun{
+R> f1 <- makeFormulas(egame122, outcomes = c("budget cuts passed",
 "budget cuts vetoed", "budget increase passed", "budget increase vetoed"))
 
 ---
-Equation for player 1's utility from budget cuts passed:
+Equation for player 1's utility from budget cuts passed: 
 
 1: fix to 0
 2: intercept only
@@ -89,7 +90,7 @@ Enter variable names (separated by spaces):
 legparty growth
 
 ---
-Equation for player 1's utility from budget cuts vetoed:
+Equation for player 1's utility from budget cuts vetoed: 
 
 1: fix to 0
 2: intercept only
@@ -99,7 +100,7 @@ Equation for player 1's utility from budget cuts vetoed:
 Selection: 2
 
 ---
-Equation for player 1's utility from budget increase passed:
+Equation for player 1's utility from budget increase passed: 
 
 1: fix to 0
 2: intercept only
@@ -112,7 +113,7 @@ Enter variable names (separated by spaces):
 legparty growth
 
 ---
-Equation for player 1's utility from budget increase vetoed:
+Equation for player 1's utility from budget increase vetoed: 
 
 1: fix to 0
 2: regressors, no intercept
@@ -120,7 +121,7 @@ Equation for player 1's utility from budget increase vetoed:
 Selection: 1
 
 ---
-Equation for player 2's utility from budget cuts vetoed:
+Equation for player 2's utility from budget cuts vetoed: 
 
 1: fix to 0
 2: intercept only
@@ -133,7 +134,7 @@ Enter variable names (separated by spaces):
 presparty growth
 
 ---
-Equation for player 2's utility from budget increase vetoed:
+Equation for player 2's utility from budget increase vetoed: 
 
 1: fix to 0
 2: intercept only
@@ -150,8 +151,9 @@ What is the name of the dependent variable in the dataset? (If stored as
 action indicators/dummies, separate their names with spaces.)
 budgincrease veto
 R> f1
-budgincrease + veto ~ legparty + growth | 1 | legparty + growth |
-    0 | presparty + growth | presparty + growth}
+budgincrease + veto ~ legparty + growth | 1 | legparty + growth | 
+    0 | presparty + growth | presparty + growth
+}
 }
 \author{
 Brenton Kenkel (\email{brenton.kenkel@gmail.com})

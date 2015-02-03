@@ -47,23 +47,7 @@
 ##' @seealso \code{\link{plot.profile.game}} for plotting profiled likelihoods
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-##' @examples
-##' data(student_offers)
-##'
-##' ## a model that does not converge to global max
-##' f1 <- offer + accept ~ gender1 | gender2
-##' m1 <- ultimatum(f1, maxOffer = 100, data = student_offers, s2 = 1)
-##'
-##' p1 <- profile(m1)  ## issues warning
-##' plot(p1)
-##'
-##' ## refit model with better starting values
-##' m2 <- ultimatum(f1, maxOffer = 100, data = student_offers, s2 = 1, profile = p1)
-##' p2 <- profile(m2)
-##' plot(p2)
-##'
-##' logLik(m1)
-##' logLik(m2)  ## improved
+##' @example inst/examples/profile.game.r
 profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
                          TRUE, report = TRUE, ...)
 {

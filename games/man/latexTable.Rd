@@ -63,16 +63,17 @@ The \code{digits} option does not yet work seamlessly; you may have to
 resort to trial and error.
 }
 \examples{
-data(war1800)
+data("war1800")
 f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | balanc + revis1 | balanc
 m1 <- egame12(f1, data = war1800)
 
 latexTable(m1)
 latexTable(m1, digits = 8)
-latexTable(m1, blankfill = "--")  ## dashes in blank cells
+latexTable(m1, blankfill = "--")  ## Dashes in blank cells
 
 \dontrun{
-latexTable(m1, file = "my_table.tex")  ## write to file}
+    latexTable(m1, file = "my_table.tex")  ## Write to file
+}
 }
 \author{
 Brenton Kenkel (\email{brenton.kenkel@gmail.com})
