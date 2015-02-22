@@ -50,8 +50,8 @@ and \code{year} are standardized to have mean 0 and unit variance.
 
 We are grateful to David Leblang for allowing us to redistribute his data.
 The original replication file is available in Stata format at
-\url{http://www.faculty.virginia.edu/leblang/Leblang/Data_files/strat.dta}
-(as of 2010-03-01).
+\url{https://sites.google.com/site/davidaleblang/data-1} (as of
+2015-02-22).
 }
 \examples{
 ## Replicate analysis in Leblang (2003)
