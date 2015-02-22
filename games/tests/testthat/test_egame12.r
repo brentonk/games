@@ -61,3 +61,13 @@ test_that("log-likelihood is correctly computed", {
                                 p_war))
     expect_equal(log(p_observed), log(pp_observed))
 })
+
+test_that("egame12 works with integer-class binary LHS", {
+    war1800 <- transform(war1800,
+                         esc = as.integer(esc),
+                         war = as.integer(war))
+    expect_true({
+        fit_main_int <- egame12(formula_main, data = war1800)
+        TRUE
+    })
+})
