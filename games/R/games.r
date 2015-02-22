@@ -19,16 +19,6 @@
 ##' @export predict.egame123
 ##' @export predict.ultimatum
 ##' @export clarke
-##' @S3method logLik game
-##' @S3method logLik summary.game
-##' @S3method coef game
-##' @S3method vcov game
-##' @S3method plot preplot.predProbs
-##' @S3method predict egame12
-##' @S3method predict egame122
-##' @S3method predict egame123
-##' @S3method predict ultimatum
-##' @S3method print nonnest.test
 NULL
 
 ##' Print a strategic model object
@@ -39,8 +29,6 @@ NULL
 ##' @param x a fitted model of class \code{game}
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly
-##' @method print game
-##' @S3method print game
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
 print.game <- function(x, ...)
@@ -107,8 +95,6 @@ print.game <- function(x, ...)
 ##' Forms the standard regression results table from a fitted strategic model.
 ##' Normally used interactively, in conjunction with
 ##' \code{\link{print.summary.game}}.
-##' @method summary game
-##' @S3method summary game
 ##' @param object a fitted model of class \code{game}
 ##' @param useboot logical: use bootstrap estimates (if present) to construct
 ##' standard error estimates?
@@ -153,7 +139,6 @@ summary.game <- function(object, useboot = TRUE, ...)
 ##' Prints the standard regression results table from a fitted strategic model,
 ##' along with the log-likelihood, AIC, and number of observations.
 ##' @method print summary.game
-##' @S3method print summary.game
 ##' @param x an object of class \code{summary.game}, typically produced by
 ##'running \code{summary} on a fitted model of class \code{game}
 ##' @param ... other arguments, currently ignored
@@ -189,16 +174,19 @@ print.summary.game <- function(x, ...)
     invisible(x)
 }
 
+##' @export
 coef.game <- function(object, ...)
 {
     object$coefficients
 }
 
+##' @export
 vcov.game <- function(object, ...)
 {
     object$vcov
 }
 
+##' @export
 logLik.game <- function(object, ...)
 {
     ans <- sum(object$log.likelihood)
@@ -208,6 +196,8 @@ logLik.game <- function(object, ...)
     return(ans)
 }
 
+##' @method logLik summary.game
+##' @export
 logLik.summary.game <- function(object, ...)
 {
     ans <- object$log.likelihood
@@ -254,8 +244,6 @@ logLik.summary.game <- function(object, ...)
 ##' \code{ultimatum} models (see Details).
 ##' @param ... other arguments, currently ignored.
 ##' @return A data frame of predicted probabilities.
-##' @method predict game
-##' @S3method predict game
 ##' @export
 ##' @seealso \code{\link{predProbs}} provides a more full-featured and
 ##' user-friendly wrapper, including plots and confidence bands.

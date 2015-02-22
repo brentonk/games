@@ -1,7 +1,3 @@
-##' @include games.r
-##' @include helpers.r
-NULL
-
 ##
 ## INPUT:
 ## x: character vector
@@ -67,17 +63,7 @@ latexEsc <- function(x)
 ##' and Test of Extended Immediate Deterrence."  \emph{American Journal of
 ##' Political Science} 50(3):586--605.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-##' @examples
-##' data(war1800)
-##' f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | balanc + revis1 | balanc
-##' m1 <- egame12(f1, data = war1800)
-##'
-##' latexTable(m1)
-##' latexTable(m1, digits = 8)
-##' latexTable(m1, blankfill = "--")  ## dashes in blank cells
-##' 
-##' \dontrun{
-##' latexTable(m1, file = "my_table.tex")  ## write to file}
+##' @example inst/examples/latexTable.r
 latexTable <- function(x, digits = max(3, getOption("digits") - 2), scientific =
                        NA, blankfill = "", math.style.negative = TRUE, file =
                        "", floatplace = "htbp", caption = NULL, label = NULL,

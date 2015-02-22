@@ -1,7 +1,3 @@
-##' @include games.r
-##' @include helpers.r
-NULL
-
 ##' Lambert's W
 ##' 
 ##' Solves for W in the equation \eqn{W e^W = x}{W * exp(W) = x}.
@@ -18,10 +14,7 @@ NULL
 ##' Values of the W-Function."  \emph{ACM Transactions on Mathematical Software}
 ##' 21(2):161--171.
 ##' @author Curt Signorino (\email{curt.signorino@@rochester.edu})
-##' @examples
-##' x <- rexp(10)
-##' w <- LW(x)
-##' all.equal(x, w * exp(w))
+##' @example inst/examples/LW.r
 LW <- function(x)
 {
     ## Note: there is a Lambert's W package, but it depends on the gsl (GNU
@@ -59,6 +52,7 @@ LW <- function(x)
     return(W4)
 }
 
+##' @export
 predict.ultimatum <- function(object, newdata, na.action = na.pass,
                               n.sim = 1000, ...)
 {
@@ -115,6 +109,19 @@ predict.ultimatum <- function(object, newdata, na.action = na.pass,
     ans <- as.data.frame(cbind(Ey, PrA))
     names(ans) <- c("E(offer)", "Pr(accept)")
     return(ans)
+}
+
+##
+## INPUT:
+## x: numeric vector
+##
+## RETURN:
+## numeric vector, replacing Inf with largest representable values
+##
+finitize <- function(x)
+{
+    x <- ifelse(is.finite(x), x, sign(x) * .Machine$double.xmax)
+    return(x)
 }
 
 offerCDF <- function(y, maxOffer, fit1, fit2, s1, s2)
@@ -335,25 +342,7 @@ logLikGradUlt <- function(b, y, acc, regr, minOffer=0, maxOffer, offerOnly, offe
 ##' \url{http://www.rochester.edu/college/psc/signorino/research/RamsaySignorino_Ultimatum.pdf}.
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com}) and Curtis
 ##' S. Signorino
-##' @examples
-##' data(data_ult)
-##'
-##' ## the formula:
-##' f1 <- offer + accept ~ x1 + x2 + x3 + x4 + w1 + w2 | z1 + z2 + z3 + z4 + w1 + w2
-##' ##                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-##' ##                                  R1                              R2
-##'
-##' m1 <- ultimatum(f1, data = data_ult, maxOffer = 15)
-##' summary(m1)
-##'
-##' ## estimating offer size only
-##' f2 <- update(Formula(f1), offer ~ .)
-##' m2 <- ultimatum(f2, data = data_ult, maxOffer = 15, outcome = "offer")
-##' summary(m2)
-##'
-##' ## fixing scale terms
-##' m3 <- ultimatum(f1, data = data_ult, maxOffer = 15, s1 = 5, s2 = 1)
-##' summary(m3)
+##' @example inst/examples/ultimatum.r
 ultimatum <- function(formulas, data, subset, na.action, minOffer=0,
                       maxOffer, offertol = sqrt(.Machine$double.eps),
                       s1 = NULL, s2 = NULL,

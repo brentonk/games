@@ -1,6 +1,3 @@
-##' @include games.r
-NULL
-
 ##' 19th-century international disputes
 ##' 
 ##' Dataset of militarized international disputes between 1816 and 1899.
@@ -88,8 +85,8 @@ NULL
 ##'
 ##' We are grateful to David Leblang for allowing us to redistribute his data.
 ##' The original replication file is available in Stata format at
-##' \url{http://www.faculty.virginia.edu/leblang/Leblang/Data_files/strat.dta}
-##' (as of 2010-03-01).
+##' \url{https://sites.google.com/site/davidaleblang/data-1} (as of
+##' 2015-02-22).
 ##' @name leblang2003
 ##' @usage data(leblang2003)
 ##' @docType data
@@ -98,15 +95,7 @@ NULL
 ##' 47: 533--559.
 ##' @seealso \code{\link{egame12}}
 ##' @keywords data
-##' @examples
-##' ## replicate analysis in Leblang (2003)
-##' data(leblang2003)
-##' m1 <- egame12(outcome ~ capcont + lreserves + overval + creditgrow +
-##' USinterest + service + contagion + prioratt - 1 | 1 | 1 | unifgov + lexports
-##' + preelec + postelec + rightgov + realinterest + capcont + lreserves, data =
-##' leblang2003, link = "probit", type = "private")
-##'
-##' summary(m1)
+##' @example inst/examples/leblang2003.r
 NULL
 
 ##' Simulated egame122 data

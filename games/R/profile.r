@@ -1,7 +1,3 @@
-##' @include games.r
-##' @include helpers.r
-NULL
-
 ##' Likelihood profiles for fitted strategic models
 ##' 
 ##' Calculate profile likelihood to assess convergence of a model.
@@ -48,28 +44,10 @@ NULL
 ##' across the profiled values for a particular parameter.  The first column of
 ##' each data frame is the log-likelihood for the given fits.  The returned
 ##' object is of class \code{c("profile.game", "profile")}.
-##' @method profile game
-##' @S3method profile game
 ##' @seealso \code{\link{plot.profile.game}} for plotting profiled likelihoods
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-##' @examples
-##' data(student_offers)
-##'
-##' ## a model that does not converge to global max
-##' f1 <- offer + accept ~ gender1 | gender2
-##' m1 <- ultimatum(f1, maxOffer = 100, data = student_offers, s2 = 1)
-##'
-##' p1 <- profile(m1)  ## issues warning
-##' plot(p1)
-##'
-##' ## refit model with better starting values
-##' m2 <- ultimatum(f1, maxOffer = 100, data = student_offers, s2 = 1, profile = p1)
-##' p2 <- profile(m2)
-##' plot(p2)
-##'
-##' logLik(m1)
-##' logLik(m2)  ## improved
+##' @example inst/examples/profile.game.r
 profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
                          TRUE, report = TRUE, ...)
 {
@@ -243,7 +221,6 @@ profile.game <- function(fitted, which = 1:p, steps = 5, dist = 3, use.se =
 ##' @param ... other arguments, currently ignored
 ##' @return \code{x}, invisibly
 ##' @method plot profile.game
-##' @S3method plot profile.game
 ##' @seealso \code{\link{profile.game}}
 ##' @export
 ##' @author Brenton Kenkel

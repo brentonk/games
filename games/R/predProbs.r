@@ -1,50 +1,22 @@
-##' @include games.r
-##' @include helpers.r
-NULL
-
 ##' Mode of a vector
 ##' 
 ##' Finds the modal value of a vector of any class.
 ##'
-##' Based on code from the R wiki:
-##' \url{http://rwiki.sciviews.org/doku.php?id=tips:stats-basic:modalvalue}.
+##' Based on the Stack Overflow answer
+##' \url{http://stackoverflow.com/a/8189441/143383}
 ##' @param x a vector (lists and arrays will be flattened).
 ##' @param na.rm logical: strip \code{NA} values?
 ##' @return The value of \code{x} that occurs most often.  If there is a tie,
 ##' the one that appears first (among those tied) is chosen.
 ##' @export
-##' @author R Wiki contributors
-##' @examples
-##' x <- c(1, 3, 3, 4)
-##' Mode(x)  # 3
-##' x.char <- letters[x]
-##' Mode(x.char)  # "c"
-##' x.factor <- as.factor(x.char)
-##' Mode(x.factor)  # "c", with levels "a", "c", "d"
-##' x.logical <- x > 3
-##' Mode(x.logical)  # FALSE
-##'
-##' ## behavior with ties
-##' y <- c(3, 3, 1, 1, 2)
-##' Mode(y)  # 3
-##' z <- c(2, 1, 1, 3, 3)
-##' Mode(z)  # 1
+##' @author Ken Williams (on Stack Overflow)
+##' @example inst/examples/Mode.r
 Mode <- function(x, na.rm = FALSE)
 {
-    x <- unlist(x);
     if (na.rm)
         x <- x[!is.na(x)]
-    u <- unique(x);
-    n <- length(u);
-    frequencies <- rep(0, n);
-    for (i in seq_len(n)) {
-        if (is.na(u[i])) {
-            frequencies[i] <- sum(is.na(x))
-        } else {
-            frequencies[i] <- sum(x == u[i], na.rm = TRUE)
-        }
-    }
-    return(u[which.max(frequencies)])
+    ux <- unique(x)
+    ux[which.max(tabulate(match(x, ux)))]
 }
 
 ##
@@ -247,29 +219,7 @@ CIfromBoot <- function(x, newdata, ci = .95, type, report = TRUE)
 ##' function \code{escapeRegex}, written by Charles Dupont.
 ##' @seealso \code{\link{predict.game}} for somewhat more flexible (but fussier)
 ##' generation of predicted probabilities.
-##' @examples
-##' data(war1800)
-##' f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | regime1 | balanc + regime2
-##' m1 <- egame12(f1, data = war1800, boot = 10)
-##'
-##' pp1 <- predProbs(m1, x = "s_wt_re1", n = 5)
-##' print(pp1)  ## the hypothetical observations and their predicted probs
-##' plot(pp1, which = 2)  ## see ?plot.predProbs for more plot examples
-##'
-##' ## changing the profile used
-##' pp2 <- predProbs(m1, x = "s_wt_re1", n = 5, revis1 = 1, balanc = 0.7)
-##' pp3 <- predProbs(m1, x = "s_wt_re1", n = 5, regime1 = "dem")
-##' pp4 <- predProbs(m1, x = "s_wt_re1", n = 5, balanc = median(balanc))
-##'
-##' ## variable names (other than x) must match exactly!
-##' \dontrun{
-##' pp5 <- predProbs(m1, x = "s_wt_re1", bal = 0.7)  ## error will result}
-##'
-##' ## x can be a factor too
-##' pp6 <- predProbs(m1, x = "regime1")
-##'
-##' ## action probabilities
-##' pp7 <- predProbs(m1, x = "regime1", type = "action")
+##' @example inst/examples/predProbs.r
 predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
                       type = c("outcome", "action"),
                       makePlots = FALSE, report = TRUE, ...)
@@ -399,39 +349,9 @@ predProbs <- function(model, x, xlim = c(min(x), max(x)), n = 100, ci = .95,
 ##' or \code{\link{bxp}} (when it is discrete).
 ##' @return an object of class \code{preplot.predProbs}, invisibly.  This contains
 ##' the raw information used by lower-level plotting functions.
-##' @method plot predProbs
-##' @S3method plot predProbs
 ##' @export
 ##' @author Brenton Kenkel (\email{brenton.kenkel@@gmail.com})
-##' @examples
-##' data(war1800)
-##' f1 <- esc + war ~ s_wt_re1 + revis1 | 0 | regime1 | balanc + regime2
-##' m1 <- egame12(f1, data = war1800, boot = 10)
-##' pp1 <- predProbs(m1, x = "balanc", n = 5)  ## continuous x
-##' pp2 <- predProbs(m1, x = "regime1")  ## discrete x
-##'
-##' ## if "ask" is FALSE and "which" isn't specified, all plots are printed
-##' op <- par(mfrow = c(2, 2))
-##' plot(pp1)
-##' par(op)
-##'
-##' \dontrun{
-##' plot(pp1, ask = TRUE)
-##'   # displays menu:
-##'   # Make a plot selection (or 0 to exit):
-##'   #   1: plot: Pr(~esc)
-##'   #   2: plot: Pr(esc,~war)
-##'   #   3: plot: Pr(esc,war)
-##'   #   4: plot all terms}
-##'
-##' ## to change line type for confidence bounds, use argument "lty.ci"
-##' plot(pp1, which = 3, lty.ci = 3)
-##'
-##' ## all the standard plotting options work too
-##' plot(pp1, which = 3, xlab = "Capabilities", ylab = "Probability", main = "Title")
-##'
-##' ## discrete x variables are plotted via R's boxplot functionality
-##' plot(pp2, which = 3)
+##' @example inst/examples/plot.predProbs.r
 plot.predProbs <- function(x, which = NULL, ask = FALSE, ...)
 {
     ## retrieve the columns containing the variable of interest, predicted
@@ -485,6 +405,8 @@ plot.predProbs <- function(x, which = NULL, ask = FALSE, ...)
     invisible(preplotObj)
 }
 
+##' @method plot preplot.predProbs
+##' @export
 plot.preplot.predProbs <- function(x, xlab = x$xlab, ylab = x$ylab,
                                    ylim = c(min(x$y, x$low), max(x$y, x$high)),
                                    type = "l", lty.ci = 2, ...)
