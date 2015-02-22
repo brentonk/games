@@ -231,7 +231,7 @@ makeResponse12 <- function(yf)
             warning("only first two columns of response will be used")
         
         Y <- Y[, 1:2]
-        if (!identical(sort(unique(unlist(yf))), c(0, 1)))
+        if (!all(unlist(yf) %in% c(0L, 1L)))
             stop("dummy responses must be dummy variables")
         
         y <- numeric(nrow(Y))

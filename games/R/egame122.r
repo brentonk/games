@@ -265,7 +265,7 @@ makeResponse122 <- function(yf)
             Y <- Y[, 1:3]
         }
 
-        if (!identical(sort(unique(unlist(Y))), c(0, 1)))
+        if (!all(unlist(Y) %in% c(0L, 1L)))
             stop("dummy responses must be dummy variables")
 
         if (ncol(Y) == 3) {
