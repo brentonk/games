@@ -56,6 +56,9 @@ The original replication file is available in Stata format at
 \examples{
 ## Replicate analysis in Leblang (2003)
 data("leblang2003")
+
+## NOTE: Convergence tolerance is set to 1e-4 to reduce testing runtime on
+## CRAN; do not reduce tolerance in real applications!
 m1 <- egame12(outcome ~
               capcont + lreserves + overval + creditgrow + USinterest + service
               + contagion + prioratt - 1 |
@@ -65,7 +68,8 @@ m1 <- egame12(outcome ~
               + capcont + lreserves,
               data = leblang2003,
               link = "probit",
-              type = "private")
+              type = "private",
+              reltol = 1e-4)
 
 summary(m1)
 }

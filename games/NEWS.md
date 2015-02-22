@@ -4,6 +4,8 @@
 
 * Streamlined `Mode()` function according to the Stack Overflow answer <http://stackoverflow.com/a/8189441/143383>
 
+* Reduced computation time of `egame122()` and `leblang2003` examples
+
 
 # games 1.1-1
 
