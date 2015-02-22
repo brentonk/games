@@ -1,4 +1,4 @@
-# games 1.1.1.9000
+# games 1.1.2
 
 * Fixed bugs in `egame12()` and `egame122()` that caused them to fail when the left-hand side was constructed with binary variables of class `"integer"` (thanks to Tyson Chatagnier for the bug report)
 
