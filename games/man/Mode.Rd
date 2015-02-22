@@ -19,8 +19,8 @@ the one that appears first (among those tied) is chosen.
 Finds the modal value of a vector of any class.
 }
 \details{
-Based on code from the R wiki:
-\url{http://rwiki.sciviews.org/doku.php?id=tips:stats-basic:modalvalue}.
+Based on the Stack Overflow answer
+\url{http://stackoverflow.com/a/8189441/143383}
 }
 \examples{
 x <- c(1, 3, 3, 4)
@@ -39,6 +39,6 @@ z <- c(2, 1, 1, 3, 3)
 Mode(z)  # 1
 }
 \author{
-R Wiki contributors
+Ken Williams (on Stack Overflow)
 }
 

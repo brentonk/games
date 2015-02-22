@@ -2,31 +2,21 @@
 ##' 
 ##' Finds the modal value of a vector of any class.
 ##'
-##' Based on code from the R wiki:
-##' \url{http://rwiki.sciviews.org/doku.php?id=tips:stats-basic:modalvalue}.
+##' Based on the Stack Overflow answer
+##' \url{http://stackoverflow.com/a/8189441/143383}
 ##' @param x a vector (lists and arrays will be flattened).
 ##' @param na.rm logical: strip \code{NA} values?
 ##' @return The value of \code{x} that occurs most often.  If there is a tie,
 ##' the one that appears first (among those tied) is chosen.
 ##' @export
-##' @author R Wiki contributors
+##' @author Ken Williams (on Stack Overflow)
 ##' @example inst/examples/Mode.r
 Mode <- function(x, na.rm = FALSE)
 {
-    x <- unlist(x);
     if (na.rm)
         x <- x[!is.na(x)]
-    u <- unique(x);
-    n <- length(u);
-    frequencies <- rep(0, n);
-    for (i in seq_len(n)) {
-        if (is.na(u[i])) {
-            frequencies[i] <- sum(is.na(x))
-        } else {
-            frequencies[i] <- sum(x == u[i], na.rm = TRUE)
-        }
-    }
-    return(u[which.max(frequencies)])
+    ux <- unique(x)
+    ux[which.max(tabulate(match(x, ux)))]
 }
 
 ##
